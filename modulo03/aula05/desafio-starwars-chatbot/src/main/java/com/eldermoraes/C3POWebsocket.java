@@ -36,7 +36,6 @@ public class C3POWebsocket {
         Person person = starWarsPersonService.chat(personJson);
 
         return c3poService.chat("O que você acha desse personagem: " + person)
-                .onFailure().recoverWithCompletion()
                 .collect().asList()
                 .map(tokens -> String.join("", tokens));
     }
@@ -44,7 +43,6 @@ public class C3POWebsocket {
     @OnTextMessage
     public Uni<String> onTextMessage(String message) {
         return c3poService.chat(message)
-                .onFailure().recoverWithCompletion()
                 .collect().asList()
                 .map(tokens -> String.join("", tokens));
     }
