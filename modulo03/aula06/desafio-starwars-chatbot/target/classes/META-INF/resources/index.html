@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C-3PO Chatbot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #FFD700;
+      --gold-dim: #b89b00;
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a28;
+      --user-bg: #1a2a4a;
+      --user-border: #3a6aaa;
+      --text: #e8e8e8;
+      --text-muted: #888;
+      --radius: 12px;
+      --max-w: 900px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: var(--max-w);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid #222;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+    }
+
+    #status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    #status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #555;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    #status-dot.connected    { background: #4caf50; box-shadow: 0 0 6px #4caf5088; }
+    #status-dot.connecting   { background: #ff9800; box-shadow: 0 0 6px #ff980088; animation: pulse 1s infinite; }
+    #status-dot.disconnected { background: #f44336; box-shadow: 0 0 6px #f4433688; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── Controls panel (select + input rows) ── */
+    .controls {
+      background: var(--surface);
+      border-bottom: 1px solid #222;
+      flex-shrink: 0;
+    }
+
+    /* ── Select row ── */
+    .select-row {
+      padding: 12px 16px 8px;
+    }
+
+    #person-select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid #2e2e40;
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 10px 36px 10px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath fill='%23888' d='M6 7L0 0h12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      transition: border-color 0.2s;
+    }
+
+    #person-select:focus { border-color: var(--gold-dim); }
+    #person-select option { background: var(--surface2); color: var(--text); }
+
+    /* ── Input row ── */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      padding: 8px 16px 12px;
+    }
+
+    #msg-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid #2e2e40;
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #msg-input:focus { border-color: var(--gold-dim); }
+    #msg-input:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    #send-btn {
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    #send-btn:hover:not(:disabled) { opacity: 0.88; }
+    #send-btn:active:not(:disabled) { transform: scale(0.97); }
+    #send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Chat area ── */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+
+    #chat::-webkit-scrollbar { width: 5px; }
+    #chat::-webkit-scrollbar-track { background: transparent; }
+    #chat::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+    /* ── Messages ── */
+    .msg {
+      max-width: 78%;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .msg .label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      opacity: 0.75;
+    }
+
+    .msg p { font-size: 0.95rem; }
+
+    /* C-3PO: left, gold */
+    .msg.c3po {
+      align-self: flex-start;
+      background: #1a1608;
+      border: 1px solid var(--gold-dim);
+      color: var(--gold);
+      border-bottom-left-radius: 3px;
+    }
+
+    .msg.c3po .label { color: var(--gold); }
+
+    /* User: right, blue */
+    .msg.user {
+      align-self: flex-end;
+      background: var(--user-bg);
+      border: 1px solid var(--user-border);
+      color: var(--text);
+      border-bottom-right-radius: 3px;
+    }
+
+    .msg.user .label { color: #7ab4f5; }
+
+    /* System / info message */
+    .msg.system {
+      align-self: center;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      padding: 4px 0;
+      max-width: 100%;
+      text-align: center;
+    }
+
+    /* Typing indicator */
+    #typing {
+      display: none;
+      align-self: flex-start;
+      padding: 10px 16px;
+      background: #1a1608;
+      border: 1px solid var(--gold-dim);
+      border-radius: var(--radius);
+      border-bottom-left-radius: 3px;
+    }
+
+    #typing span {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: bounce 1.2s infinite;
+    }
+
+    #typing span:nth-child(2) { animation-delay: 0.2s; }
+    #typing span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+      40%            { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* Reconnect button */
+    #reconnect-btn {
+      display: none;
+      align-self: center;
+      background: transparent;
+      border: 1px solid #f44336;
+      color: #f44336;
+      border-radius: var(--radius);
+      padding: 7px 18px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #reconnect-btn:hover { background: #f4433622; }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      header h1 { font-size: 0.95rem; }
+
+      .input-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      #send-btn { width: 100%; padding: 12px; }
+
+      .msg { max-width: 92%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <h1>C-3PO Chatbot</h1>
+      <div id="status">
+        <div id="status-dot"></div>
+        <span id="status-text">Aguardando seleção</span>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="select-row">
+        <select id="person-select">
+          <option value="">Selecione um personagem...</option>
+        </select>
+      </div>
+      <div class="input-row">
+        <input
+          id="msg-input"
+          type="text"
+          placeholder="Digite sua mensagem..."
+          disabled
+          autocomplete="off"
+        />
+        <button id="send-btn" disabled>Enviar</button>
+      </div>
+    </div>
+
+    <div id="chat">
+      <div id="typing">
+        <span></span><span></span><span></span>
+      </div>
+      <button id="reconnect-btn">Reconectar</button>
+    </div>
+  </div>
+
+  <script>
+    const chat         = document.getElementById('chat');
+    const input        = document.getElementById('msg-input');
+    const sendBtn      = document.getElementById('send-btn');
+    const statusDot    = document.getElementById('status-dot');
+    const statusText   = document.getElementById('status-text');
+    const typing       = document.getElementById('typing');
+    const reconnectBtn = document.getElementById('reconnect-btn');
+    const personSelect = document.getElementById('person-select');
+
+    let ws = null;
+    let currentBotP = null; // <p> of the in-progress bot bubble; null = ready for new one
+
+    // ── People list ──────────────────────────────────────────────────
+    async function loadPeople() {
+      try {
+        const res = await fetch('/api/people');
+        const data = await res.json();
+        const people = (Array.isArray(data) ? data : data.results)
+          .sort((a, b) => a.name.localeCompare(b.name));
+        people.forEach(p => {
+          const id = p.url.split('/').filter(Boolean).pop();
+          personSelect.appendChild(new Option(p.name, id));
+        });
+      } catch {
+        appendSystem('Erro ao carregar lista de personagens.');
+      }
+    }
+
+    // ── WebSocket ────────────────────────────────────────────────────
+    function connect(personId) {
+      setStatus('connecting');
+      reconnectBtn.style.display = 'none';
+      currentBotP = null;
+
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${window.location.host}/ws/c3po/${personId}`);
+
+      ws.onopen = () => {
+        setStatus('connected');
+        showTyping(); // OnOpen triggers an AI call — wait for the greeting
+      };
+
+      ws.onmessage = (e) => {
+        hideTyping();
+
+        if (currentBotP === null) {
+          const div = document.createElement('div');
+          div.className = 'msg c3po';
+          div.innerHTML = '<span class="label">C-3PO</span><p></p>';
+          chat.insertBefore(div, typing);
+          currentBotP = div.querySelector('p');
+        }
+
+        currentBotP.innerText += e.data;
+        scrollToBottom();
+        enableInput();
+      };
+
+      ws.onclose = () => {
+        setStatus('disconnected');
+        hideTyping();
+        disableInput();
+        currentBotP = null;
+        if (personSelect.value) reconnectBtn.style.display = 'block';
+        appendSystem('Conexão encerrada.');
+      };
+
+      ws.onerror = () => {
+        setStatus('disconnected');
+        hideTyping();
+        disableInput();
+        currentBotP = null;
+        appendSystem('Erro de conexão.');
+      };
+    }
+
+    // ── Send ─────────────────────────────────────────────────────────
+    function send() {
+      const text = input.value.trim();
+      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+      appendMsg('user', text);
+      currentBotP = null; // next response starts a fresh bubble
+      ws.send(text);
+      input.value = '';
+      disableInput();
+      showTyping();
+    }
+
+    // ── Chat helpers ─────────────────────────────────────────────────
+    function clearChat() {
+      Array.from(chat.children).forEach(child => {
+        if (child.id !== 'typing' && child.id !== 'reconnect-btn') child.remove();
+      });
+      reconnectBtn.style.display = 'none';
+      hideTyping();
+    }
+
+    function appendMsg(who, text) {
+      const labels = { c3po: 'C-3PO', user: 'Você' };
+      const div = document.createElement('div');
+      div.className = `msg ${who}`;
+      div.innerHTML = `<span class="label">${labels[who]}</span><p>${escapeHtml(text)}</p>`;
+      chat.insertBefore(div, typing);
+      scrollToBottom();
+    }
+
+    function appendSystem(text) {
+      const div = document.createElement('div');
+      div.className = 'msg system';
+      div.textContent = text;
+      chat.insertBefore(div, typing);
+      scrollToBottom();
+    }
+
+    function showTyping() {
+      typing.style.display = 'block';
+      scrollToBottom();
+    }
+
+    function hideTyping() {
+      typing.style.display = 'none';
+    }
+
+    function enableInput() {
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    function disableInput() {
+      input.disabled = true;
+      sendBtn.disabled = true;
+    }
+
+    function setStatus(state) {
+      const labels = {
+        connected:    'Conectado',
+        connecting:   'Conectando...',
+        disconnected: 'Desconectado',
+        idle:         'Aguardando seleção',
+      };
+      statusDot.className = state;
+      statusText.textContent = labels[state] || state;
+    }
+
+    function scrollToBottom() {
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/\n/g, '<br>');
+    }
+
+    // ── Events ───────────────────────────────────────────────────────
+    personSelect.addEventListener('change', () => {
+      const personId = personSelect.value;
+      if (!personId) return;
+      if (ws && ws.readyState !== WebSocket.CLOSED) {
+        ws.onclose = null;
+        ws.onerror = null;
+        ws.close();
+      }
+      clearChat();
+      disableInput();
+      connect(personId);
+    });
+
+    sendBtn.addEventListener('click', send);
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      }
+    });
+
+    reconnectBtn.addEventListener('click', () => {
+      const personId = personSelect.value;
+      if (!personId) return;
+      clearChat();
+      connect(personId);
+    });
+
+    // ── Boot ─────────────────────────────────────────────────────────
+    setStatus('idle');
+    loadPeople();
+  </script>
+</body>
+</html>

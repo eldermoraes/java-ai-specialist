@@ -19,7 +19,7 @@ public class SemanticSearchService {
     EmbeddingModel embeddingModel;
 
     @Inject
-    EmbeddingStore<TextSegment> pgVectorStore; // Injetado automaticamente via extensão do Quarkus
+    EmbeddingStore<TextSegment> pgVectorStore;
 
     private final SqlFilterParser sqlParser = new SqlFilterParser();
 

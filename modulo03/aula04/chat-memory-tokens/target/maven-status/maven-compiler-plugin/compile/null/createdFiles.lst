@@ -1,0 +1,5 @@
+com/eldermoraes/ChatSessionEntity.class
+com/eldermoraes/WithMemoryService.class
+com/eldermoraes/DatabaseChatStore.class
+com/eldermoraes/WithMemoryResource.class
+com/eldermoraes/MemoryConfig.class
