@@ -1,0 +1,10 @@
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/C3POWebsocket.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/Force.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/Person.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/StarWarsPeopleResource.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/ai/C3POService.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/ai/StarWarsPersonService.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/persistance/ChatSessionEntity.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/persistance/DatabaseChatStore.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/persistance/MemoryConfig.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/aula05/desafio-starwars-chatbot/src/main/java/com/eldermoraes/rest/StarWarsAPIService.java
