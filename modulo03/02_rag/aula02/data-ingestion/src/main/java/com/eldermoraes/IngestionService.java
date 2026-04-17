@@ -20,7 +20,7 @@ import java.time.LocalDate;
 public class IngestionService {
 
     @Inject
-    EmbeddingStore<TextSegment> vectorDatabase;
+    EmbeddingStore<TextSegment> embeddingStore;
 
     @Inject
     EmbeddingModel embeddingModel;
@@ -45,7 +45,7 @@ public class IngestionService {
         EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
                 .documentSplitter(DocumentSplitters.recursive(500, 50))
                 .embeddingModel(embeddingModel)
-                .embeddingStore(vectorDatabase)
+                .embeddingStore(embeddingStore)
                 .build();
 
         ingestor.ingest(document);
