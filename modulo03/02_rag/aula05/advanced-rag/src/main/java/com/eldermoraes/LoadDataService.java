@@ -13,9 +13,9 @@ import jakarta.inject.Named;
 @ApplicationScoped
 public class LoadDataService {
 
-    private static final String DOC_RH_NOME = "Manual de Benefícios da Acme Corp - 2025";
+    private static final String DOC_RH_NOME = "Manual de Benefícios da Acme Corp - 2026";
     private static final String DOC_RH = """
-            Manual de Benefícios da Acme Corp - Edição 2025.
+            Manual de Benefícios da Acme Corp - Edição 2026.
 
             Capítulo 1 - Férias: Os funcionários têm direito a 30 dias de descanso
             remunerado por ano, que podem ser fracionados em até três períodos.
@@ -61,7 +61,7 @@ public class LoadDataService {
     EmbeddingModel embeddingModel;
 
     @Inject
-    ContextService situator;
+    ContextService context;
 
     @Startup
     void init() {
@@ -74,7 +74,7 @@ public class LoadDataService {
             chunk = chunk.strip();
             if (chunk.isEmpty()) continue;
 
-            String context = situator.situate(documento, chunk);
+            String context = this.context.situate(documento, chunk);
             context = context == null ? "" : context.strip();
             String contextualized = context.isEmpty() ? chunk : context + "\n\n" + chunk;
 
