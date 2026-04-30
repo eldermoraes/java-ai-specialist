@@ -50,6 +50,14 @@ public class LoadDataService {
     EmbeddingStore<TextSegment> itStore;
 
     @Inject
+    @Named("rhBm25")
+    InMemoryBM25Retriever rhBm25;
+
+    @Inject
+    @Named("itBm25")
+    InMemoryBM25Retriever itBm25;
+
+    @Inject
     EmbeddingModel embeddingModel;
 
     @Inject
@@ -57,11 +65,11 @@ public class LoadDataService {
 
     @Startup
     void init() {
-        ingest(DOC_RH, DOC_RH_NOME, rhStore);
-        ingest(DOC_TI, DOC_TI_NOME, itStore);
+        ingest(DOC_RH, DOC_RH_NOME, rhStore, rhBm25);
+        ingest(DOC_TI, DOC_TI_NOME, itStore, itBm25);
     }
 
-    private void ingest(String documento, String nome, EmbeddingStore<TextSegment> store) {
+    private void ingest(String documento, String nome, EmbeddingStore<TextSegment> store, InMemoryBM25Retriever bm25) {
         for (String chunk : documento.split("\\n\\s*\\n")) {
             chunk = chunk.strip();
             if (chunk.isEmpty()) continue;
@@ -77,6 +85,7 @@ public class LoadDataService {
                     Metadata.from("source", nome)
             );
             store.add(embeddingModel.embed(segment).content(), segment);
+            bm25.add(segment);
         }
     }
 }
