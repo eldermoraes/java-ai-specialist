@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Assistant</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f4f6fa;
+            color: #1f2330;
+            display: flex;
+            justify-content: center;
+        }
+        .app {
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
+        }
+        header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e6e9ef;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+        }
+        header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+        .session-info { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .status {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .status::before {
+            content: ""; width: 8px; height: 8px; border-radius: 50%;
+            background: #94a3b8; transition: background 0.2s;
+        }
+        .status.connected::before { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+        .status.connecting::before { background: #fbbf24; animation: pulse 1.2s infinite; }
+        .status.disconnected::before { background: #f87171; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .reset-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .empty-state {
+            margin: auto;
+            text-align: center;
+            color: #8993a4;
+            font-size: 14px;
+            max-width: 400px;
+        }
+        .empty-state strong { color: #1f2330; }
+
+        .msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.45;
+            font-size: 14px;
+        }
+        .msg.user {
+            align-self: flex-end;
+            background: #2563eb;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .msg.bot {
+            align-self: flex-start;
+            background: #eef2f7;
+            color: #1f2330;
+            border-bottom-left-radius: 4px;
+        }
+        .msg.thinking {
+            align-self: flex-start;
+            background: #eef2f7;
+            color: #6b7280;
+            font-style: italic;
+            border-bottom-left-radius: 4px;
+        }
+        .msg.thinking::after {
+            content: "…";
+            display: inline-block;
+            animation: pulse 1.4s infinite;
+        }
+        .msg.error {
+            align-self: flex-start;
+            background: #fee2e2;
+            color: #991b1b;
+            border-bottom-left-radius: 4px;
+        }
+
+        form {
+            border-top: 1px solid #e6e9ef;
+            padding: 14px 16px;
+            display: flex;
+            gap: 10px;
+            background: #fafbfc;
+        }
+        input[type=text] {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid #d3d8e0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        input[type=text]:focus { border-color: #2563eb; }
+        input[type=text]:disabled { background: #f4f6fa; }
+        button[type=submit] {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        button[type=submit]:hover { background: #1d4ed8; }
+        button[type=submit]:disabled { background: #94a3b8; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <h1>🤖 Enterprise Assistant</h1>
+        <div class="session-info">
+            <span class="status connecting" id="statusBadge">conectando</span>
+            <button type="button" class="reset-btn" id="resetBtn">Nova sessão</button>
+        </div>
+    </header>
+
+    <div class="messages" id="messages">
+        <div class="empty-state" id="emptyState">
+            <p><strong>Olá!</strong> Pergunte sobre RH (férias, benefícios) ou TI (senhas, VPN).</p>
+            <p>Exemplos:<br>
+                <em>"Quantos dias de férias eu posso tirar por ano?"</em><br>
+                <em>"E se eu quiser vender um terço delas?"</em>
+            </p>
+        </div>
+    </div>
+
+    <form id="chatForm" autocomplete="off">
+        <input type="text" id="msgInput" placeholder="Digite sua pergunta…" required disabled>
+        <button type="submit" id="sendBtn" disabled>Enviar</button>
+    </form>
+</div>
+
+<script>
+    const messagesEl = document.getElementById('messages');
+    const emptyEl    = document.getElementById('emptyState');
+    const formEl     = document.getElementById('chatForm');
+    const inputEl    = document.getElementById('msgInput');
+    const sendBtn    = document.getElementById('sendBtn');
+    const resetBtn   = document.getElementById('resetBtn');
+    const statusEl   = document.getElementById('statusBadge');
+
+    let ws = null;
+    let pendingThinking = null;
+
+    function setStatus(state, label) {
+        statusEl.className = 'status ' + state;
+        statusEl.textContent = label;
+    }
+
+    function addMessage(text, cls) {
+        if (emptyEl && emptyEl.parentNode) emptyEl.remove();
+        const div = document.createElement('div');
+        div.className = 'msg ' + cls;
+        div.textContent = text;
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return div;
+    }
+
+    function connect() {
+        setStatus('connecting', 'conectando');
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(proto + '//' + location.host + '/ws/assistant');
+
+        ws.onopen = () => {
+            setStatus('connected', 'conectado');
+            inputEl.disabled = false;
+            sendBtn.disabled = false;
+            inputEl.focus();
+        };
+
+        ws.onmessage = (e) => {
+            if (pendingThinking) { pendingThinking.remove(); pendingThinking = null; }
+            addMessage(e.data, 'bot');
+            inputEl.disabled = false;
+            sendBtn.disabled = false;
+            inputEl.focus();
+        };
+
+        ws.onclose = () => {
+            setStatus('disconnected', 'desconectado');
+            inputEl.disabled = true;
+            sendBtn.disabled = true;
+            if (pendingThinking) { pendingThinking.remove(); pendingThinking = null; }
+        };
+
+        ws.onerror = () => {
+            setStatus('disconnected', 'erro');
+        };
+    }
+
+    resetBtn.addEventListener('click', () => {
+        if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+        messagesEl.innerHTML = '';
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.innerHTML = '<p><strong>Nova sessão iniciada.</strong> Faça uma pergunta.</p>';
+        messagesEl.appendChild(empty);
+        connect();
+    });
+
+    formEl.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const msg = inputEl.value.trim();
+        if (!msg) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            addMessage('Conexão fechada. Clique "Nova sessão" para reconectar.', 'error');
+            return;
+        }
+        addMessage(msg, 'user');
+        inputEl.value = '';
+        inputEl.disabled = true;
+        sendBtn.disabled = true;
+        pendingThinking = addMessage('Pensando', 'thinking');
+        ws.send(msg);
+    });
+
+    connect();
+</script>
+</body>
+</html>

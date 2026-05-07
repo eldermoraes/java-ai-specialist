@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/aula02/data-ingestion/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula02/data-ingestion/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula03/rh-vector/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula03/rh-vector/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula04/juridico-generate-retrieve/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula04/juridico-generate-retrieve/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula05/advanced-rag/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula05/advanced-rag/src/main/resources" charset="UTF-8" />
+  </component>
+</project>
