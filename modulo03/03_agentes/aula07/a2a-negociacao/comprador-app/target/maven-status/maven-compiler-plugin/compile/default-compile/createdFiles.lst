@@ -1,0 +1,11 @@
+com/eldermoraes/comprador/dto/MensagemNegociacao.class
+com/eldermoraes/comprador/ws/CompradorWebSocket.class
+com/eldermoraes/comprador/dto/NegociacaoEvent.class
+com/eldermoraes/comprador/dto/Acao.class
+com/eldermoraes/comprador/dto/EntradaCompra.class
+com/eldermoraes/comprador/dto/RespostaVendedor.class
+com/eldermoraes/comprador/dto/DecisaoComprador.class
+com/eldermoraes/comprador/negociacao/NegociacaoCoordinator.class
+com/eldermoraes/comprador/negociacao/VendedorRemote.class
+com/eldermoraes/comprador/dto/RodadaNegociacao.class
+com/eldermoraes/comprador/ai/CompradorAgent.class

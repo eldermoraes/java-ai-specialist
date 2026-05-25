@@ -1,0 +1,15 @@
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/TriageWebsocket.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/ai/CardioAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/ai/ConsultationValidator.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/ai/GiClinicaAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/ai/NeuroAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/ai/OrtopediaAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/ai/SpecialistRouter.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/dto/SpecialistOpinion.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/dto/Specialty.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/dto/SupervisorReview.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/dto/SymptomsInput.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/dto/TriageReport.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/dto/TriageStep.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/dto/UrgencyLevel.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula04/triagem-medica/src/main/java/com/eldermoraes/workflow/MedicalSupervisor.java

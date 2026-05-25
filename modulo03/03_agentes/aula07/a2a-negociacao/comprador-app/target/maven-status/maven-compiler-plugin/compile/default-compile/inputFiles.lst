@@ -1,0 +1,11 @@
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/ai/CompradorAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/dto/Acao.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/dto/DecisaoComprador.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/dto/EntradaCompra.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/dto/MensagemNegociacao.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/dto/NegociacaoEvent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/dto/RespostaVendedor.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/dto/RodadaNegociacao.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/negociacao/NegociacaoCoordinator.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/negociacao/VendedorRemote.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula07/a2a-negociacao/comprador-app/src/main/java/com/eldermoraes/comprador/ws/CompradorWebSocket.java

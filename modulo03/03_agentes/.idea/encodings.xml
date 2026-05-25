@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/aula02/triagem-curricular/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula02/triagem-curricular/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula03/traducao-paralela/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula03/traducao-paralela/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula04/triagem-medica/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula04/triagem-medica/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula05/ticket-router/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula05/ticket-router/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula06/aprovacao-desconto/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula06/aprovacao-desconto/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula07/a2a-negociacao/comprador-app/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula07/a2a-negociacao/comprador-app/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula07/a2a-negociacao/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula07/a2a-negociacao/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula07/a2a-negociacao/vendedor-app/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/aula07/a2a-negociacao/vendedor-app/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

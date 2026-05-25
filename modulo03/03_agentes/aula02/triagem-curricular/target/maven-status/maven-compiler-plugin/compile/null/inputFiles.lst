@@ -1,0 +1,14 @@
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/TriagemWebsocket.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/ai/CulturalFitAnalyzer.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/ai/ExperienceAnalyzer.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/ai/RedFlagsAnalyzer.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/ai/ReportSynthesizer.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/ai/SkillsAnalyzer.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/dto/CulturalFitReport.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/dto/ExperienceReport.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/dto/ProgressUpdate.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/dto/RedFlagsReport.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/dto/SkillsReport.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/dto/TriagemInput.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/dto/TriagemReport.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula02/triagem-curricular/src/main/java/com/eldermoraes/workflow/TriagemOrchestrator.java

@@ -1,0 +1,7 @@
+com/eldermoraes/ai/CulturalTranslator.class
+com/eldermoraes/dto/Traducao.class
+com/eldermoraes/workflow/TraducaoOrchestrator.class
+com/eldermoraes/dto/Idioma.class
+com/eldermoraes/dto/ProgressUpdate.class
+com/eldermoraes/TraducaoWebsocket.class
+com/eldermoraes/dto/ComunicadoInput.class

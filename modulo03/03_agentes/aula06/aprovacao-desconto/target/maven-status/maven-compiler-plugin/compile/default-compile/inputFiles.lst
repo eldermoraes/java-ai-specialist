@@ -1,0 +1,14 @@
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/ai/ComercialAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/ai/RespostaFinalAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/dto/ApprovalDecision.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/dto/EntradaPedido.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/dto/GerenteEvent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/dto/PropostaDesconto.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/dto/PropostaView.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/dto/VendedorEvent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/hitl/ApprovalProposal.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/hitl/ApprovalService.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/hitl/ApprovalStatus.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/workflow/DescontoWorkflow.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/ws/GerenteWebSocket.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula06/aprovacao-desconto/src/main/java/com/eldermoraes/ws/VendedorWebSocket.java

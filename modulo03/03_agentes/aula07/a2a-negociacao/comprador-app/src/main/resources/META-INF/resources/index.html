@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprador A2A — Negociação</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #eff6ff; color: #1f2330;
+        }
+        .app { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; padding: 18px 22px;
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            color: white; border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+        header .subtitle { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+        .status {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.15);
+            padding: 5px 12px; border-radius: 999px;
+            font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+        .status.connected::before { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+        .status.connecting::before { background: #fbbf24; animation: pulse 1.2s infinite; }
+        .status.disconnected::before { background: #f87171; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .panel {
+            background: white; border-radius: 12px;
+            padding: 18px; margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .panel h2 {
+            margin: 0 0 12px 0; font-size: 14px; font-weight: 700;
+            color: #1e40af; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .info {
+            font-size: 13px; color: #4b5563; line-height: 1.5;
+        }
+        .info code {
+            background: #f3f4f6; padding: 2px 6px; border-radius: 4px;
+            font-size: 12px; color: #1e40af;
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+        .form-row label {
+            display: block; font-size: 11px; font-weight: 600;
+            color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em;
+            margin-bottom: 4px;
+        }
+        input, textarea {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid #d3d8e0; border-radius: 8px;
+            font-family: inherit; font-size: 13px;
+            outline: none;
+        }
+        input:focus, textarea:focus { border-color: #1e40af; }
+        textarea { min-height: 60px; resize: vertical; line-height: 1.5; }
+
+        .action-bar { display: flex; justify-content: space-between; align-items: center; }
+        .examples { display: flex; gap: 6px; flex-wrap: wrap; }
+        .examples button {
+            background: #f3f4f6; border: 1px solid #e5e7eb;
+            padding: 4px 10px; border-radius: 999px;
+            font-size: 11px; color: #4b5563; cursor: pointer;
+        }
+        .examples button:hover { background: #e5e7eb; }
+
+        button.primary {
+            padding: 10px 22px; border: none; border-radius: 8px;
+            background: #1e40af; color: white;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        button.primary:hover { background: #1e3a8a; }
+        button.primary:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .rodadas {
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .rodada-card {
+            background: #f9fafb; border-radius: 10px;
+            padding: 14px; border-left: 4px solid #1e40af;
+        }
+        .rodada-header {
+            font-size: 12px; color: #6b7280;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            margin-bottom: 8px;
+        }
+        .rodada-section {
+            background: white; padding: 10px 12px; border-radius: 6px;
+            font-size: 13px; line-height: 1.4; margin: 6px 0;
+        }
+        .rodada-section.vendedor { border-left: 3px solid #16a34a; }
+        .rodada-section.comprador { border-left: 3px solid #1e40af; }
+        .rodada-section .label {
+            font-weight: 700; color: #6b7280; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;
+        }
+        .preco {
+            font-size: 18px; font-weight: 800; color: #1f2330;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .acao-badge {
+            display: inline-block; padding: 2px 10px; border-radius: 999px;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .acao-ACEITAR { background: #dcfce7; color: #166534; }
+        .acao-CONTRAPOR { background: #ede9fe; color: #5b21b6; }
+        .acao-DESISTIR { background: #fee2e2; color: #991b1b; }
+
+        .resultado {
+            background: white; border: 3px solid;
+            border-radius: 12px; padding: 20px;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .resultado.acordo { border-color: #16a34a; background: #f0fdf4; }
+        .resultado.impasse { border-color: #dc2626; background: #fef2f2; }
+        .resultado h3 { margin: 0 0 8px 0; font-size: 22px; }
+        .resultado.acordo h3 { color: #166534; }
+        .resultado.impasse h3 { color: #991b1b; }
+        .resultado .preco-final {
+            font-size: 32px; font-weight: 800;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            margin: 8px 0;
+        }
+        .resultado .detalhe { font-size: 13px; color: #4b5563; }
+
+        .empty-state {
+            text-align: center; color: #94a3b8;
+            font-size: 13px; padding: 30px 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div>
+            <h1>🛒 Comprador — A2A</h1>
+            <div class="subtitle">Negocia via POST → vendedor-app (porta 8081) · padrão Agent-to-Agent</div>
+        </div>
+        <span class="status connecting" id="statusBadge">conectando</span>
+    </header>
+
+    <div class="panel">
+        <h2>Parâmetros da Compra</h2>
+        <div class="form-row">
+            <div>
+                <label for="produto">Produto</label>
+                <input type="text" id="produto" placeholder="ex: servidor rack 2U">
+            </div>
+            <div>
+                <label for="orcamento">Orçamento Máximo (R$)</label>
+                <input type="number" id="orcamento" step="100" placeholder="ex: 15000">
+            </div>
+        </div>
+        <div class="form-row">
+            <div>
+                <label for="prazo">Prazo Máximo (dias)</label>
+                <input type="number" id="prazo" placeholder="ex: 20">
+            </div>
+            <div>
+                <label for="criterios">Critérios Extras</label>
+                <input type="text" id="criterios" placeholder="ex: garantia mínima 36 meses">
+            </div>
+        </div>
+        <div class="action-bar" style="margin-top:8px;">
+            <div class="examples">
+                <button data-example="servidor">Servidor</button>
+                <button data-example="storage">Storage</button>
+                <button data-example="licenca">Licença</button>
+                <button data-example="switch">Switch</button>
+            </div>
+            <button class="primary" id="negociarBtn" disabled>Iniciar Negociação A2A</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Rodadas de Negociação</h2>
+        <div class="rodadas" id="rodadasEl">
+            <div class="empty-state">Inicie uma negociação para ver as rodadas.</div>
+        </div>
+        <div id="resultadoEl"></div>
+    </div>
+</div>
+
+<script>
+    const statusEl = document.getElementById('statusBadge');
+    const produtoEl = document.getElementById('produto');
+    const orcamentoEl = document.getElementById('orcamento');
+    const prazoEl = document.getElementById('prazo');
+    const criteriosEl = document.getElementById('criterios');
+    const negociarBtn = document.getElementById('negociarBtn');
+    const rodadasEl = document.getElementById('rodadasEl');
+    const resultadoEl = document.getElementById('resultadoEl');
+
+    const EXEMPLOS = {
+        servidor: { produto: 'servidor rack 2U', orcamento: 16000, prazo: 20, criterios: 'garantia mínima 36 meses, suporte 24x7' },
+        storage:  { produto: 'storage NAS 24TB', orcamento: 29000, prazo: 25, criterios: 'redundância RAID 6, hot swap' },
+        licenca:  { produto: 'licença software pro anual', orcamento: 2200, prazo: 5, criterios: 'ativação até final do mês' },
+        switch:   { produto: 'switch gerenciável 48 portas', orcamento: 8500, prazo: 12, criterios: 'PoE+, gestão por SNMP' }
+    };
+
+    let ws = null;
+    let rodadaIndex = 0;
+
+    function setStatus(state, label) {
+        statusEl.className = 'status ' + state;
+        statusEl.textContent = label;
+    }
+
+    function escapeHtml(s) {
+        return (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    }
+
+    function resetNegociacao() {
+        rodadasEl.innerHTML = '';
+        resultadoEl.innerHTML = '';
+        rodadaIndex = 0;
+    }
+
+    function renderRodada(rodada) {
+        rodadaIndex++;
+        if (rodadaIndex === 1) rodadasEl.innerHTML = '';
+        const rv = rodada.respostaVendedor;
+        const dc = rodada.decisaoComprador;
+        const limite = rv.limiteAtingido
+            ? '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-left:6px;">LIMITE VENDEDOR</span>'
+            : '';
+        const div = document.createElement('div');
+        div.className = 'rodada-card';
+        div.innerHTML = `
+            <div class="rodada-header">Rodada ${rodada.numero}</div>
+            <div class="rodada-section vendedor">
+                <div class="label">🏪 Vendedor respondeu via A2A ${limite}</div>
+                R$ <span class="preco">${rv.precoOferecido}</span> · ${escapeHtml(rv.prazoEntrega || '')}
+                <div style="margin-top:4px;color:#4b5563;">"${escapeHtml(rv.mensagem || '')}"</div>
+                <div style="margin-top:4px;font-size:11px;color:#6b7280;">${escapeHtml(rv.condicoes || '')}</div>
+            </div>
+            <div class="rodada-section comprador">
+                <div class="label">🛒 Comprador decidiu <span class="acao-badge acao-${dc.acao}">${dc.acao}</span></div>
+                ${dc.acao === 'CONTRAPOR' ? `Contraproposta: R$ <span class="preco">${dc.precoSugerido}</span>` : ''}
+                <div style="margin-top:4px;color:#4b5563;">"${escapeHtml(dc.mensagem || '')}"</div>
+                <div style="margin-top:4px;font-size:11px;color:#6b7280;font-style:italic;">Raciocínio interno: ${escapeHtml(dc.justificativa || '')}</div>
+            </div>
+        `;
+        rodadasEl.appendChild(div);
+    }
+
+    function renderAcordo(payload, message) {
+        resultadoEl.innerHTML = `
+            <div class="resultado acordo">
+                <h3>✅ Acordo Fechado</h3>
+                <div class="preco-final">R$ ${payload.precoOferecido}</div>
+                <div class="detalhe">${escapeHtml(payload.prazoEntrega || '')} · ${escapeHtml(payload.condicoes || '')}</div>
+                <div class="detalhe" style="margin-top:6px;font-style:italic;">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        negociarBtn.disabled = false;
+    }
+
+    function renderImpasse(message) {
+        resultadoEl.innerHTML = `
+            <div class="resultado impasse">
+                <h3>❌ Sem Acordo</h3>
+                <div class="detalhe">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        negociarBtn.disabled = false;
+    }
+
+    function renderError(message) {
+        resultadoEl.innerHTML = `
+            <div class="resultado impasse">
+                <h3>⚠️ Erro</h3>
+                <div class="detalhe">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        negociarBtn.disabled = false;
+    }
+
+    function connect() {
+        setStatus('connecting', 'conectando');
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(proto + '//' + location.host + '/ws/negociacao');
+        ws.onopen = () => { setStatus('connected', 'conectado'); negociarBtn.disabled = false; };
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'INICIADA') {
+                resetNegociacao();
+            } else if (msg.type === 'RODADA') {
+                renderRodada(msg.payload);
+            } else if (msg.type === 'ACORDO') {
+                renderAcordo(msg.payload, msg.message);
+            } else if (msg.type === 'IMPASSE') {
+                renderImpasse(msg.message);
+            } else if (msg.type === 'ERROR') {
+                renderError(msg.message);
+            }
+        };
+        ws.onclose = () => { setStatus('disconnected', 'desconectado'); negociarBtn.disabled = true; };
+        ws.onerror = () => setStatus('disconnected', 'erro');
+    }
+
+    negociarBtn.addEventListener('click', () => {
+        const produto = produtoEl.value.trim();
+        const orcamentoMax = parseFloat(orcamentoEl.value);
+        const prazoMaxDias = parseInt(prazoEl.value);
+        const criterios = criteriosEl.value.trim() || '—';
+        if (!produto || !orcamentoMax || !prazoMaxDias) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        resetNegociacao();
+        negociarBtn.disabled = true;
+        ws.send(JSON.stringify({ produto, orcamentoMax, prazoMaxDias, criterios }));
+    });
+
+    document.querySelectorAll('[data-example]').forEach(b => {
+        b.addEventListener('click', () => {
+            const e = EXEMPLOS[b.dataset.example];
+            produtoEl.value = e.produto;
+            orcamentoEl.value = e.orcamento;
+            prazoEl.value = e.prazo;
+            criteriosEl.value = e.criterios;
+        });
+    });
+
+    connect();
+</script>
+</body>
+</html>

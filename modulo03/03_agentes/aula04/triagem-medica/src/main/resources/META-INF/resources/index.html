@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triagem Médica - Supervisor Pattern</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f4f6fa;
+            color: #1f2330;
+        }
+        .app { max-width: 980px; margin: 0 auto; padding: 24px; }
+
+        .disclaimer {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            color: #78350f;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        .disclaimer::before { content: "⚠️ "; }
+
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 24px; padding: 18px 22px;
+            background: linear-gradient(135deg, #0e7490 0%, #155e75 100%);
+            color: white; border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+        header .subtitle { font-size: 12px; opacity: 0.75; margin-top: 4px; }
+        .status {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 12px; border-radius: 999px;
+            font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .status::before {
+            content: ""; width: 8px; height: 8px; border-radius: 50%;
+            background: #94a3b8; transition: background 0.2s;
+        }
+        .status.connected::before { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+        .status.connecting::before { background: #fbbf24; animation: pulse 1.2s infinite; }
+        .status.disconnected::before { background: #f87171; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .input-card {
+            background: white; padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .input-card label {
+            display: block; font-size: 12px; font-weight: 600;
+            color: #6b7280; text-transform: uppercase;
+            letter-spacing: 0.04em; margin-bottom: 8px;
+        }
+        .input-card textarea {
+            width: 100%; min-height: 110px;
+            padding: 12px 14px;
+            border: 1px solid #d3d8e0;
+            border-radius: 8px;
+            font-family: inherit; font-size: 14px;
+            line-height: 1.5; resize: vertical; outline: none;
+        }
+        .input-card textarea:focus { border-color: #0e7490; }
+
+        .action-bar {
+            display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px;
+        }
+        button.primary {
+            padding: 12px 26px; border: none; border-radius: 10px;
+            background: #0e7490; color: white;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        button.primary:hover { background: #155e75; }
+        button.primary:disabled { background: #94a3b8; cursor: not-allowed; }
+        button.ghost {
+            padding: 12px 18px; border: 1px solid #d3d8e0;
+            background: white; color: #1f2330;
+            border-radius: 10px; font-size: 14px; cursor: pointer;
+        }
+
+        .steps {
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .step {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            opacity: 0.3;
+            transition: opacity 0.2s;
+            display: none;
+        }
+        .step.visible { opacity: 1; display: block; }
+        .step.active { border-left: 4px solid #0e7490; }
+        .step-title {
+            font-size: 12px; font-weight: 700;
+            color: #6b7280; text-transform: uppercase;
+            letter-spacing: 0.04em; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .specialty-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .specialty-CARDIO     { background: #fee2e2; color: #991b1b; }
+        .specialty-NEURO      { background: #ede9fe; color: #5b21b6; }
+        .specialty-ORTOPEDIA  { background: #fef3c7; color: #78350f; }
+        .specialty-GI_CLINICA { background: #dcfce7; color: #166534; }
+
+        .opinion .row {
+            margin: 6px 0;
+            font-size: 14px;
+        }
+        .opinion .label {
+            font-weight: 600; color: #6b7280; min-width: 130px;
+            display: inline-block; vertical-align: top;
+        }
+        .opinion .value { color: #1f2330; }
+        .opinion ul { margin: 4px 0 4px 16px; padding: 0; }
+        .opinion li { font-size: 13px; line-height: 1.5; }
+
+        .urgency-badge {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 999px;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .urgency-VERDE    { background: #d1fae5; color: #065f46; }
+        .urgency-AMARELO  { background: #fef3c7; color: #92400e; }
+        .urgency-VERMELHO { background: #fee2e2; color: #991b1b; animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+        }
+
+        .parecer {
+            background: #f9fafb;
+            border-left: 4px solid #0e7490;
+            padding: 12px;
+            border-radius: 4px;
+            line-height: 1.6;
+            color: #1f2937;
+            font-size: 14px;
+            margin: 8px 0;
+        }
+        .observacao {
+            font-size: 12px;
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 6px;
+        }
+        .spinner {
+            width: 14px; height: 14px;
+            border: 2px solid #e6e9ef;
+            border-top-color: #0e7490; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .examples { margin-top: 8px; font-size: 12px; color: #6b7280; }
+        .examples a { color: #0e7490; cursor: pointer; text-decoration: underline; margin-right: 10px; }
+        .error { background: #fef2f2; color: #991b1b; padding: 10px; border-radius: 8px; font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="disclaimer">Material didático. Não use para decisão clínica real. Não substitui avaliação médica presencial.</div>
+
+    <header>
+        <div>
+            <h1>🏥 Triagem Médica Hospitalar</h1>
+            <div class="subtitle">Padrão Supervisor · Router → Especialista → Validator</div>
+        </div>
+        <span class="status connecting" id="statusBadge">conectando</span>
+    </header>
+
+    <div class="input-card">
+        <label for="sintomasInput">Descreva os sintomas do paciente</label>
+        <textarea id="sintomasInput" placeholder="Ex: dor no peito que irradia para braço esquerdo há 30 minutos, sudorese fria…"></textarea>
+        <div class="examples">
+            <a data-example="cardio">↳ exemplo cardio</a>
+            <a data-example="neuro">↳ exemplo neuro</a>
+            <a data-example="orto">↳ exemplo ortopedia</a>
+            <a data-example="gi">↳ exemplo gastro</a>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button type="button" class="ghost" id="resetBtn">Limpar</button>
+        <button type="button" class="primary" id="triarBtn" disabled>Triar Paciente</button>
+    </div>
+
+    <div class="steps">
+        <div class="step" id="step-routed">
+            <div class="step-title">① Decisão do Supervisor — Especialidade Encaminhada</div>
+            <div id="routedContent"></div>
+        </div>
+        <div class="step" id="step-specialist">
+            <div class="step-title">② Avaliação do Especialista</div>
+            <div class="opinion" id="opinionContent"></div>
+        </div>
+        <div class="step" id="step-review">
+            <div class="step-title">③ Revisão do Supervisor (Validação)</div>
+            <div id="reviewContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const statusEl = document.getElementById('statusBadge');
+    const sintomasInput = document.getElementById('sintomasInput');
+    const triarBtn = document.getElementById('triarBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const EXAMPLES = {
+        cardio: 'Homem de 62 anos com dor opressiva no peito que irradia para o braço esquerdo e mandíbula há 40 minutos. Sudorese fria, náusea e sensação de "morte iminente". Pressão arterial elevada.',
+        neuro:  'Mulher de 55 anos com perda súbita de força no lado direito do corpo, fala arrastada e desvio da rima labial há 25 minutos. Estava bem antes do quadro.',
+        orto:   'Adolescente de 16 anos sofreu queda de skate. Apresenta dor intensa e deformidade no antebraço direito, sem perfuração da pele. Movimento muito doloroso.',
+        gi:     'Mulher de 28 anos com dor abdominal difusa há 12 horas, agora localizada na fossa ilíaca direita. Náusea, sem vômitos, sem febre alta. Dor piora ao tossir.'
+    };
+
+    let ws = null;
+
+    function setStatus(state, label) {
+        statusEl.className = 'status ' + state;
+        statusEl.textContent = label;
+    }
+
+    function resetSteps() {
+        ['step-routed', 'step-specialist', 'step-review'].forEach(id => {
+            const el = document.getElementById(id);
+            el.classList.remove('visible', 'active');
+            const content = el.querySelector('div[id$="Content"]');
+            if (content) content.innerHTML = '';
+        });
+    }
+
+    function showStep(id, html) {
+        const el = document.getElementById(id);
+        el.classList.add('visible');
+        const content = el.querySelector('div[id$="Content"]');
+        content.innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+        return (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    }
+
+    function renderOpinion(opinion) {
+        const condutas = (opinion.condutasIniciais || []).map(c => `<li>${escapeHtml(c)}</li>`).join('') || '<li>—</li>';
+        const sinais = (opinion.sinaisDeAlarme || []).map(c => `<li>${escapeHtml(c)}</li>`).join('') || '<li>—</li>';
+        const exames = (opinion.examesSugeridos || []).map(c => `<li>${escapeHtml(c)}</li>`).join('') || '<li>—</li>';
+        return `
+            <div class="row"><span class="label">Hipótese:</span> <span class="value">${escapeHtml(opinion.hipotese || '—')}</span></div>
+            <div class="row"><span class="label">Urgência (especialista):</span> <span class="urgency-badge urgency-${opinion.nivelUrgencia}">${opinion.nivelUrgencia || '—'}</span></div>
+            <div class="row"><span class="label">Condutas Iniciais:</span><ul>${condutas}</ul></div>
+            <div class="row"><span class="label">Sinais de Alarme:</span><ul>${sinais}</ul></div>
+            <div class="row"><span class="label">Exames Sugeridos:</span><ul>${exames}</ul></div>
+        `;
+    }
+
+    function renderReview(review) {
+        return `
+            <div class="row"><span class="urgency-badge urgency-${review.urgenciaRevisada}">URGÊNCIA: ${review.urgenciaRevisada || '—'}</span></div>
+            <div class="parecer">${escapeHtml(review.parecerConsolidado || '')}</div>
+            <div class="observacao">📝 Observação do supervisor: ${escapeHtml(review.observacoesSupervisor || '')}</div>
+            <div class="observacao">Diagnóstico faz sentido segundo supervisor: ${review.diagnosticoFazSentido ? 'sim' : 'NÃO — encaminhar para 2ª opinião'}</div>
+        `;
+    }
+
+    function connect() {
+        setStatus('connecting', 'conectando');
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(proto + '//' + location.host + '/ws/triagem');
+        ws.onopen = () => { setStatus('connected', 'conectado'); triarBtn.disabled = false; };
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'STARTED') {
+                resetSteps();
+                showStep('step-routed', '<div><span class="spinner"></span> Supervisor está decidindo especialidade…</div>');
+            } else if (msg.type === 'ROUTED') {
+                showStep('step-routed', `<div><span class="specialty-badge specialty-${msg.payload}">${msg.payload}</span> <span style="color:#6b7280;margin-left:8px;">selecionada pelo supervisor</span></div>`);
+                showStep('step-specialist', '<div><span class="spinner"></span> Especialista está avaliando…</div>');
+            } else if (msg.type === 'SPECIALIST_DONE') {
+                showStep('step-specialist', renderOpinion(msg.payload));
+            } else if (msg.type === 'REVIEWING') {
+                showStep('step-review', '<div><span class="spinner"></span> Supervisor está revisando o diagnóstico…</div>');
+            } else if (msg.type === 'DONE') {
+                showStep('step-review', renderReview(msg.payload.review));
+                triarBtn.disabled = false;
+            } else if (msg.type === 'ERROR') {
+                showStep('step-review', `<div class="error">❌ ${escapeHtml(msg.error || 'erro desconhecido')}</div>`);
+                triarBtn.disabled = false;
+            }
+        };
+        ws.onclose = () => { setStatus('disconnected', 'desconectado'); triarBtn.disabled = true; };
+        ws.onerror = () => setStatus('disconnected', 'erro');
+    }
+
+    triarBtn.addEventListener('click', () => {
+        const sintomas = sintomasInput.value.trim();
+        if (!sintomas) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        triarBtn.disabled = true;
+        ws.send(JSON.stringify({ sintomas }));
+    });
+
+    resetBtn.addEventListener('click', () => {
+        sintomasInput.value = '';
+        resetSteps();
+    });
+
+    document.querySelectorAll('[data-example]').forEach(a => {
+        a.addEventListener('click', () => sintomasInput.value = EXAMPLES[a.dataset.example]);
+    });
+
+    connect();
+</script>
+</body>
+</html>

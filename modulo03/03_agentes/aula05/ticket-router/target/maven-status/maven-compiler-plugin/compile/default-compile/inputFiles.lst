@@ -1,0 +1,12 @@
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/TicketWebsocket.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/ai/EngineerAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/ai/FaqBot.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/ai/ProductManagerAgent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/ai/SecurityOfficer.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/ai/TicketClassifier.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/dto/ModelTier.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/dto/TicketCategory.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/dto/TicketEvent.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/dto/TicketInput.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/dto/TicketResponse.java
+/Users/eldermoraes/git/eldermoraes/java-ai-specialist/modulo03/03_agentes/aula05/ticket-router/src/main/java/com/eldermoraes/workflow/TicketRouter.java

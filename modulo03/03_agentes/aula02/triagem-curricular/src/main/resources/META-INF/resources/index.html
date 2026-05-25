@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triagem Curricular - Orchestrator-Workers</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f4f6fa;
+            color: #1f2330;
+        }
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+        header .subtitle { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+        .status {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .status::before {
+            content: ""; width: 8px; height: 8px; border-radius: 50%;
+            background: #94a3b8; transition: background 0.2s;
+        }
+        .status.connected::before { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+        .status.connecting::before { background: #fbbf24; animation: pulse 1.2s infinite; }
+        .status.disconnected::before { background: #f87171; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .input-card {
+            background: white;
+            padding: 14px 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .input-card label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+        .input-card textarea {
+            width: 100%;
+            min-height: 180px;
+            padding: 10px 12px;
+            border: 1px solid #d3d8e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+            line-height: 1.45;
+            resize: vertical;
+            outline: none;
+        }
+        .input-card textarea:focus { border-color: #2563eb; }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        button.primary {
+            padding: 12px 26px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button.primary:hover { background: #1d4ed8; }
+        button.primary:disabled { background: #94a3b8; cursor: not-allowed; }
+        button.ghost {
+            padding: 12px 18px;
+            border: 1px solid #d3d8e0;
+            background: white;
+            color: #1f2330;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .pipeline-title {
+            font-size: 13px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0 0 12px 0;
+            font-weight: 600;
+        }
+        .orchestrator-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #1f2937;
+            color: white;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        .workers {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 900px) { .workers { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 540px) { .workers { grid-template-columns: 1fr; } .inputs { grid-template-columns: 1fr; } }
+
+        .worker {
+            background: white;
+            padding: 14px 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            position: relative;
+            min-height: 140px;
+        }
+        .worker h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .worker .score {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2330;
+            margin: 4px 0;
+        }
+        .worker .summary {
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        .worker .details {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #e6e9ef;
+            line-height: 1.5;
+        }
+        .worker .details strong { color: #1f2937; }
+        .worker.skills h3::before     { content: "💻 "; }
+        .worker.experience h3::before { content: "🛤️ "; }
+        .worker.cultural h3::before   { content: "🤝 "; }
+        .worker.redFlags h3::before   { content: "🚨 "; }
+        .worker.pending { opacity: 0.6; }
+        .worker.pending .placeholder { color: #94a3b8; font-style: italic; }
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid #e6e9ef;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .worker.error { background: #fef2f2; border: 1px solid #fecaca; }
+        .worker.error .summary { color: #991b1b; }
+
+        .synthesis {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            display: none;
+        }
+        .synthesis.visible { display: block; }
+        .synthesis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .synthesis-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .score-final {
+            font-size: 48px;
+            font-weight: 800;
+            color: #1f2330;
+            line-height: 1;
+        }
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge.avancar { background: #dcfce7; color: #166534; }
+        .badge.revisao_humana { background: #fef3c7; color: #92400e; }
+        .badge.nao_avancar { background: #fee2e2; color: #991b1b; }
+        .justificativa {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f9fafb;
+            border-left: 4px solid #2563eb;
+            border-radius: 4px;
+            line-height: 1.6;
+            color: #1f2937;
+            font-size: 14px;
+        }
+
+        .examples {
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 1px solid #e6e9ef;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .examples a { color: #2563eb; cursor: pointer; text-decoration: underline; margin-right: 12px; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div>
+            <h1>📋 Triagem Curricular</h1>
+            <div class="subtitle">Padrão Orchestrator-Workers · 4 analistas paralelos + 1 síntese</div>
+        </div>
+        <span class="status connecting" id="statusBadge">conectando</span>
+    </header>
+
+    <div class="inputs">
+        <div class="input-card">
+            <label for="vagaInput">Descrição da Vaga</label>
+            <textarea id="vagaInput" placeholder="Cole aqui a descrição da vaga (responsabilidades, requisitos, stack…)"></textarea>
+            <div class="examples">
+                <a id="exampleVaga">↳ usar exemplo</a>
+            </div>
+        </div>
+        <div class="input-card">
+            <label for="cvInput">Currículo do Candidato</label>
+            <textarea id="cvInput" placeholder="Cole aqui o texto do CV (experiências, formação, projetos…)"></textarea>
+            <div class="examples">
+                <a id="exampleCv">↳ usar exemplo</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button type="button" class="ghost" id="resetBtn">Limpar</button>
+        <button type="button" class="primary" id="analyzeBtn" disabled>Analisar Candidato</button>
+    </div>
+
+    <div class="pipeline-title">Pipeline de Análise</div>
+    <div class="orchestrator-badge">⚙️ Orquestrador</div>
+
+    <div class="workers">
+        <div class="worker pending skills" data-key="skills">
+            <h3>Skills Técnicas</h3>
+            <div class="placeholder"><span class="spinner"></span>aguardando…</div>
+        </div>
+        <div class="worker pending experience" data-key="experience">
+            <h3>Experiência</h3>
+            <div class="placeholder"><span class="spinner"></span>aguardando…</div>
+        </div>
+        <div class="worker pending cultural" data-key="cultural">
+            <h3>Fit Cultural</h3>
+            <div class="placeholder"><span class="spinner"></span>aguardando…</div>
+        </div>
+        <div class="worker pending redFlags" data-key="redFlags">
+            <h3>Red Flags</h3>
+            <div class="placeholder"><span class="spinner"></span>aguardando…</div>
+        </div>
+    </div>
+
+    <div class="synthesis" id="synthesis">
+        <div class="synthesis-header">
+            <h2>🧩 Parecer Final</h2>
+            <span class="badge" id="recomendacaoBadge"></span>
+        </div>
+        <div>Score Final: <span class="score-final" id="scoreFinal"></span></div>
+        <div class="justificativa" id="justificativa"></div>
+    </div>
+</div>
+
+<script>
+    const statusEl = document.getElementById('statusBadge');
+    const vagaInput = document.getElementById('vagaInput');
+    const cvInput = document.getElementById('cvInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const synthesis = document.getElementById('synthesis');
+    const scoreFinal = document.getElementById('scoreFinal');
+    const recomendacaoBadge = document.getElementById('recomendacaoBadge');
+    const justificativa = document.getElementById('justificativa');
+    const workers = {
+        skills: document.querySelector('.worker.skills'),
+        experience: document.querySelector('.worker.experience'),
+        cultural: document.querySelector('.worker.cultural'),
+        redFlags: document.querySelector('.worker.redFlags')
+    };
+
+    let ws = null;
+    let startTimes = {};
+
+    const EXAMPLE_VAGA = `Vaga: Desenvolvedor(a) Java Sênior — Equipe de Pagamentos
+
+Responsabilidades:
+- Construir e manter serviços críticos de pagamento em Java 21+/Quarkus
+- Trabalhar com mensageria (Kafka), bancos PostgreSQL e observabilidade
+- Atuar em squad ágil com 6 pessoas, code review constante
+
+Requisitos:
+- 5+ anos de experiência com Java
+- Vivência sólida em microsserviços e arquitetura distribuída
+- Conhecimento de TDD, CI/CD e cloud (AWS ou GCP)
+- Inglês intermediário (leitura técnica)`;
+
+    const EXAMPLE_CV = `Maria Silva
+Desenvolvedora Backend · 7 anos de experiência
+
+Experiência:
+- 2022 - atual: Banco Digital ABC — Engenheira Java Sênior
+  Construiu pipelines de transações em Quarkus + Kafka. Liderou migração de monolito para microsserviços. Mentorou 3 devs juniores.
+- 2019 - 2022: Fintech XYZ — Desenvolvedora Java Pleno
+  Atuou em PIX e cobrança. Implementou testes de integração com TestContainers. Reduziu tempo de deploy em 40%.
+- 2017 - 2019: Consultoria Beta — Desenvolvedora Java Júnior
+  Sistemas legados em Java EE 7. Aprendeu Spring Boot.
+
+Formação:
+- Bacharel em Ciência da Computação, USP (2013-2016)
+- Certificação AWS Solutions Architect Associate (2021)
+
+Soft Skills: comunicação clara, mentoria, trabalho em equipe.
+Inglês fluente. Espanhol intermediário.`;
+
+    function setStatus(state, label) {
+        statusEl.className = 'status ' + state;
+        statusEl.textContent = label;
+    }
+
+    function resetWorkers() {
+        Object.values(workers).forEach(el => {
+            el.className = 'worker pending ' + el.dataset.key;
+            el.innerHTML = `<h3>${el.querySelector('h3') ? el.querySelector('h3').textContent : ''}</h3><div class="placeholder"><span class="spinner"></span>aguardando…</div>`;
+        });
+        workers.skills.innerHTML = '<h3>Skills Técnicas</h3><div class="placeholder"><span class="spinner"></span>aguardando…</div>';
+        workers.experience.innerHTML = '<h3>Experiência</h3><div class="placeholder"><span class="spinner"></span>aguardando…</div>';
+        workers.cultural.innerHTML = '<h3>Fit Cultural</h3><div class="placeholder"><span class="spinner"></span>aguardando…</div>';
+        workers.redFlags.innerHTML = '<h3>Red Flags</h3><div class="placeholder"><span class="spinner"></span>aguardando…</div>';
+        synthesis.classList.remove('visible');
+        startTimes = {};
+    }
+
+    function renderWorker(key, payload) {
+        const el = workers[key];
+        if (!el) return;
+        const elapsed = startTimes[key] ? ((Date.now() - startTimes[key]) / 1000).toFixed(1) + 's' : '';
+        const titles = { skills: 'Skills Técnicas', experience: 'Experiência', cultural: 'Fit Cultural', redFlags: 'Red Flags' };
+        let detail = '';
+        if (key === 'skills') {
+            detail = `<strong>Bate:</strong> ${(payload.matched || []).join(', ') || '—'}<br>
+                      <strong>Falta:</strong> ${(payload.missing || []).join(', ') || '—'}`;
+        } else if (key === 'experience') {
+            detail = `<strong>Anos:</strong> ${payload.anosTotal || 0}<br>
+                      <strong>Continuidade:</strong> ${payload.continuidade ? 'sim' : 'não'}<br>
+                      <strong>Gaps:</strong> ${(payload.gaps || []).join(', ') || '—'}`;
+        } else if (key === 'cultural') {
+            detail = `<strong>Soft skills:</strong> ${(payload.softSkills || []).join(', ') || '—'}<br>
+                      <strong>Tom:</strong> ${payload.tomComunicacao || '—'}`;
+        } else if (key === 'redFlags') {
+            detail = `<strong>Severidade:</strong> ${payload.severidade || 0}<br>
+                      <strong>Alertas:</strong> ${(payload.alertas || []).join(', ') || '—'}<br>
+                      <strong>Inconsistências:</strong> ${(payload.inconsistencias || []).join(', ') || '—'}`;
+        }
+        const score = key === 'redFlags' ? payload.severidade : payload.score;
+        el.className = 'worker ' + key;
+        el.innerHTML = `
+            <h3>${titles[key]} <span style="float:right;font-weight:normal;color:#94a3b8;font-size:11px;">${elapsed}</span></h3>
+            <div class="score">${score ?? '—'}</div>
+            <div class="summary">${payload.summary || ''}</div>
+            <div class="details">${detail}</div>
+        `;
+    }
+
+    function renderSynthesis(report) {
+        scoreFinal.textContent = report.scoreFinal;
+        const rec = (report.recomendacao || '').toLowerCase();
+        recomendacaoBadge.textContent = (report.recomendacao || '').replace(/_/g, ' ');
+        recomendacaoBadge.className = 'badge ' + rec;
+        justificativa.textContent = report.justificativa || '';
+        synthesis.classList.add('visible');
+    }
+
+    function connect() {
+        setStatus('connecting', 'conectando');
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(proto + '//' + location.host + '/ws/triagem');
+        ws.onopen = () => {
+            setStatus('connected', 'conectado');
+            analyzeBtn.disabled = false;
+        };
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'STARTED') {
+                ['skills','experience','cultural','redFlags'].forEach(k => startTimes[k] = Date.now());
+            } else if (msg.type === 'WORKER_DONE') {
+                renderWorker(msg.worker, msg.payload);
+            } else if (msg.type === 'SYNTHESIZING') {
+                synthesis.innerHTML = '<div class="synthesis-header"><h2>🧩 Sintetizando…</h2></div><div class="justificativa"><span class="spinner"></span>O orquestrador está consolidando os 4 relatórios em um parecer final.</div>';
+                synthesis.classList.add('visible');
+            } else if (msg.type === 'DONE') {
+                synthesis.innerHTML = '<div class="synthesis-header"><h2>🧩 Parecer Final</h2><span class="badge" id="recomendacaoBadge"></span></div><div>Score Final: <span class="score-final" id="scoreFinal"></span></div><div class="justificativa" id="justificativa"></div>';
+                document.getElementById('scoreFinal').textContent = msg.payload.scoreFinal;
+                const rec = (msg.payload.recomendacao || '').toLowerCase();
+                const badge = document.getElementById('recomendacaoBadge');
+                badge.textContent = (msg.payload.recomendacao || '').replace(/_/g, ' ');
+                badge.className = 'badge ' + rec;
+                document.getElementById('justificativa').textContent = msg.payload.justificativa || '';
+                analyzeBtn.disabled = false;
+            } else if (msg.type === 'ERROR') {
+                synthesis.innerHTML = '<div class="synthesis-header"><h2>❌ Erro</h2></div><div class="justificativa">' + (msg.error || 'desconhecido') + '</div>';
+                synthesis.classList.add('visible');
+                analyzeBtn.disabled = false;
+            }
+        };
+        ws.onclose = () => { setStatus('disconnected', 'desconectado'); analyzeBtn.disabled = true; };
+        ws.onerror = () => { setStatus('disconnected', 'erro'); };
+    }
+
+    analyzeBtn.addEventListener('click', () => {
+        const vaga = vagaInput.value.trim();
+        const cv = cvInput.value.trim();
+        if (!vaga || !cv) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        resetWorkers();
+        analyzeBtn.disabled = true;
+        ws.send(JSON.stringify({ vaga, cv }));
+    });
+
+    resetBtn.addEventListener('click', () => {
+        vagaInput.value = '';
+        cvInput.value = '';
+        resetWorkers();
+    });
+
+    document.getElementById('exampleVaga').addEventListener('click', () => vagaInput.value = EXAMPLE_VAGA);
+    document.getElementById('exampleCv').addEventListener('click', () => cvInput.value = EXAMPLE_CV);
+
+    connect();
+</script>
+</body>
+</html>

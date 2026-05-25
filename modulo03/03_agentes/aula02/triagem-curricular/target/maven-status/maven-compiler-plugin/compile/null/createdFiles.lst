@@ -1,0 +1,14 @@
+com/eldermoraes/ai/ReportSynthesizer.class
+com/eldermoraes/dto/SkillsReport.class
+com/eldermoraes/dto/RedFlagsReport.class
+com/eldermoraes/ai/CulturalFitAnalyzer.class
+com/eldermoraes/workflow/TriagemOrchestrator.class
+com/eldermoraes/TriagemWebsocket.class
+com/eldermoraes/dto/TriagemReport.class
+com/eldermoraes/dto/CulturalFitReport.class
+com/eldermoraes/ai/ExperienceAnalyzer.class
+com/eldermoraes/ai/SkillsAnalyzer.class
+com/eldermoraes/dto/ExperienceReport.class
+com/eldermoraes/dto/ProgressUpdate.class
+com/eldermoraes/dto/TriagemInput.class
+com/eldermoraes/ai/RedFlagsAnalyzer.class
