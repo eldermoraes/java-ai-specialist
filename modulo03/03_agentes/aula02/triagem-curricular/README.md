@@ -1,4 +1,4 @@
-# Aula 02 — Orchestrator-Workers: Triagem Curricular
+# Aula 02: Orchestrator-Workers: Triagem Curricular
 
 > **Padrão**: Orchestrator-Workers
 > **Case**: Triagem de currículos para vagas de tecnologia
@@ -8,16 +8,16 @@
 
 ## O que você vai aprender
 
-Esta é a **primeira aula do módulo Agentes** — é onde você sai do mundo "AI Services soltos" para o mundo de **agentes compostos via framework**.
+Esta é a **primeira aula do módulo Agentes**. É onde você sai do mundo "AI Services soltos" para o mundo de **agentes compostos via framework**.
 
 O padrão **Orchestrator-Workers** decompõe uma tarefa complexa em pedaços, **delega** cada pedaço a um agente especializado (worker), executa os workers **em paralelo** e por fim **sintetiza** os resultados num parecer único.
 
-Você vai construir isso usando 4 anotações do LangChain4j Agentic, todas declarativas — o Quarkus extension registra cada interface anotada como um bean `@ApplicationScoped` automaticamente, e você apenas `@Inject` o resultado:
+Você vai construir isso usando 4 anotações do LangChain4j Agentic, todas declarativas. O Quarkus extension registra cada interface anotada como um bean `@ApplicationScoped` automaticamente, e você apenas `@Inject` o resultado:
 
-1. **`@Agent`** em cada AI Service worker — declara que aquela interface é um agente, com `name`, `description` e `outputKey` (a chave no `AgenticScope` onde o resultado vai parar)
-2. **`@ParallelAgent`** numa interface "marker" — referencia os 4 workers em `subAgents = {...}`, o framework executa todos em paralelo
-3. **`@SequenceAgent`** noutra interface — encadeia o parallel + o synthesizer
-4. **`@Output`** static method — pós-processa o resultado lendo `AgenticScope` para montar o `TriagemReport` final completo
+1. **`@Agent`** em cada AI Service worker. Declara que aquela interface é um agente, com `name`, `description` e `outputKey` (a chave no `AgenticScope` onde o resultado vai parar)
+2. **`@ParallelAgent`** numa interface "marker". Referencia os 4 workers em `subAgents = {...}`, o framework executa todos em paralelo
+3. **`@SequenceAgent`** em outra interface. Encadeia o parallel + o synthesizer
+4. **`@Output`** static method. Pós-processa o resultado lendo `AgenticScope` para montar o `TriagemReport` final completo
 
 ```
        @Inject TriagemAgent triagemAgent;   ←  Quarkus produz o bean automaticamente
@@ -46,10 +46,10 @@ Você vai construir isso usando 4 anotações do LangChain4j Agentic, todas decl
 ### Por que este padrão importa
 
 - **Decomposição reduz alucinação**: cada agente olha um aspecto bem definido (skills, experiência, fit cultural, red flags) em vez de pedir um veredito holístico
-- **Paralelismo encurta latência**: o framework executa os 4 workers em paralelo — tempo total ≈ tempo do mais lento, não soma dos 4
-- **Auditabilidade**: o parecer final cita os 4 sub-relatórios — você pode inspecionar a base de cada conclusão
+- **Paralelismo encurta latência**: o framework executa os 4 workers em paralelo. Tempo total ≈ tempo do mais lento, não soma dos 4
+- **Auditabilidade**: o parecer final cita os 4 sub-relatórios. Você pode inspecionar a base de cada conclusão
 - **Mix de modelos**: workers usam modelo barato (`gpt-oss:20b-cloud`), sintetizador usa modelo robusto (`deepseek-v4-pro:cloud`)
-- **Declarativo > programático**: você nunca chama `parallelBuilder()` ou `sequenceBuilder()` manualmente — o framework Quarkus detecta as annotations em build time e gera os SyntheticBeans
+- **Declarativo > programático**: você nunca chama `parallelBuilder()` ou `sequenceBuilder()` manualmente. O framework Quarkus detecta as annotations em build time e gera os SyntheticBeans
 
 ---
 
@@ -91,7 +91,7 @@ src/main/java/com/eldermoraes/
 
 #### 1. Workers como `@Agent`
 
-Cada worker é uma `interface` com **duas** anotações principais. `@RegisterAiService(modelName = "smaller")` cria o bean Quarkus apontando para `gpt-oss:20b-cloud`. `@Agent(name, description, outputKey)` declara o método como **agente** dentro do framework agentic — o `outputKey` define onde o resultado fica no `AgenticScope` para outros agents lerem.
+Cada worker é uma `interface` com **duas** anotações principais. `@RegisterAiService(modelName = "smaller")` cria o bean Quarkus apontando para `gpt-oss:20b-cloud`. `@Agent(name, description, outputKey)` declara o método como **agente** dentro do framework agentic. O `outputKey` define onde o resultado fica no `AgenticScope` para outros agents lerem.
 
 ```java
 @ApplicationScoped
@@ -106,7 +106,7 @@ public interface SkillsAnalyzer {
 }
 ```
 
-#### 2. `WorkersParallel` — `@ParallelAgent` aglomerando os 4 workers
+#### 2. `WorkersParallel` e `@ParallelAgent` aglomerando os 4 workers
 
 Uma interface "marker" que só serve para declarar a composição paralela. O framework executa os 4 sub-agents em paralelo, propaga `vaga`/`cv` para todos (via `@V`), e armazena cada resultado no `AgenticScope` sob a chave `outputKey` declarada em cada `@Agent`.
 
@@ -125,11 +125,11 @@ public interface WorkersParallel {
 }
 ```
 
-O retorno é `Object` apenas para satisfazer a validação do AI Services (não pode ser `void`). O retorno do método não é usado — os resultados vão para o `AgenticScope` via `outputKey` de cada worker individualmente.
+O retorno é `Object` apenas para satisfazer a validação do AI Services (não pode ser `void`). O retorno do método não é usado, os resultados vão para o `AgenticScope` via `outputKey` de cada worker individualmente.
 
-#### 3. `TriagemAgent` — `@SequenceAgent` orquestrando parallel + synthesizer
+#### 3. `TriagemAgent` e `@SequenceAgent` orquestrando parallel + synthesizer
 
-Encadeia dois agents: primeiro o paralelo, depois o synthesizer. O `@SequenceAgent` propaga o `AgenticScope` entre as etapas — quando o synthesizer é chamado, ele já tem `{vaga, skills, experience, cultural, redFlags}` disponíveis para resolução dos `@V`.
+Encadeia dois agents: primeiro o paralelo, depois o synthesizer. O `@SequenceAgent` propaga o `AgenticScope` entre as etapas. Quando o synthesizer é chamado, ele já tem `{vaga, skills, experience, cultural, redFlags}` disponíveis para resolução dos `@V`.
 
 ```java
 public interface TriagemAgent {
@@ -152,9 +152,9 @@ public interface TriagemAgent {
 }
 ```
 
-**`@Output` static method** é o "pós-processamento" do agentic system. Sem ele, o método retornaria apenas o output do último sub-agent (o synthesizer), com os campos `skills`/`experience`/`cultural`/`redFlags` do `TriagemReport` ficando `null` (porque o synthesizer não os preenche — só o `AgenticScope` os tem, vindos dos workers).
+**`@Output` static method** é o "pós-processamento" do agentic system. Sem ele, o método retornaria apenas o output do último sub-agent (o synthesizer), com os campos `skills`/`experience`/`cultural`/`redFlags` do `TriagemReport` ficando `null` (porque o synthesizer não os preenche. Só o `AgenticScope` os tem, vindos dos workers).
 
-#### 4. `TriagemOrchestrator` — wrapper Multi para WebSocket
+#### 4. `TriagemOrchestrator`: wrapper Multi para WebSocket
 
 Quarkus extension produz o bean `TriagemAgent` automaticamente. O orchestrator apenas `@Inject` ele e o envolve em `Multi<ProgressUpdate>` para o frontend.
 
