@@ -1,6 +1,7 @@
 package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.RedFlagsReport;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -34,5 +35,8 @@ public interface RedFlagsAnalyzer {
             CV:
             {cv}
             """)
+    @Agent(name = "redFlags",
+            description = "Identifica inconsistências, exageros e alertas no CV do candidato",
+            outputKey = "redFlags")
     RedFlagsReport analyze(@V("vaga") String vaga, @V("cv") String cv);
 }

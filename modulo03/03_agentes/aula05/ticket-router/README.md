@@ -1,50 +1,43 @@
-# Aula 05 — Dynamic Routing: Ticket Router com Troca de Modelo
+# Aula 05 — Dynamic Routing: Roteamento de Tickets de TI
 
-> **Padrão**: Dynamic Routing
-> **Case**: Roteamento de tickets de TI corporativo com escolha do modelo LLM em runtime
+> **Padrão**: Dynamic Routing (via `@ConditionalAgent` + `@ActivationCondition`)
+> **Case**: Tickets de TI roteados para FAQ/BUG/SECURITY/FEATURE com **troca de modelo LLM em runtime**
 > **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`gpt-oss:120b-cloud` + `gpt-oss:20b-cloud`)
 
 ---
 
 ## O que você vai aprender
 
-Este projeto demonstra o padrão **Dynamic Routing**: um classificador determina a categoria da mensagem em runtime, e o sistema **escolhe diferentes agentes E diferentes MODELOS** conforme a categoria.
+`@ConditionalAgent` é a forma idiomática de roteamento declarativo: declaram-se **N sub-agents** e **N `@ActivationCondition`** (uma por sub-agent). O framework avalia as condições, executa o **primeiro com `true`** e armazena o resultado no `outputKey` único.
 
-A novidade vs. a aula04 (Supervisor): aqui não há revisão — é roteamento puro, mas com **escolha consciente do modelo LLM** baseada em custo/latência/qualidade.
+O ponto pedagógico chave desta aula é a **troca de modelo LLM em runtime**: cada handler tem seu próprio `@RegisterAiService(modelName=...)`. Quando o `@ConditionalAgent` ativa um handler, o modelo certo é usado automaticamente.
 
 ```
-                    Ticket de TI (texto livre)
-                            │
-                            ▼
-                ┌──────────────────────────┐
-                │   TicketClassifier (LLM) │  ← modelo barato (smaller)
-                │   modelo: gpt-oss:20b    │     decide FAQ/BUG/SECURITY/FEATURE
-                └──────────────┬───────────┘
-                               │
-              ┌────────────────┼────────────────┬──────────────┐
-              ▼                ▼                ▼              ▼
-        ┌──────────┐    ┌────────────┐    ┌──────────┐    ┌──────────┐
-        │ FaqBot   │    │ Engineer   │    │ Security │    │ Product  │
-        │ 20b 🟢   │    │ 120b 🟣   │    │ 120b 🟣  │    │ 20b 🟢   │
-        └──────────┘    └────────────┘    └──────────┘    └──────────┘
-           FAQ              BUG              SECURITY        FEATURE
-        (FAST tier)      (ROBUST tier)    (ROBUST tier)   (FAST tier)
+                  @Inject TicketAgent ticketAgent;
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │     @SequenceAgent      │
+                    │  Classifier → Handler   │
+                    └────────────┬────────────┘
+                                 │
+                ┌────────────────┴───────────────┐
+                ▼                                ▼
+       ┌──────────────────┐            ┌──────────────────┐
+       │ TicketClassifier │   then ──▶ │   TicketHandler  │
+       │  @Agent          │            │ @ConditionalAgent│
+       │  (gpt-oss:20b)   │            └────────┬─────────┘
+       └──────────────────┘                     │
+                                                │
+              ┌────────────┬────────────────────┼────────────────────┐
+              ▼            ▼                    ▼                    ▼
+          ┌──────┐    ┌──────────┐         ┌─────────┐          ┌─────────┐
+          │FaqBot│    │ Engineer │         │Security │          │   PM    │
+          │ FAQ  │    │  BUG     │         │SECURITY │          │ FEATURE │
+          │ 20b  │    │  120b    │         │  120b   │          │   20b   │
+          └──────┘    └──────────┘         └─────────┘          └─────────┘
+                       (cada um com sua @ActivationCondition)
 ```
-
-### Por que este padrão importa
-
-Em produção, nem todo agente precisa do modelo mais caro:
-
-| Categoria | Por que escolhemos o modelo |
-|---|---|
-| **FAQ** (reset senha, VPN) | Resposta direta de base estática → modelo barato suficiente |
-| **FEATURE** (pedido) | Texto curto, registro padronizado → modelo barato suficiente |
-| **BUG** (falha técnica) | Raciocínio passo-a-passo → modelo robusto compensa custo |
-| **SECURITY** (incidente) | Domínio sensível, custo de erro alto → modelo robusto sempre |
-
-Economia real: ~80% das requisições de uma central N1 são FAQ. Rotear pelo modelo barato pode reduzir custo de inferência em **5-10x** sem perder qualidade onde importa.
-
----
 
 ## Como rodar
 
@@ -52,138 +45,125 @@ Economia real: ~80% das requisições de uma central N1 são FAQ. Rotear pelo mo
 cd modulo03/03_agentes/aula05/ticket-router
 ./mvnw quarkus:dev
 ```
-
-Abra: <http://localhost:8080/>
-
----
-
-## Como usar a UI
-
-1. **Cole um ticket** ou clique em um dos 4 botões de exemplo (FAQ/BUG/SECURITY/FEATURE)
-2. Clique em **Abrir Ticket**
-3. Observe o pipeline horizontal:
-   - **① Ticket Recebido** — preview do texto
-   - **② Categoria Detectada** — badge colorido + agente que vai responder
-   - **③ Modelo Selecionado** — **badge grande** com o `modelId` real (`gpt-oss:20b-cloud` em verde ou `gpt-oss:120b-cloud` em violeta) + tier FAST/ROBUST
-4. Resposta do agente aparece abaixo com **tempo de resposta** medido
-5. Painel lateral mostra contadores acumulados (quantas chamadas em cada modelo) + tempo da última resposta
-
-**Teste em sequência**: rode FAQ depois BUG — você vai ver o tempo dobrar/triplicar (modelo robusto é mais lento). Esse é o ponto pedagógico.
-
----
+Abra <http://localhost:8080/>.
 
 ## Estrutura do código
 
 ```
 src/main/java/com/eldermoraes/
 ├── ai/
-│   ├── TicketClassifier.java       — classificador (modelName="smaller")
-│   ├── FaqBot.java                 — agente FAQ (modelName="smaller")
-│   ├── EngineerAgent.java          — agente BUG (modelo default = 120b)
-│   ├── SecurityOfficer.java        — agente SECURITY (modelo default = 120b)
-│   └── ProductManagerAgent.java    — agente FEATURE (modelName="smaller")
+│   ├── TicketClassifier.java     — @Agent: classifica → outputKey="category"
+│   ├── FaqBot.java               — @Agent + @RegisterAiService(modelName="smaller")
+│   ├── EngineerAgent.java        — @Agent + @RegisterAiService (default = 120b)
+│   ├── SecurityOfficer.java      — @Agent + @RegisterAiService (default)
+│   ├── ProductManagerAgent.java  — @Agent + @RegisterAiService(modelName="smaller")
+│   └── ExampleGenerator.java     — AI Service auxiliar (gera tickets de exemplo)
 ├── workflow/
-│   └── TicketRouter.java           — switch Java explícito sobre TicketCategory
-├── dto/                             — records + enums TicketCategory, ModelTier
-└── TicketWebsocket.java            — endpoint /ws/tickets
+│   ├── TicketHandler.java        — @ConditionalAgent + 4 @ActivationCondition static
+│   ├── TicketAgent.java          — @SequenceAgent(Classifier, Handler) + @Output static
+│   └── TicketRouter.java         — wrapper Multi<TicketEvent>
+├── rest/
+│   └── ExampleResource.java      — endpoint /api/example/ticket
+├── dto/                          — TicketCategory, ModelTier, TicketResponse, TicketEvent
+└── TicketWebsocket.java          — endpoint /ws/tickets
 ```
 
-### Pontos-chave para os alunos
+### Pontos-chave
 
-#### 1. `modelName` aponta para configuração nomeada
+#### 1. `TicketClassifier` — classifica e escreve no scope
 
 ```java
 @RegisterAiService(modelName = "smaller")
-public interface FaqBot { ... }
-```
-
-E no `application.properties`:
-
-```properties
-quarkus.langchain4j.ollama.chat-model.model-id=gpt-oss:120b-cloud
-quarkus.langchain4j.ollama.smaller.chat-model.model-id=gpt-oss:20b-cloud
-```
-
-**Mesma anotação `@RegisterAiService`, modelo diferente em runtime** — o segredo é o parâmetro `modelName`.
-
-#### 2. Router como `switch` Java explícito
-
-O `TicketRouter` usa um `switch` clássico que torna a decisão de modelo **visível no código**:
-
-```java
-return switch (category) {
-    case FAQ      -> new TicketResponse(category, ModelTier.FAST,   "gpt-oss:20b-cloud",  ...);
-    case BUG      -> new TicketResponse(category, ModelTier.ROBUST, "gpt-oss:120b-cloud", ...);
-    case SECURITY -> new TicketResponse(category, ModelTier.ROBUST, "gpt-oss:120b-cloud", ...);
-    case FEATURE  -> new TicketResponse(category, ModelTier.FAST,   "gpt-oss:20b-cloud",  ...);
-};
-```
-
-Poderíamos usar `@ConditionalAgent` + `@ActivationCondition` do agentic module, mas o `switch` deixa **muito mais óbvio** para o aluno que estamos trocando o modelo.
-
-#### 3. WebSocket emite a classificação ANTES da resposta
-
-O endpoint emite 3 eventos sequenciais:
-- `RECEIVED` — eco do ticket recebido
-- `CLASSIFICATION` — categoria + modelo escolhido (chega em ~500ms — modelo smaller)
-- `ANSWER` — resposta do agente especializado (chega em ~2-15s dependendo do modelo)
-
-O usuário vê o "cérebro decidindo" antes de a resposta começar a chegar.
-
-#### 4. Logging no console
-
-O `TicketRouter` loga cada decisão:
-```
-INFO [com.eld.wor.TicketRouter] >> Categoria: BUG | Modelo: gpt-oss:120b-cloud
-```
-
-Útil em demonstrações ao vivo para confirmar a troca real do modelo.
-
----
-
-## Alternativa declarativa (`@ConditionalAgent`)
-
-Equivalente do agentic module:
-
-```java
-public interface TicketWorkflow {
-    @ConditionalAgent(outputKey = "answer", subAgents = {
-        FaqBot.class, EngineerAgent.class, SecurityOfficer.class, ProductManagerAgent.class
-    })
-    String handle(@V("ticket") String ticket, @V("category") TicketCategory category);
-
-    @ActivationCondition(FaqBot.class)
-    static boolean activateFaq(@V("category") TicketCategory c) { return c == TicketCategory.FAQ; }
-    // ... outras 3 ActivationCondition
+public interface TicketClassifier {
+    @SystemMessage("...categoria em FAQ/BUG/SECURITY/FEATURE...")
+    @UserMessage("Ticket: {ticket}")
+    @Agent(name = "classifier", outputKey = "category")
+    TicketCategory classify(@V("ticket") String ticket);
 }
 ```
 
-**Trade-offs**: a declarativa é elegante para o roteamento, mas a **escolha do modelo continua sendo no `@RegisterAiService(modelName=...)` de cada agente**. A versão `switch` torna o **mapeamento categoria↔modelo** mais visível em um único lugar.
+O `outputKey = "category"` armazena o enum `TicketCategory` no `AgenticScope`. As `@ActivationCondition` leem essa chave depois.
 
----
+#### 2. Cada handler — `@Agent(outputKey="answer")` + modelo próprio
 
-## O que observar no frontend
+```java
+@RegisterAiService(modelName = "smaller")  // ou default = gpt-oss:120b-cloud
+public interface FaqBot {
+    @SystemMessage("...")
+    @UserMessage("Ticket: {ticket}")
+    @Agent(name = "faq", outputKey = "answer")
+    String answer(@V("ticket") String ticket);
+}
+```
+
+Note: TODOS os 4 handlers usam o mesmo `outputKey = "answer"`. Só **um** vai executar (escolhido pelo `@ConditionalAgent`), então não há conflito.
+
+#### 3. `TicketHandler` — `@ConditionalAgent` + 4 `@ActivationCondition`
+
+```java
+public interface TicketHandler {
+    @ConditionalAgent(outputKey = "answer", subAgents = {
+        FaqBot.class, EngineerAgent.class, SecurityOfficer.class, ProductManagerAgent.class })
+    String handle(@V("ticket") String ticket);
+
+    @ActivationCondition(value = FaqBot.class, description = "categoria == FAQ")
+    static boolean isFaq(@V("category") TicketCategory category) {
+        return category == TicketCategory.FAQ;
+    }
+
+    @ActivationCondition(value = EngineerAgent.class, description = "categoria == BUG")
+    static boolean isBug(@V("category") TicketCategory category) { ... }
+    // ... isSecurity, isFeature
+}
+```
+
+Cada `@ActivationCondition` é um método static que recebe `@V("category")` do `AgenticScope` e retorna `boolean`. O framework executa todos em ordem; o **primeiro que retornar `true`** ativa o sub-agente correspondente.
+
+#### 4. `TicketAgent` — `@SequenceAgent` encadeia classifier + handler
+
+```java
+public interface TicketAgent {
+    @SequenceAgent(outputKey = "ticketResponse",
+                   subAgents = { TicketClassifier.class, TicketHandler.class })
+    TicketResponse processar(@V("ticket") String ticket);
+
+    @Output
+    static TicketResponse assemble(AgenticScope scope) {
+        TicketCategory category = (TicketCategory) scope.readState("category");
+        String answer = (String) scope.readState("answer");
+        ModelTier tier = tierFor(category);
+        return new TicketResponse(category, tier, tier.modelId(), agentNameFor(category), answer, 0L);
+    }
+}
+```
+
+O `@Output static assemble` combina o `category` (do classifier) com o `answer` (do handler ativo) e devolve um `TicketResponse` completo, incluindo informações derivadas sobre o modelo usado.
+
+#### 5. Troca de modelo runtime — visível nos logs
+
+| Categoria | Handler | `modelName` | Modelo invocado |
+|---|---|---|---|
+| FAQ | `FaqBot` | `"smaller"` | `gpt-oss:20b-cloud` |
+| BUG | `EngineerAgent` | default | `gpt-oss:120b-cloud` |
+| SECURITY | `SecurityOfficer` | default | `gpt-oss:120b-cloud` |
+| FEATURE | `ProductManagerAgent` | `"smaller"` | `gpt-oss:20b-cloud` |
+
+O Quarkus extension resolve o `modelName` no momento da injeção do bean — o `@ConditionalAgent` não sabe nada sobre modelos, ele só ativa o sub-agente certo.
+
+## O que observar
 
 | Observação | Explica… |
 |---|---|
-| Classificação aparece em **~500ms** | Modelo smaller é rápido |
-| Badge do modelo muda de cor (verde vs violeta) | Escolha de modelo é visual |
-| FAQ/FEATURE respondem em ~2-3s | Modelo 20b processa rápido |
-| BUG/SECURITY respondem em ~8-15s | Modelo 120b leva mais tempo (mais qualidade) |
-| Contador lateral acumula | Visibilidade de mix ao longo da sessão |
-
----
+| Sequência WS: `RECEIVED → CLASSIFICATION → ANSWER` | Orchestrator emite 3 marcos para visualização da pipeline |
+| FAQ/FEATURE respondem ~3-7s | Modelo `gpt-oss:20b-cloud` mais rápido |
+| BUG/SECURITY respondem ~18-24s | Modelo `gpt-oss:120b-cloud` mais robusto |
+| Contagem `chamadas 20b` vs `chamadas 120b` no painel | Cada ticket alimenta uma das contagens, depending do roteamento |
 
 ## Para experimentar
 
-- **Mude `EngineerAgent` para `modelName="smaller"`** — compare qualidade de análise de bug com modelo menor
-- **Adicione uma 5ª categoria** (ex: `BILLING`) — atualize enum, classifier, switch, frontend
-- **Implemente fallback**: se classificador retornar categoria inesperada, rotear para `FaqBot` por default
-- **Roteamento por tamanho do texto**: tickets curtos → modelo small; tickets longos (>500 chars) → modelo 120b independente da categoria
-- **Adicione SLA-aware routing**: tickets vindos com header `priority=P1` sempre vão para 120b
-
----
+- Adicione uma 5ª categoria (ex: `BILLING`): nova `BillingAgent` interface + entrada em `TicketCategory` + nova `@ActivationCondition` em `TicketHandler` + classe no `subAgents` de `@ConditionalAgent`. **Atualize também** o `tierFor` e `agentNameFor` no `TicketAgent`
+- Troque o modelo do `EngineerAgent` para `"smaller"` (gpt-oss:20b-cloud) — veja como a análise de bug perde profundidade
 
 ## Próxima aula
 
-Aula 06: **Human-in-the-Loop (HITL)** — agente prepara uma proposta, sistema **pausa** aguardando aprovação humana, e segue conforme decisão (aprovação de desconto B2B).
+Aula 06: **HITL** — Aprovação de desconto B2B com `@LoopAgent` + `@HumanInTheLoop` binário (aprovar/rejeitar como exit condition; "contrapor" reinicia o loop).

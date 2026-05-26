@@ -1,6 +1,7 @@
 package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.CulturalFitReport;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -34,5 +35,8 @@ public interface CulturalFitAnalyzer {
             CV:
             {cv}
             """)
+    @Agent(name = "cultural",
+            description = "Avalia soft skills e fit cultural do candidato",
+            outputKey = "cultural")
     CulturalFitReport analyze(@V("vaga") String vaga, @V("cv") String cv);
 }

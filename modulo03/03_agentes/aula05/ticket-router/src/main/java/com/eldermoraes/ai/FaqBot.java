@@ -1,7 +1,9 @@
 package com.eldermoraes.ai;
 
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -23,6 +25,9 @@ public interface FaqBot {
 
             Responda em texto direto e objetivo, no máximo 4 linhas.
             """)
-    @UserMessage("Ticket: {it}")
-    String answer(String ticket);
+    @UserMessage("Ticket: {ticket}")
+    @Agent(name = "faq",
+            description = "Responde dúvidas operacionais simples de TI usando uma base interna",
+            outputKey = "answer")
+    String answer(@V("ticket") String ticket);
 }

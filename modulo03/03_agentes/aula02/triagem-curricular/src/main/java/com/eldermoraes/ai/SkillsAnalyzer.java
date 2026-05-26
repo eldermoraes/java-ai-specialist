@@ -1,6 +1,7 @@
 package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.SkillsReport;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -34,5 +35,8 @@ public interface SkillsAnalyzer {
             CV:
             {cv}
             """)
+    @Agent(name = "skills",
+            description = "Analisa a aderência das skills técnicas do candidato à vaga",
+            outputKey = "skills")
     SkillsReport analyze(@V("vaga") String vaga, @V("cv") String cv);
 }

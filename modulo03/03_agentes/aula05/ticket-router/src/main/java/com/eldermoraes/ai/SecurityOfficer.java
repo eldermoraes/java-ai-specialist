@@ -1,7 +1,9 @@
 package com.eldermoraes.ai;
 
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -22,6 +24,9 @@ public interface SecurityOfficer {
             Linguagem formal, compliance-aware. NÃO minimize riscos.
             Use markdown com headers em **negrito**.
             """)
-    @UserMessage("Incidente reportado: {it}")
-    String handle(String ticket);
+    @UserMessage("Incidente reportado: {ticket}")
+    @Agent(name = "security",
+            description = "Trata incidentes de segurança seguindo boas práticas NIST e LGPD",
+            outputKey = "answer")
+    String handle(@V("ticket") String ticket);
 }

@@ -3,6 +3,7 @@ package com.eldermoraes.dto;
 import java.util.List;
 
 public record SpecialistOpinion(
+        Specialty specialty,
         String hipotese,
         List<String> condutasIniciais,
         UrgencyLevel nivelUrgencia,

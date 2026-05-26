@@ -1,7 +1,9 @@
 package com.eldermoraes.ai;
 
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -20,6 +22,9 @@ public interface EngineerAgent {
             Seja específico tecnicamente. Use markdown com headers em **negrito** e listas.
             Se faltar informação crítica, pergunte explicitamente o que falta no final.
             """)
-    @UserMessage("Bug reportado: {it}")
-    String analyze(String ticket);
+    @UserMessage("Bug reportado: {ticket}")
+    @Agent(name = "engineer",
+            description = "Analisa bugs reportados e propõe hipóteses, sinais a coletar, workaround e próxima ação",
+            outputKey = "answer")
+    String analyze(@V("ticket") String ticket);
 }

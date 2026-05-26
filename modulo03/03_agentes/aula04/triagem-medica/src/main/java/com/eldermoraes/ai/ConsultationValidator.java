@@ -1,8 +1,8 @@
 package com.eldermoraes.ai;
 
-import com.eldermoraes.dto.Specialty;
 import com.eldermoraes.dto.SpecialistOpinion;
 import com.eldermoraes.dto.SupervisorReview;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -34,16 +34,14 @@ public interface ConsultationValidator {
             }
             """)
     @UserMessage("""
-            ESPECIALIDADE ESCOLHIDA: {especialidade}
-
             SINTOMAS RELATADOS:
             {sintomas}
 
             DIAGNÓSTICO DO ESPECIALISTA:
             {opiniao}
             """)
-    SupervisorReview revisar(
-            @V("especialidade") Specialty especialidade,
-            @V("sintomas") String sintomas,
-            @V("opiniao") SpecialistOpinion opiniao);
+    @Agent(name = "validator",
+            description = "Supervisor médico — revisa diagnóstico do especialista e eleva urgência se houver sinais de alarme",
+            outputKey = "review")
+    SupervisorReview revisar(@V("sintomas") String sintomas, @V("opiniao") SpecialistOpinion opiniao);
 }

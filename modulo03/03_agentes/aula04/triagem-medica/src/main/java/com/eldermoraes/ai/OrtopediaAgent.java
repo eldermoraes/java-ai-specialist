@@ -1,8 +1,10 @@
 package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.SpecialistOpinion;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -16,6 +18,7 @@ public interface OrtopediaAgent {
 
             Retorne APENAS um JSON válido:
             {
+              "specialty": "ORTOPEDIA",
               "hipotese": "principal hipótese diagnóstica",
               "condutasIniciais": ["radiografia", "imobilização"],
               "nivelUrgencia": "VERDE|AMARELO|VERMELHO",
@@ -23,6 +26,9 @@ public interface OrtopediaAgent {
               "examesSugeridos": ["exame_1"]
             }
             """)
-    @UserMessage("Sintomas do paciente: {it}")
-    SpecialistOpinion avaliar(String sintomas);
+    @UserMessage("Sintomas do paciente: {sintomas}")
+    @Agent(name = "ortopedia",
+            description = "Ortopedista — avalia dor musculoesquelética, trauma, queda, fratura suspeita, entorse, edema articular",
+            outputKey = "opiniao")
+    SpecialistOpinion avaliar(@V("sintomas") String sintomas);
 }

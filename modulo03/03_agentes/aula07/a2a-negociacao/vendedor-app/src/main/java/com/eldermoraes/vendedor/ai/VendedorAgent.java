@@ -1,6 +1,7 @@
 package com.eldermoraes.vendedor.ai;
 
 import com.eldermoraes.vendedor.dto.RespostaVendedor;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -44,6 +45,9 @@ public interface VendedorAgent {
             Último valor proposto pelo comprador: R$ {ultimoValor}
             Mensagem do comprador: "{mensagem}"
             """)
+    @Agent(name = "vendedor",
+            description = "Agente vendedor B2B — propõe preço e condições respeitando o preço mínimo do catálogo",
+            outputKey = "respostaVendedor")
     RespostaVendedor responder(
             @V("produto") String produto,
             @V("precoTabela") BigDecimal precoTabela,

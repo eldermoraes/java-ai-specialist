@@ -1,205 +1,184 @@
 # Aula 06 — Human-in-the-Loop (HITL): Aprovação de Desconto B2B
 
-> **Padrão**: Human-in-the-Loop
-> **Case**: Aprovação de desconto comercial — agente prepara, gerente decide, agente responde
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`gpt-oss:120b-cloud`) · Postgres via Dev Services
+> **Padrão**: Human-in-the-Loop (decisão ternária — aprovar/rejeitar/contrapor)
+> **Case**: Vendedor solicita desconto → agente comercial propõe % → gerente decide
+> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`gpt-oss:120b-cloud` + `gpt-oss:20b-cloud`) · Postgres (Dev Services)
 
 ---
 
 ## O que você vai aprender
 
-Este projeto demonstra o padrão **Human-in-the-Loop** (HITL): um agente automatiza parte do fluxo, **pausa** num ponto que exige decisão humana, e **retoma** depois que o humano decide. Diferente de "humano olhando logs depois", aqui o humano é parte do fluxo síncrono.
+O padrão **Human-in-the-Loop** é único entre os 6 padrões do módulo: ele **bloqueia** a execução do workflow agente até que um humano tome uma decisão. Os outros 5 padrões são totalmente automatizados; HITL **integra autoridade humana** ao fluxo.
+
+Esta aula tem dois agentes (`@Agent`) e um serviço de aprovação Java que gerencia o bloqueio:
 
 ```
-   ┌─────────┐  pedido  ┌──────────────┐
-   │Vendedor │─────────▶│ Comercial    │ analisa e propõe %
-   └─────────┘          │ Agent (LLM)  │
-        ▲               └──────┬───────┘
-        │                      │
-        │                      ▼ proposta persistida em PG
-        │              ┌─────────────────┐
-        │              │ Approval        │   ⏸  PAUSA aqui
-        │              │ Service         │   waiter em CompletableFuture
-        │              └────────┬────────┘
-        │                       │ broadcast WS
-        │                       ▼
-        │              ┌─────────────────┐
-        │              │   Gerente       │   ✅ Aprovar
-        │              │   (humano)      │   ❌ Rejeitar
-        │              └────────┬────────┘   ↻ Contrapor (novo %)
-        │                       │
-        │                       ▼ future.complete(decisao)
-        │              ┌─────────────────┐
-        │              │ RespostaFinal   │ formata resposta ao vendedor
-        │              │ Agent (LLM)     │
-        │              └────────┬────────┘
-        └───────────────────────┘
-                resposta final
+   ┌─────────────────────────────────────────────────────────────┐
+   │                                                             │
+   │   Vendedor envia pedido            Gerente decide           │
+   │           ▼                              ▲                  │
+   │   ┌──────────────────┐         ┌──────────────────┐         │
+   │   │  VendedorWS      │         │   GerenteWS      │         │
+   │   └────────┬─────────┘         └────────▲─────────┘         │
+   │            │                            │                   │
+   │            ▼                            │                   │
+   │   ┌──────────────────────┐              │                   │
+   │   │  DescontoWorkflow    │              │                   │
+   │   │   1. ComercialAgent  │  ◀── propõe  │                   │
+   │   │      (@Agent)        │              │                   │
+   │   │   2. ApprovalService │ ─ broadcast ─┘                   │
+   │   │      (CompletableFut)│ ◀── aguarda decisão              │
+   │   │   3. RespostaFinal   │                                  │
+   │   │      Agent (@Agent)  │                                  │
+   │   └──────────────────────┘                                  │
+   │            │                                                │
+   │            ▼                                                │
+   │     Postgres entity                                         │
+   │     (ApprovalProposal)                                      │
+   └─────────────────────────────────────────────────────────────┘
 ```
-
-### Por que este padrão importa
-
-- **Decisões irreversíveis com IA** (pagamentos, descontos, aprovações regulatórias) **não devem** ser tomadas pelo LLM sozinho — risco/custo de erro alto
-- **HITL preserva auditabilidade**: cada proposta fica persistida com a decisão humana e observação
-- **Mantém o humano como árbitro**: o agente faz a parte chata (analisar contexto, calcular %), o humano decide e justifica
-
-### Casos de uso reais
-
-- **Aprovação de desconto B2B** (este projeto)
-- **Pagamentos acima de limite** (compliance financeiro)
-- **Publicação de comunicados regulatórios** (compliance officer revisa)
-- **Aprovação de cláusulas contratuais** sugeridas por agente
-
----
-
-## Decisão técnica: por que NÃO usei `@HumanInTheLoop`
-
-O `langchain4j-agentic` tem uma anotação `@HumanInTheLoop`, mas:
-1. Ela espera output binário formatado pela LLM — nossa decisão é **ternária** (aprovar/rejeitar/contrapor com `%`)
-2. Não há persistência built-in — perda em restart
-3. Maintainers do LangChain4j classificam a implementação atual como "naive" ([issue #3405](https://github.com/langchain4j/langchain4j/issues/3405))
-
-Usamos o **padrão programático do workshop Quarkus step 5**:
-- `ApprovalService` `@ApplicationScoped` mantém `ConcurrentMap<Long, CompletableFuture<ApprovalDecision>>`
-- Workflow bloqueia em `future.get(timeout)` numa worker thread
-- Decisão do gerente chega via WS e completa o future
-- Tudo persistido em Postgres para sobreviver a restart
-
----
 
 ## Como rodar
 
-Pré-requisitos:
-- Docker rodando (Quarkus Dev Services sobe Postgres automaticamente)
-- Ollama Cloud configurado (`OLLAMA_HOST` apontando para serviço com `gpt-oss:120b-cloud`)
+Pré-requisito: podman rodando (testcontainers usa para Postgres Dev Services).
 
 ```bash
 cd modulo03/03_agentes/aula06/aprovacao-desconto
 ./mvnw quarkus:dev
 ```
+Abra <http://localhost:8080/> (interface tem painéis vendedor + gerente lado a lado).
 
-Abra: <http://localhost:8080/>
-
----
-
-## Como usar a UI
-
-A tela mostra **2 painéis lado a lado** simulando os 2 papéis numa só janela. Em produção seriam 2 perfis/usuários distintos — você pode abrir em 2 abas se quiser separação.
-
-### Painel esquerdo: 👤 Vendedor
-
-1. Cole/escreva um pedido (ou clique num dos exemplos: pequeno/médio/grande)
-2. Clique em **Enviar Pedido**
-3. Acompanhe a timeline:
-   - 📨 "Pedido recebido. Analisando…"
-   - 📋 "Proposta #N preparada: X% — enviada para aprovação"
-   - ⏳ aguardando…
-   - ✅ "Decisão recebida: APROVADA/REJEITADA/CONTRAPROPOSTA"
-   - 📝 resposta final formatada do agente
-
-### Painel direito: 🏢 Gerente Comercial
-
-1. Ao abrir, recebe **snapshot** de todas as propostas (incluindo pendentes de execuções anteriores — recuperação pós-restart)
-2. Quando uma proposta nova chega, aparece com badge **PENDENTE** amarelo
-3. 3 opções:
-   - **✓ Aprovar** — aceita o % proposto pelo agente
-   - **✕ Rejeitar** — recusa a venda nestas condições
-   - **↻ Contrapor** — abre input para novo % + observação
-4. Decisão é enviada via WS, atualiza estado da proposta, libera o vendedor
-
----
-
-## Estrutura do código
+## Estrutura
 
 ```
 src/main/java/com/eldermoraes/
 ├── ai/
-│   ├── ComercialAgent.java         — analisa pedido e propõe % de desconto
-│   └── RespostaFinalAgent.java     — formata resposta final ao vendedor
+│   ├── ComercialAgent.java       — @Agent: propõe % de desconto
+│   ├── RespostaFinalAgent.java   — @Agent: redige resposta ao vendedor
+│   └── ExampleGenerator.java     — AI Service auxiliar (gera pedidos B2B)
 ├── hitl/
-│   ├── ApprovalProposal.java       — Panache entity persistida em Postgres
-│   ├── ApprovalStatus.java         — enum (PENDENTE/APROVADA/REJEITADA/CONTRAPROPOSTA/EXPIRADA)
-│   └── ApprovalService.java        — gerencia futures + persistência
+│   ├── ApprovalService.java      — bloqueio via CompletableFuture + Postgres
+│   ├── ApprovalProposal.java     — PanacheEntity (persistência)
+│   └── ApprovalStatus.java       — enum (PENDENTE/APROVADA/REJEITADA/CONTRAPROPOSTA/EXPIRADA)
 ├── workflow/
-│   └── DescontoWorkflow.java       — orquestra: agente → aguardar → agente
+│   └── DescontoWorkflow.java     — orquestra: agente → bloqueio → agente
 ├── ws/
-│   ├── VendedorWebSocket.java      — /ws/vendedor/{id}
-│   ├── GerenteWebSocket.java       — /ws/gerente
-│   ├── VendedorRegistry.java       — Map<vendedorId, connection>
-│   └── GerenteRegistry.java        — Set<connection> para broadcast
-└── dto/                             — records de eventos e DTOs
+│   ├── VendedorWebSocket.java    — /ws/vendedor/{vendedorId}
+│   └── GerenteWebSocket.java     — /ws/gerente (broadcast bidirecional)
+├── rest/
+│   └── ExampleResource.java      — /api/example/pedido
+└── dto/                          — PropostaDesconto, ApprovalDecision, VendedorEvent, GerenteEvent
 ```
 
-### Pontos-chave para os alunos
+### Pontos-chave
 
-#### 1. Bloqueio com `CompletableFuture.get(timeout)`
-
-O coração do HITL:
+#### 1. Workers como `@Agent`
 
 ```java
-public ApprovalDecision aguardarDecisao(Long propostaId) {
-    CompletableFuture<ApprovalDecision> future = waiters.get(propostaId);
-    return future.get(timeoutMinutes, TimeUnit.MINUTES);  // bloqueia thread
+@RegisterAiService
+public interface ComercialAgent {
+    @SystemMessage("...analista comercial sênior B2B...")
+    @UserMessage("Pedido do vendedor: {descricao}")
+    @Agent(name = "comercial",
+            description = "Analista comercial — propõe desconto razoável",
+            outputKey = "proposta")
+    PropostaDesconto propor(@V("descricao") String descricaoPedido);
+}
+
+@RegisterAiService
+public interface RespostaFinalAgent {
+    @SystemMessage("...redige resposta final ao vendedor...")
+    @UserMessage("PEDIDO: {pedido}\n\nPROPOSTA: {propostaResumo}\n\nDECISÃO: {decisaoResumo}")
+    @Agent(name = "resposta", outputKey = "respostaFinal")
+    String redigir(@V("pedido") String pedido,
+                   @V("propostaResumo") String propostaResumo,
+                   @V("decisaoResumo") String decisaoResumo);
 }
 ```
 
-A worker thread fica parada em `.get()` por até 10 minutos. Isso é **aceitável aqui** porque:
-- Volume é baixo (decisão humana, não pico de tráfego)
-- Quarkus tem worker pool generoso
-- Vendedor está esperando interativamente
+#### 2. Bloqueio HITL ternário via `ApprovalService` (Java)
 
-Em produção com volumes maiores, considerar transformar em **state machine assíncrona** (event sourcing).
+```java
+@ApplicationScoped
+public class ApprovalService {
+    private final ConcurrentMap<Long, CompletableFuture<ApprovalDecision>> waiters = new ConcurrentHashMap<>();
 
-#### 2. Persistência sobrevive a restart
+    @Transactional
+    public ApprovalProposal criarPendente(String vendedorId, String descricaoPedido, PropostaDesconto proposta) {
+        // persiste no Postgres + broadcast para gerentes
+        waiters.put(entity.id, new CompletableFuture<>());
+        return entity;
+    }
 
-A `ApprovalProposal` é persistida em Postgres antes do `.get()`. Se o servidor reiniciar:
-- O gerente reconecta → vê snapshot das pendentes
-- Quando decidir, a entity é atualizada, mas o `CompletableFuture` original já se perdeu
-- **Tratamento idempotente**: `ApprovalService.decidir()` não falha se não houver waiter — apenas atualiza a entity e broadcasta para os gerentes
+    public ApprovalDecision aguardarDecisao(Long propostaId) throws TimeoutException {
+        return waiters.get(propostaId).get(timeoutMinutes, TimeUnit.MINUTES);  // BLOQUEIA
+    }
 
-Para fechar o loop com o vendedor após restart, ele precisa reconectar com o mesmo `vendedorId` — o `VendedorRegistry` o reconhece e o frontend pode enviar `GET /pendentes/{vendedorId}` (TODO didático).
-
-#### 3. Dois WebSockets, registros separados
-
-- `/ws/vendedor/{vendedorId}` — path param identifica o vendedor; `VendedorRegistry` mantém `Map<String, Connection>`
-- `/ws/gerente` — sem identificação, mas há **broadcast**; `GerenteRegistry` mantém `Set<Connection>`
-
-Permite múltiplos gerentes vendo a mesma fila (todos veem nova proposta, primeiro que decide ganha).
-
-#### 4. Postgres Dev Services
-
-Não precisa instalar PG. `quarkus.devservices.enabled=true` + Docker = PG sobe na primeira execução, é descartado ao parar. Configuração explícita no `application.properties`:
-
-```properties
-quarkus.datasource.db-kind=postgresql
-quarkus.hibernate-orm.database.generation=drop-and-create
+    @Transactional
+    public ApprovalProposal decidir(ApprovalDecision decision) {
+        // persiste status + completa o future → libera o aguardar
+        waiters.get(decision.propostaId()).complete(decision);
+    }
+}
 ```
 
----
+A virtual thread spawnada pelo `DescontoWorkflow.processarPedido(...)` chama `aguardarDecisao(id)` e **bloqueia até 10 minutos** esperando o gerente. Quando o gerente envia decisão via `GerenteWebSocket`, o `decidir(...)` completa o `CompletableFuture` e a virtual thread retoma.
 
-## O que observar no frontend
+## Trade-off: `@HumanInTheLoop` declarativo
+
+O LangChain4j Agentic tem **`@HumanInTheLoop`** static method que substituiria o `ApprovalService` em parte:
+
+```java
+public interface ApprovalGate {
+    @HumanInTheLoop(description = "Aguardar decisão do gerente", outputKey = "decisao", async = true)
+    static String askManager(AgenticScope scope, @V("proposta") PropostaDesconto proposta) {
+        // bloqueia em CompletableFuture até gerente decidir
+        // mas precisa CDI.current() para acessar serviço de decisão
+    }
+}
+```
+
+**Por que não usamos**:
+- `@HumanInTheLoop` é **binário** (aprovar/rejeitar). A decisão real é **ternária** (aprovar/rejeitar/**contrapor com % diferente**) — perderíamos uma feature do caso corporativo
+- O static method não tem `@Inject` direto — precisaria `CDI.current().select(...).get()` (cerimônia)
+- A persistência no Postgres e multi-gerente broadcast já existem no `ApprovalService` — duplicar via `@HumanInTheLoop` seria custo sem ganho
+- **Para HITL com decisão ternária ou estado persistente, Java explícito é a forma idiomática**. `@HumanInTheLoop` é melhor para fluxos binários simples (aprovar/rejeitar uma proposta de email, p.ex.)
+
+Para casos binários puros sem persistência, a versão declarativa funcionaria:
+
+```java
+public interface ApprovalAgent {
+    @LoopAgent(maxIterations = 3, subAgents = {ComercialAgent.class, ApprovalGate.class})
+    String processar(@V("descricao") String desc);
+
+    @ExitCondition
+    static boolean aprovado(@V("decisao") String decisao) {
+        return "APROVADO".equals(decisao);
+    }
+}
+```
+
+## O que observar
 
 | Observação | Explica… |
 |---|---|
-| Vendedor envia, agente propõe rápido, depois "aguardando…" | Pausa do workflow |
-| Gerente vê proposta nova aparecer em tempo real | Broadcast WS |
-| Gerente decide → vendedor recebe **resposta final reformulada** | RespostaFinalAgent reformula |
-| Status do card no gerente muda de PENDENTE → APROVADA/etc. | Persistência + atualização |
-| Se reiniciar o servidor com PENDENTE no DB, gerente reconecta e vê | Snapshot pós-restart |
+| Vendedor: `RECEBIDO → PROPOSTA_PREPARADA` em ~10s | `ComercialAgent.propor(...)` chamou o LLM |
+| Painel do gerente recebe a proposta em tempo real | `ApprovalService.broadcastGerentes(...)` via `OpenConnections` |
+| Vendedor fica em loading até gerente decidir | Virtual thread bloqueada em `future.get(timeout)` |
+| Após decisão: `DECIDIDA` chega ao vendedor | `RespostaFinalAgent.redigir(...)` formatou resposta personalizada |
+| Postgres mantém ApprovalProposal entity | Histórico persistente; `listarTodas()` recupera após restart |
 
----
+## Recuperação pós-restart
+
+O `ApprovalService.@PostConstruct` lê `findByStatus(PENDENTE)` no Postgres. Propostas pendentes antes do restart aparecem no painel do gerente — mas as virtual threads originais foram perdidas. Quando o gerente decide nessas propostas pós-restart, o `decidir(...)` ainda persiste o status no Postgres mas não há `waiter` (futureMap está vazio). Em produção isso seria mitigado por sticky sessions ou um broker de eventos persistente.
 
 ## Para experimentar
 
-- **Teste o timeout**: configure `hitl.approval.timeout.minutes=1` e veja o vendedor receber erro de timeout
-- **Adicione validação de % máximo**: gerente não pode aprovar mais que 25% mesmo via contraproposta
-- **Adicione perfis de gerente**: nível 1 aprova até 15%, nível 2 até 30% (auth via header)
-- **Audit trail completo**: além de status, persista o histórico de quem decidiu, em qual horário, em que IP
-- **Email de notificação**: se gerente não está conectado, dispare email com link de aprovação
-- **Versão assíncrona**: substitua `CompletableFuture.get()` por callback REST que retoma o workflow (sem bloquear thread)
+- Adicione uma 5ª categoria de decisão (ex: `ENCAMINHADA_DIRETOR` para pedidos > R$ 500k): novo enum + novo handler no `decidir(...)` + novo botão no painel do gerente
+- Habilite log SQL (`quarkus.hibernate-orm.log.sql=true`) — veja todas as transações
+- Force timeout reduzido (`hitl.approval.timeout.minutes=1`) — veja a EXPIRADA acontecer
+- Abra 2 abas do gerente: ambas recebem broadcast de propostas pendentes; apenas a primeira a decidir "ganha" (race condition controlada pelo Postgres + future)
 
----
+## Conclusão do módulo
 
-## Próxima aula
-
-Aula 07: **Agent-to-Agent (A2A)** — dois apps Quarkus em portas diferentes se comunicam via protocolo A2A do Google. Comprador negocia com vendedor até acordo ou impasse.
+Você passou pelos 6 padrões clássicos de agentes em produção. O módulo demonstrou que o framework Quarkus + LangChain4j Agentic resolve o vocabulário declarativo (`@Agent`, composições `@SequenceAgent`/`@ParallelAgent`/`@ParallelMapperAgent`/`@SequenceAgent`/`@SupervisorAgent`/`@ConditionalAgent`/`@LoopAgent`/`@HumanInTheLoop`/`@A2AClientAgent`) e quando recorrer a Java imperativo (HITL ternário com persistência, A2A REST entre apps separados).

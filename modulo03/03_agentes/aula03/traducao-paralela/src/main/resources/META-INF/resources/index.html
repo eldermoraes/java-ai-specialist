@@ -184,22 +184,6 @@
         { codigo: 'ZH', flag: '🇨🇳', nome: '中文' }
     ];
 
-    const EXEMPLO = `Equipe,
-
-Comunicamos uma atualização importante na política de home office.
-
-A partir do próximo trimestre, adotamos o modelo híbrido:
-- Mínimo de 2 dias presenciais por semana (preferencialmente terças e quintas)
-- Reuniões de planejamento sempre presenciais
-- Squads decidem os demais dias em consenso
-
-Esta mudança visa equilibrar a flexibilidade do remoto com a colaboração presencial necessária para nossos OKRs do trimestre.
-
-Dúvidas serão tratadas nas reuniões de team de quinta.
-
-Abraços,
-Diretoria de Pessoas`;
-
     let ws = null;
     let totalDone = 0;
 
@@ -278,12 +262,11 @@ Diretoria de Pessoas`;
             const msg = JSON.parse(e.data);
             if (msg.type === 'STARTED') {
                 renderInitialCards();
-                progressEl.textContent = 'iniciando 5 traduções em paralelo…';
-            } else if (msg.type === 'LANG_DONE') {
-                renderDone(msg.lang, msg.payload, msg.elapsedMs || 0);
-            } else if (msg.type === 'LANG_ERROR') {
-                renderError(msg.lang, msg.error, msg.elapsedMs || 0);
+                progressEl.textContent = 'compondo agentes — @ParallelMapperAgent rodando os 5 idiomas em paralelo…';
             } else if (msg.type === 'ALL_DONE') {
+                (msg.traducoes || []).forEach(t => {
+                    if (t && t.idioma) renderDone(t.idioma, t, 0);
+                });
                 progressEl.textContent = `5/5 traduções concluídas — pronto`;
                 translateBtn.disabled = false;
             } else if (msg.type === 'ERROR') {
@@ -310,8 +293,24 @@ Diretoria de Pessoas`;
         progressEl.textContent = 'aguardando comunicado…';
     });
 
-    document.getElementById('exampleBtn').addEventListener('click', () => {
-        comunicadoInput.value = EXEMPLO;
+    document.getElementById('exampleBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const link = e.currentTarget;
+        const original = link.textContent;
+        link.textContent = '↻ gerando…';
+        link.style.pointerEvents = 'none';
+        comunicadoInput.disabled = true;
+        try {
+            const resp = await fetch('/api/example/comunicado');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            comunicadoInput.value = await resp.text();
+        } catch (err) {
+            comunicadoInput.placeholder = 'Falha ao gerar exemplo: ' + err.message;
+        } finally {
+            link.textContent = original;
+            link.style.pointerEvents = '';
+            comunicadoInput.disabled = false;
+        }
     });
 
     connect();

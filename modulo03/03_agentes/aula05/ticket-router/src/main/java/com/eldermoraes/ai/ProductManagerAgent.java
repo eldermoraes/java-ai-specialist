@@ -1,7 +1,9 @@
 package com.eldermoraes.ai;
 
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -21,6 +23,9 @@ public interface ProductManagerAgent {
             que entrou no backlog para priorização no próximo refinamento.
             Use markdown com headers em **negrito**.
             """)
-    @UserMessage("Pedido de feature: {it}")
-    String triage(String ticket);
+    @UserMessage("Pedido de feature: {ticket}")
+    @Agent(name = "pm",
+            description = "Registra pedidos de feature avaliando valor, complexidade e impacto",
+            outputKey = "answer")
+    String triage(@V("ticket") String ticket);
 }

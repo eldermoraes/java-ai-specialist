@@ -1,6 +1,7 @@
 package com.eldermoraes.comprador.ai;
 
 import com.eldermoraes.comprador.dto.DecisaoComprador;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -44,6 +45,9 @@ public interface CompradorAgent {
             Mensagem do vendedor: "{mensagemVendedor}"
             Vendedor sinalizou limite atingido: {limiteAtingido}
             """)
+    @Agent(name = "comprador",
+            description = "Agente comprador B2B — avalia proposta do vendedor e decide ACEITAR, CONTRAPOR ou DESISTIR respeitando orçamento e critérios",
+            outputKey = "decisaoComprador")
     DecisaoComprador avaliar(
             @V("produto") String produto,
             @V("orcamentoMax") BigDecimal orcamentoMax,

@@ -1,5 +1,6 @@
 package com.eldermoraes.ai;
 
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -28,13 +29,16 @@ public interface RespostaFinalAgent {
             {pedido}
 
             PROPOSTA INICIAL DO AGENTE:
-            {proposta}
+            {propostaResumo}
 
             DECISÃO DO GERENTE:
-            {decisao}
+            {decisaoResumo}
             """)
+    @Agent(name = "resposta",
+            description = "Assistente comercial — redige resposta final ao vendedor com base na decisão do gerente",
+            outputKey = "respostaFinal")
     String redigir(
             @V("pedido") String pedido,
-            @V("proposta") String propostaResumo,
-            @V("decisao") String decisaoResumo);
+            @V("propostaResumo") String propostaResumo,
+            @V("decisaoResumo") String decisaoResumo);
 }

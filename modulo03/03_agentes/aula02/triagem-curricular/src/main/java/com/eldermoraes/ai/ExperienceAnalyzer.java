@@ -1,6 +1,7 @@
 package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.ExperienceReport;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -36,5 +37,8 @@ public interface ExperienceAnalyzer {
             CV:
             {cv}
             """)
+    @Agent(name = "experience",
+            description = "Avalia o histórico profissional, gaps e continuidade da trajetória do candidato",
+            outputKey = "experience")
     ExperienceReport analyze(@V("vaga") String vaga, @V("cv") String cv);
 }

@@ -5,6 +5,7 @@ import com.eldermoraes.dto.ExperienceReport;
 import com.eldermoraes.dto.RedFlagsReport;
 import com.eldermoraes.dto.SkillsReport;
 import com.eldermoraes.dto.TriagemReport;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -52,6 +53,9 @@ public interface ReportSynthesizer {
             RELATÓRIO DE RED FLAGS:
             {redFlags}
             """)
+    @Agent(name = "synthesizer",
+            description = "Sintetiza um parecer final ponderando skills, experiência, fit cultural e red flags",
+            outputKey = "triagemFinal")
     TriagemReport synthesize(
             @V("vaga") String vaga,
             @V("skills") SkillsReport skills,

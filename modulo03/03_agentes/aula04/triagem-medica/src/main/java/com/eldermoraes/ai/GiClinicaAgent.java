@@ -1,8 +1,10 @@
 package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.SpecialistOpinion;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -17,6 +19,7 @@ public interface GiClinicaAgent {
 
             Retorne APENAS um JSON válido:
             {
+              "specialty": "GI_CLINICA",
               "hipotese": "principal hipótese diagnóstica",
               "condutasIniciais": ["hidratação", "exames laboratoriais"],
               "nivelUrgencia": "VERDE|AMARELO|VERMELHO",
@@ -24,6 +27,9 @@ public interface GiClinicaAgent {
               "examesSugeridos": ["exame_1"]
             }
             """)
-    @UserMessage("Sintomas do paciente: {it}")
-    SpecialistOpinion avaliar(String sintomas);
+    @UserMessage("Sintomas do paciente: {sintomas}")
+    @Agent(name = "gi",
+            description = "Clínico/gastroenterologista — avalia queixas digestivas, dor abdominal, febre, diarreia, vômitos, desidratação, sintomas inespecíficos",
+            outputKey = "opiniao")
+    SpecialistOpinion avaliar(@V("sintomas") String sintomas);
 }

@@ -1,8 +1,10 @@
 package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.TicketCategory;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -21,6 +23,9 @@ public interface TicketClassifier {
             Responda APENAS o valor do enum em maiúsculas, sem aspas, sem JSON, sem explicação.
             Valores válidos: FAQ | BUG | SECURITY | FEATURE
             """)
-    @UserMessage("Ticket: {it}")
-    TicketCategory classify(String ticket);
+    @UserMessage("Ticket: {ticket}")
+    @Agent(name = "classifier",
+            description = "Classifica um ticket de TI em FAQ, BUG, SECURITY ou FEATURE",
+            outputKey = "category")
+    TicketCategory classify(@V("ticket") String ticket);
 }

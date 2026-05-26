@@ -1,8 +1,10 @@
 package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.PropostaDesconto;
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -29,6 +31,9 @@ public interface ComercialAgent {
               "justificativa": "parágrafo curto explicando a proposta"
             }
             """)
-    @UserMessage("Pedido do vendedor: {it}")
-    PropostaDesconto propor(String descricaoPedido);
+    @UserMessage("Pedido do vendedor: {descricao}")
+    @Agent(name = "comercial",
+            description = "Analista comercial — propõe percentual de desconto razoável para um pedido B2B",
+            outputKey = "proposta")
+    PropostaDesconto propor(@V("descricao") String descricaoPedido);
 }
