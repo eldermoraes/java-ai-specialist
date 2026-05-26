@@ -2,7 +2,7 @@ package com.eldermoraes.dto;
 
 public enum ModelTier {
     FAST("gpt-oss:20b-cloud"),
-    ROBUST("gpt-oss:120b-cloud");
+    ROBUST("deepseek-v4-pro:cloud");
 
     private final String modelId;
 

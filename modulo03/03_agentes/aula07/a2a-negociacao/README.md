@@ -2,7 +2,7 @@
 
 > **Padrão**: Agent-to-Agent (A2A) — dois agentes em **apps separados** dialogando via REST
 > **Case**: Negociação B2B autônoma — comprador (orçamento + critérios) ↔ vendedor (catálogo + margem)
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`gpt-oss:120b-cloud`) · Maven multi-módulo
+> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`deepseek-v4-pro:cloud`) · Maven multi-módulo
 
 ---
 

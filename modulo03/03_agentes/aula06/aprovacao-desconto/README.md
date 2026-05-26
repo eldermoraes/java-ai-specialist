@@ -2,7 +2,7 @@
 
 > **Padrão**: Human-in-the-Loop (decisão ternária — aprovar/rejeitar/contrapor)
 > **Case**: Vendedor solicita desconto → agente comercial propõe % → gerente decide
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`gpt-oss:120b-cloud` + `gpt-oss:20b-cloud`) · Postgres (Dev Services)
+> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`deepseek-v4-pro:cloud` + `gpt-oss:20b-cloud`) · Postgres (Dev Services)
 
 ---
 

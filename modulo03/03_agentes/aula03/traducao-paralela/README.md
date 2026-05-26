@@ -2,7 +2,7 @@
 
 > **Padrão**: Parallel (1 agente × N inputs em paralelo)
 > **Case**: Tradução simultânea de um comunicado interno para 5 idiomas com adaptação cultural
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic (`quarkus-langchain4j-agentic` 1.9.2 + `langchain4j-agentic` 1.13.0-beta) · Ollama (`gpt-oss:120b-cloud` + `gpt-oss:20b-cloud`)
+> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic (`quarkus-langchain4j-agentic` 1.9.2 + `langchain4j-agentic` 1.13.0-beta) · Ollama (`deepseek-v4-pro:cloud` + `gpt-oss:20b-cloud`)
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Padrão**: Dynamic Routing (via `@ConditionalAgent` + `@ActivationCondition`)
 > **Case**: Tickets de TI roteados para FAQ/BUG/SECURITY/FEATURE com **troca de modelo LLM em runtime**
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`gpt-oss:120b-cloud` + `gpt-oss:20b-cloud`)
+> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`deepseek-v4-pro:cloud` + `gpt-oss:20b-cloud`)
 
 ---
 
@@ -87,7 +87,7 @@ O `outputKey = "category"` armazena o enum `TicketCategory` no `AgenticScope`. A
 #### 2. Cada handler — `@Agent(outputKey="answer")` + modelo próprio
 
 ```java
-@RegisterAiService(modelName = "smaller")  // ou default = gpt-oss:120b-cloud
+@RegisterAiService(modelName = "smaller")  // ou default = deepseek-v4-pro:cloud
 public interface FaqBot {
     @SystemMessage("...")
     @UserMessage("Ticket: {ticket}")
@@ -144,8 +144,8 @@ O `@Output static assemble` combina o `category` (do classifier) com o `answer` 
 | Categoria | Handler | `modelName` | Modelo invocado |
 |---|---|---|---|
 | FAQ | `FaqBot` | `"smaller"` | `gpt-oss:20b-cloud` |
-| BUG | `EngineerAgent` | default | `gpt-oss:120b-cloud` |
-| SECURITY | `SecurityOfficer` | default | `gpt-oss:120b-cloud` |
+| BUG | `EngineerAgent` | default | `deepseek-v4-pro:cloud` |
+| SECURITY | `SecurityOfficer` | default | `deepseek-v4-pro:cloud` |
 | FEATURE | `ProductManagerAgent` | `"smaller"` | `gpt-oss:20b-cloud` |
 
 O Quarkus extension resolve o `modelName` no momento da injeção do bean — o `@ConditionalAgent` não sabe nada sobre modelos, ele só ativa o sub-agente certo.
@@ -156,7 +156,7 @@ O Quarkus extension resolve o `modelName` no momento da injeção do bean — o 
 |---|---|
 | Sequência WS: `RECEIVED → CLASSIFICATION → ANSWER` | Orchestrator emite 3 marcos para visualização da pipeline |
 | FAQ/FEATURE respondem ~3-7s | Modelo `gpt-oss:20b-cloud` mais rápido |
-| BUG/SECURITY respondem ~18-24s | Modelo `gpt-oss:120b-cloud` mais robusto |
+| BUG/SECURITY respondem ~18-24s | Modelo `deepseek-v4-pro:cloud` mais robusto |
 | Contagem `chamadas 20b` vs `chamadas 120b` no painel | Cada ticket alimenta uma das contagens, depending do roteamento |
 
 ## Para experimentar
