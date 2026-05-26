@@ -335,36 +335,26 @@
     let ws = null;
     let startTimes = {};
 
-    const EXAMPLE_VAGA = `Vaga: Desenvolvedor(a) Java Sênior — Equipe de Pagamentos
-
-Responsabilidades:
-- Construir e manter serviços críticos de pagamento em Java 21+/Quarkus
-- Trabalhar com mensageria (Kafka), bancos PostgreSQL e observabilidade
-- Atuar em squad ágil com 6 pessoas, code review constante
-
-Requisitos:
-- 5+ anos de experiência com Java
-- Vivência sólida em microsserviços e arquitetura distribuída
-- Conhecimento de TDD, CI/CD e cloud (AWS ou GCP)
-- Inglês intermediário (leitura técnica)`;
-
-    const EXAMPLE_CV = `Maria Silva
-Desenvolvedora Backend · 7 anos de experiência
-
-Experiência:
-- 2022 - atual: Banco Digital ABC — Engenheira Java Sênior
-  Construiu pipelines de transações em Quarkus + Kafka. Liderou migração de monolito para microsserviços. Mentorou 3 devs juniores.
-- 2019 - 2022: Fintech XYZ — Desenvolvedora Java Pleno
-  Atuou em PIX e cobrança. Implementou testes de integração com TestContainers. Reduziu tempo de deploy em 40%.
-- 2017 - 2019: Consultoria Beta — Desenvolvedora Java Júnior
-  Sistemas legados em Java EE 7. Aprendeu Spring Boot.
-
-Formação:
-- Bacharel em Ciência da Computação, USP (2013-2016)
-- Certificação AWS Solutions Architect Associate (2021)
-
-Soft Skills: comunicação clara, mentoria, trabalho em equipe.
-Inglês fluente. Espanhol intermediário.`;
+    async function carregarExemplo(endpoint, textarea, link) {
+        const labelOriginal = link.textContent;
+        link.textContent = '↻ gerando…';
+        link.style.pointerEvents = 'none';
+        textarea.disabled = true;
+        const placeholderOriginal = textarea.placeholder;
+        textarea.placeholder = 'Gerando exemplo via AI Service…';
+        try {
+            const resp = await fetch(endpoint);
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            textarea.value = await resp.text();
+        } catch (e) {
+            textarea.placeholder = 'Falha ao gerar exemplo: ' + e.message;
+        } finally {
+            link.textContent = labelOriginal;
+            link.style.pointerEvents = '';
+            textarea.disabled = false;
+            if (textarea.value) textarea.placeholder = placeholderOriginal;
+        }
+    }
 
     function setStatus(state, label) {
         statusEl.className = 'status ' + state;
@@ -436,19 +426,21 @@ Inglês fluente. Espanhol intermediário.`;
             const msg = JSON.parse(e.data);
             if (msg.type === 'STARTED') {
                 ['skills','experience','cultural','redFlags'].forEach(k => startTimes[k] = Date.now());
-            } else if (msg.type === 'WORKER_DONE') {
-                renderWorker(msg.worker, msg.payload);
-            } else if (msg.type === 'SYNTHESIZING') {
-                synthesis.innerHTML = '<div class="synthesis-header"><h2>🧩 Sintetizando…</h2></div><div class="justificativa"><span class="spinner"></span>O orquestrador está consolidando os 4 relatórios em um parecer final.</div>';
+                synthesis.innerHTML = '<div class="synthesis-header"><h2>🧩 Compondo agentes…</h2></div><div class="justificativa"><span class="spinner"></span>O <code>TriagemAgent</code> (@SequenceAgent) está executando o <code>WorkersParallel</code> (@ParallelAgent) e depois o <code>ReportSynthesizer</code>.</div>';
                 synthesis.classList.add('visible');
             } else if (msg.type === 'DONE') {
+                const p = msg.payload || {};
+                if (p.skills)     renderWorker('skills', p.skills);
+                if (p.experience) renderWorker('experience', p.experience);
+                if (p.cultural)   renderWorker('cultural', p.cultural);
+                if (p.redFlags)   renderWorker('redFlags', p.redFlags);
                 synthesis.innerHTML = '<div class="synthesis-header"><h2>🧩 Parecer Final</h2><span class="badge" id="recomendacaoBadge"></span></div><div>Score Final: <span class="score-final" id="scoreFinal"></span></div><div class="justificativa" id="justificativa"></div>';
-                document.getElementById('scoreFinal').textContent = msg.payload.scoreFinal;
-                const rec = (msg.payload.recomendacao || '').toLowerCase();
+                document.getElementById('scoreFinal').textContent = p.scoreFinal;
+                const rec = (p.recomendacao || '').toLowerCase();
                 const badge = document.getElementById('recomendacaoBadge');
-                badge.textContent = (msg.payload.recomendacao || '').replace(/_/g, ' ');
+                badge.textContent = (p.recomendacao || '').replace(/_/g, ' ');
                 badge.className = 'badge ' + rec;
-                document.getElementById('justificativa').textContent = msg.payload.justificativa || '';
+                document.getElementById('justificativa').textContent = p.justificativa || '';
                 analyzeBtn.disabled = false;
             } else if (msg.type === 'ERROR') {
                 synthesis.innerHTML = '<div class="synthesis-header"><h2>❌ Erro</h2></div><div class="justificativa">' + (msg.error || 'desconhecido') + '</div>';
@@ -476,8 +468,14 @@ Inglês fluente. Espanhol intermediário.`;
         resetWorkers();
     });
 
-    document.getElementById('exampleVaga').addEventListener('click', () => vagaInput.value = EXAMPLE_VAGA);
-    document.getElementById('exampleCv').addEventListener('click', () => cvInput.value = EXAMPLE_CV);
+    document.getElementById('exampleVaga').addEventListener('click', (e) => {
+        e.preventDefault();
+        carregarExemplo('/api/example/vaga', vagaInput, e.currentTarget);
+    });
+    document.getElementById('exampleCv').addEventListener('click', (e) => {
+        e.preventDefault();
+        carregarExemplo('/api/example/cv', cvInput, e.currentTarget);
+    });
 
     connect();
 </script>
