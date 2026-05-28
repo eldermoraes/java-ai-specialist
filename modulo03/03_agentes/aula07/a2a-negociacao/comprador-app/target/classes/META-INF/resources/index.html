@@ -176,10 +176,7 @@
         </div>
         <div class="action-bar" style="margin-top:8px;">
             <div class="examples">
-                <button data-example="servidor">Servidor</button>
-                <button data-example="storage">Storage</button>
-                <button data-example="licenca">Licença</button>
-                <button data-example="switch">Switch</button>
+                <button data-example="auto">↻ gerar compra de exemplo</button>
             </div>
             <button class="primary" id="negociarBtn" disabled>Iniciar Negociação A2A</button>
         </div>
@@ -203,13 +200,6 @@
     const negociarBtn = document.getElementById('negociarBtn');
     const rodadasEl = document.getElementById('rodadasEl');
     const resultadoEl = document.getElementById('resultadoEl');
-
-    const EXEMPLOS = {
-        servidor: { produto: 'servidor rack 2U', orcamento: 16000, prazo: 20, criterios: 'garantia mínima 36 meses, suporte 24x7' },
-        storage:  { produto: 'storage NAS 24TB', orcamento: 29000, prazo: 25, criterios: 'redundância RAID 6, hot swap' },
-        licenca:  { produto: 'licença software pro anual', orcamento: 2200, prazo: 5, criterios: 'ativação até final do mês' },
-        switch:   { produto: 'switch gerenciável 48 portas', orcamento: 8500, prazo: 12, criterios: 'PoE+, gestão por SNMP' }
-    };
 
     let ws = null;
     let rodadaIndex = 0;
@@ -325,12 +315,24 @@
     });
 
     document.querySelectorAll('[data-example]').forEach(b => {
-        b.addEventListener('click', () => {
-            const e = EXEMPLOS[b.dataset.example];
-            produtoEl.value = e.produto;
-            orcamentoEl.value = e.orcamento;
-            prazoEl.value = e.prazo;
-            criteriosEl.value = e.criterios;
+        b.addEventListener('click', async () => {
+            const original = b.textContent;
+            b.textContent = '↻ gerando…';
+            b.disabled = true;
+            try {
+                const resp = await fetch('/api/example/compra');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const e = await resp.json();
+                produtoEl.value = e.produto || '';
+                orcamentoEl.value = e.orcamentoMax || '';
+                prazoEl.value = e.prazoMaxDias || '';
+                criteriosEl.value = e.criterios || '';
+            } catch (err) {
+                console.error('Falha ao gerar exemplo:', err);
+            } finally {
+                b.textContent = original;
+                b.disabled = false;
+            }
         });
     });
 

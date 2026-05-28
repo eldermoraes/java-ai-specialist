@@ -226,9 +226,7 @@
             <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#6b7280;font-weight:600;display:block;margin-bottom:4px;">Descreva o pedido</label>
             <textarea id="pedidoInput" placeholder="Ex: cliente Acme quer 500 licenças do plano Pro com pagamento à vista, urgente para fechar contrato Q2…"></textarea>
             <div class="examples">
-                <button data-example="pequeno">Pedido pequeno (R$ 30k)</button>
-                <button data-example="medio">Pedido médio (R$ 120k)</button>
-                <button data-example="grande">Pedido grande (R$ 350k)</button>
+                <button data-example="auto">↻ gerar pedido de exemplo</button>
             </div>
             <div style="display:flex;justify-content:flex-end;">
                 <button class="primary-vendedor" id="enviarBtn" disabled>Enviar Pedido</button>
@@ -262,11 +260,6 @@
     const propostasContainer = document.getElementById('propostasContainer');
 
     const VENDEDOR_ID = 'v1';
-    const EXEMPLOS = {
-        pequeno: 'Cliente Acme Pequena quer comprar 100 licenças plano Standard a R$ 300 cada (R$ 30k total). Pagamento em 30 dias. Cliente novo, sem histórico.',
-        medio: 'Cliente Beta Solutions, parceiro de 3 anos, quer renovar 400 licenças Pro a R$ 300 (R$ 120k). Pagamento em 45 dias. Pediu condição especial pois compete com proposta de concorrente direto.',
-        grande: 'Cliente Gamma Corp, multinacional, quer fechar contrato anual de 1200 licenças Enterprise a R$ 290 cada (R$ 348k). Pagamento à vista. Urgente — fechamento até final do mês para entrar no budget anual deles.'
-    };
 
     let wsVendedor = null;
     let wsGerente = null;
@@ -435,7 +428,21 @@
     });
 
     document.querySelectorAll('[data-example]').forEach(b => {
-        b.addEventListener('click', () => pedidoInput.value = EXEMPLOS[b.dataset.example]);
+        b.addEventListener('click', async () => {
+            const original = b.textContent;
+            b.textContent = '↻ gerando…';
+            b.disabled = true;
+            try {
+                const resp = await fetch('/api/example/pedido');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                pedidoInput.value = await resp.text();
+            } catch (err) {
+                pedidoInput.placeholder = 'Falha ao gerar exemplo: ' + err.message;
+            } finally {
+                b.textContent = original;
+                b.disabled = false;
+            }
+        });
     });
 
     connectVendedor();

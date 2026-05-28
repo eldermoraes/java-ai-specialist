@@ -3,6 +3,22 @@
   <component name="QuarkusDeploymentProjectService">
     <option name="modules">
       <map>
+        <entry key="aprovacao-desconto">
+          <value>
+            <ModuleState>
+              <option name="hash" value="1102113836" />
+              <option name="version" value="1" />
+            </ModuleState>
+          </value>
+        </entry>
+        <entry key="traducao-paralela">
+          <value>
+            <ModuleState>
+              <option name="hash" value="337446077" />
+              <option name="version" value="1" />
+            </ModuleState>
+          </value>
+        </entry>
         <entry key="triagem-curricular">
           <value>
             <ModuleState>
