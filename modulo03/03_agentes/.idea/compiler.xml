@@ -21,8 +21,8 @@
       <module name="aprovacao-desconto" options="-parameters" />
       <module name="comprador-app" options="-parameters" />
       <module name="ticket-router" options="-parameters" />
-      <module name="traducao-paralela" options="-parameters --enable-preview" />
-      <module name="triagem-curricular" options="-parameters --enable-preview" />
+      <module name="traducao-paralela" options="-parameters" />
+      <module name="triagem-curricular" options="-parameters" />
       <module name="triagem-medica" options="-parameters" />
       <module name="vendedor-app" options="-parameters" />
     </option>

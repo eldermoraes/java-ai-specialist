@@ -224,10 +224,7 @@
             <label for="ticketInput">Descreva o ticket de TI</label>
             <textarea id="ticketInput" placeholder="Ex: meu Outlook não abre desde manhã…"></textarea>
             <div class="examples">
-                <button data-example="faq">📞 Exemplo FAQ</button>
-                <button data-example="bug">🐛 Exemplo BUG</button>
-                <button data-example="security">🚨 Exemplo SECURITY</button>
-                <button data-example="feature">✨ Exemplo FEATURE</button>
+                <button id="exampleBtn">↻ gerar ticket de exemplo</button>
             </div>
         </div>
 
@@ -302,13 +299,6 @@
     const countFast = document.getElementById('countFast');
     const countRobust = document.getElementById('countRobust');
     const lastTime = document.getElementById('lastTime');
-
-    const EXAMPLES = {
-        faq: 'Como faço para resetar minha senha de acesso ao portal corporativo?',
-        bug: 'Nosso sistema de faturamento está retornando erro 500 intermitente desde as 9h. Já reiniciamos os pods 2x, persiste. Logs mostram timeout no PostgreSQL após queries de relatório anual. Volume de erros: ~30%.',
-        security: 'Recebi um e-mail aparentemente da Receita Federal pedindo para baixar um anexo .exe para regularizar declaração. Cliquei sem pensar e o arquivo executou — agora meu antivírus desativou sozinho e algumas senhas salvas no Chrome sumiram. Acho que algo está enviando dados.',
-        feature: 'Gostaria de sugerir que o sistema de gestão de viagens corporativas mostrasse o histórico de hotéis preferidos por colaborador, e permitisse re-booking em 1 clique. Hoje preciso pesquisar tudo de novo a cada viagem.'
-    };
 
     let ws = null;
     let stats = { fast: 0, robust: 0 };
@@ -402,8 +392,24 @@
         resetPipeline();
     });
 
-    document.querySelectorAll('[data-example]').forEach(b => {
-        b.addEventListener('click', () => ticketInput.value = EXAMPLES[b.dataset.example]);
+    document.getElementById('exampleBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const btn = e.currentTarget;
+        const original = btn.textContent;
+        btn.textContent = '↻ gerando…';
+        btn.disabled = true;
+        ticketInput.disabled = true;
+        try {
+            const resp = await fetch('/api/example/ticket');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            ticketInput.value = await resp.text();
+        } catch (err) {
+            ticketInput.placeholder = 'Falha ao gerar exemplo: ' + err.message;
+        } finally {
+            btn.textContent = original;
+            btn.disabled = false;
+            ticketInput.disabled = false;
+        }
     });
 
     connect();
