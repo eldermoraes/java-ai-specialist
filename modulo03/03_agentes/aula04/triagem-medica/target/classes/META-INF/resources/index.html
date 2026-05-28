@@ -195,10 +195,7 @@
         <label for="sintomasInput">Descreva os sintomas do paciente</label>
         <textarea id="sintomasInput" placeholder="Ex: dor no peito que irradia para braço esquerdo há 30 minutos, sudorese fria…"></textarea>
         <div class="examples">
-            <a data-example="cardio">↳ exemplo cardio</a>
-            <a data-example="neuro">↳ exemplo neuro</a>
-            <a data-example="orto">↳ exemplo ortopedia</a>
-            <a data-example="gi">↳ exemplo gastro</a>
+            <a id="exampleBtn">↻ gerar caso clínico de exemplo</a>
         </div>
     </div>
 
@@ -228,13 +225,6 @@
     const sintomasInput = document.getElementById('sintomasInput');
     const triarBtn = document.getElementById('triarBtn');
     const resetBtn = document.getElementById('resetBtn');
-
-    const EXAMPLES = {
-        cardio: 'Homem de 62 anos com dor opressiva no peito que irradia para o braço esquerdo e mandíbula há 40 minutos. Sudorese fria, náusea e sensação de "morte iminente". Pressão arterial elevada.',
-        neuro:  'Mulher de 55 anos com perda súbita de força no lado direito do corpo, fala arrastada e desvio da rima labial há 25 minutos. Estava bem antes do quadro.',
-        orto:   'Adolescente de 16 anos sofreu queda de skate. Apresenta dor intensa e deformidade no antebraço direito, sem perfuração da pele. Movimento muito doloroso.',
-        gi:     'Mulher de 28 anos com dor abdominal difusa há 12 horas, agora localizada na fossa ilíaca direita. Náusea, sem vômitos, sem febre alta. Dor piora ao tossir.'
-    };
 
     let ws = null;
 
@@ -294,16 +284,15 @@
             const msg = JSON.parse(e.data);
             if (msg.type === 'STARTED') {
                 resetSteps();
-                showStep('step-routed', '<div><span class="spinner"></span> Supervisor está decidindo especialidade…</div>');
-            } else if (msg.type === 'ROUTED') {
-                showStep('step-routed', `<div><span class="specialty-badge specialty-${msg.payload}">${msg.payload}</span> <span style="color:#6b7280;margin-left:8px;">selecionada pelo supervisor</span></div>`);
-                showStep('step-specialist', '<div><span class="spinner"></span> Especialista está avaliando…</div>');
-            } else if (msg.type === 'SPECIALIST_DONE') {
-                showStep('step-specialist', renderOpinion(msg.payload));
-            } else if (msg.type === 'REVIEWING') {
-                showStep('step-review', '<div><span class="spinner"></span> Supervisor está revisando o diagnóstico…</div>');
+                showStep('step-routed', '<div><span class="spinner"></span> @SupervisorAgent escolhendo especialidade e invocando o especialista…</div>');
+                showStep('step-specialist', '<div><span class="spinner"></span> aguardando opinião…</div>');
+                showStep('step-review', '<div><span class="spinner"></span> aguardando revisão…</div>');
             } else if (msg.type === 'DONE') {
-                showStep('step-review', renderReview(msg.payload.review));
+                const report = msg.payload || {};
+                const specialty = report.specialty || (report.opinion && report.opinion.specialty) || '—';
+                showStep('step-routed', `<div><span class="specialty-badge specialty-${specialty}">${specialty}</span> <span style="color:#6b7280;margin-left:8px;">selecionada pelo supervisor</span></div>`);
+                if (report.opinion) showStep('step-specialist', renderOpinion(report.opinion));
+                if (report.review) showStep('step-review', renderReview(report.review));
                 triarBtn.disabled = false;
             } else if (msg.type === 'ERROR') {
                 showStep('step-review', `<div class="error">❌ ${escapeHtml(msg.error || 'erro desconhecido')}</div>`);
@@ -327,8 +316,24 @@
         resetSteps();
     });
 
-    document.querySelectorAll('[data-example]').forEach(a => {
-        a.addEventListener('click', () => sintomasInput.value = EXAMPLES[a.dataset.example]);
+    document.getElementById('exampleBtn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const a = e.currentTarget;
+        const original = a.textContent;
+        a.textContent = '↻ gerando…';
+        a.style.pointerEvents = 'none';
+        sintomasInput.disabled = true;
+        try {
+            const resp = await fetch('/api/example/sintomas');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            sintomasInput.value = await resp.text();
+        } catch (err) {
+            sintomasInput.placeholder = 'Falha ao gerar exemplo: ' + err.message;
+        } finally {
+            a.textContent = original;
+            a.style.pointerEvents = '';
+            sintomasInput.disabled = false;
+        }
     });
 
     connect();
