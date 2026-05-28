@@ -1,8 +1,0 @@
-com/eldermoraes/vendedor/catalogo/Produto.class
-com/eldermoraes/vendedor/ai/VendedorAgent.class
-com/eldermoraes/vendedor/rest/NegociacaoEndpoint.class
-com/eldermoraes/vendedor/dto/RespostaVendedor.class
-com/eldermoraes/vendedor/dto/MensagemNegociacao.class
-com/eldermoraes/vendedor/ws/VendedorDashboard$DashboardEvent.class
-com/eldermoraes/vendedor/ws/VendedorDashboard.class
-com/eldermoraes/vendedor/catalogo/CatalogoService.class
