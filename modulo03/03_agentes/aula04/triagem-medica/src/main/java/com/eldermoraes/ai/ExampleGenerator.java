@@ -19,7 +19,7 @@ public interface ExampleGenerator {
             - Ortopédica (queda, dor articular, fratura suspeita, trauma)
             - Clínica/gastro (dor abdominal, febre, diarreia, sintomas inespecíficos)
 
-            Escreva como o paciente falaria — linguagem leiga, com detalhes relevantes:
+            Escreva como o paciente falaria — em primeira pessoa, linguagem leiga, com detalhes relevantes:
             duração do sintoma, intensidade, fatores associados, histórico.
             NÃO indique a especialidade explicitamente — o supervisor LLM vai descobrir.
             Tamanho: 3-6 linhas. Texto puro, sem JSON nem markdown.
