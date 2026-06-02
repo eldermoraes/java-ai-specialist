@@ -196,12 +196,12 @@ O Quarkus produz dois `ChatModel` beans a partir dessas seções: o default (ace
 
 ## Mapa de roteamento
 
-| Categoria | Tier | Modelo | Latência típica |
-|---|---|---|---|
-| FAQ | FAST | `gpt-oss:20b-cloud` | 5 a 20 s |
-| FEATURE | FAST | `gpt-oss:20b-cloud` | 5 a 15 s |
-| BUG | ROBUST | `deepseek-v4-pro:cloud` | 30 a 50 s |
-| SECURITY | ROBUST | `deepseek-v4-pro:cloud` | 20 a 40 s |
+| Categoria | Tier | Modelo |
+|---|---|---|
+| FAQ | FAST | `gpt-oss:20b-cloud` |
+| FEATURE | FAST | `gpt-oss:20b-cloud` |
+| BUG | ROBUST | `deepseek-v4-pro:cloud` |
+| SECURITY | ROBUST | `deepseek-v4-pro:cloud` |
 
 ## O que observar
 
@@ -219,6 +219,3 @@ O Quarkus produz dois `ChatModel` beans a partir dessas seções: o default (ace
 * Use o supplier para escolher modelos de provedores diferentes (Ollama, OpenAI, Anthropic) coexistindo no mesmo agente.
 * Adicione uma 5ª categoria (por exemplo `BILLING`): basta atualizar `TicketCategory`, `tierFor(...)`, o classificador, o supplier e o frontend.
 
-## Próxima aula
-
-Aula 06: Human-in-the-Loop, aprovação de desconto B2B com `@LoopAgent` e `@HumanInTheLoop` binário.
