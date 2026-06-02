@@ -2,9 +2,13 @@ package com.eldermoraes.ai;
 
 import com.eldermoraes.dto.TicketCategory;
 import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.agentic.declarative.ChatModelSupplier;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
+import io.quarkiverse.langchain4j.ModelName;
+import jakarta.enterprise.inject.spi.CDI;
 
 public interface TicketHandler {
 
@@ -23,4 +27,16 @@ public interface TicketHandler {
             description = "Responde tickets de TI adaptando estrutura à categoria",
             outputKey = "answer")
     String responder(@V("category") TicketCategory category, @V("ticket") String ticket);
+
+    @ChatModelSupplier
+    static ChatModel chatModel(@V("category") TicketCategory category) {
+        return switch (category) {
+            case FAQ, FEATURE -> CDI.current()
+                    .select(ChatModel.class, ModelName.Literal.of("smaller"))
+                    .get();
+            case BUG, SECURITY -> CDI.current()
+                    .select(ChatModel.class)
+                    .get();
+        };
+    }
 }

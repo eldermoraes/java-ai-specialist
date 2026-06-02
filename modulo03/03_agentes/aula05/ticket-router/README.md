@@ -1,43 +1,40 @@
 # Aula 05: Dynamic Routing, Roteamento de Tickets de TI
 
 > **Padrão**: Dynamic Routing (troca de modelo LLM em runtime)
-> **Case**: Tickets de TI atendidos por um único agente que escolhe o modelo conforme a categoria
-> **Stack**: Quarkus 3.35.2, Java 25, LangChain4j Agentic, Ollama (`deepseek-v4-pro:cloud` para casos complexos, `gpt-oss:20b-cloud` para casos simples)
+> **Case**: Tickets de TI atendidos por um único agente que escolhe o `ChatModel` conforme a categoria
+> **Stack**: Quarkus 3.35.2, Java 25, LangChain4j 1.15.1, Quarkiverse LangChain4j 1.11.0.CR1, Ollama (`deepseek-v4-pro:cloud` e `gpt-oss:20b-cloud`)
 
 ---
 
 ## O que você vai aprender
 
-O Dynamic Routing é o pattern em que **um único agente troca o `ChatModel` em tempo de execução** com base em uma decisão dinâmica. Aqui essa decisão é a categoria do ticket. Tickets curtos e operacionais (FAQ, FEATURE) usam um modelo barato e rápido; tickets complexos (BUG, SECURITY) usam um modelo robusto.
-
-A composição da aula é simples:
+O Dynamic Routing é o pattern em que **um único agente troca o `ChatModel` em tempo de execução** com base em uma decisão dinâmica. A aula demonstra a forma canônica introduzida na LangChain4j 1.15.0 (PR #5158) e disponível na Quarkiverse LangChain4j 1.11.0.CR1: a annotation `@ChatModelSupplier` aplicada a um método static que recebe valores do `AgenticScope` via `@V` e devolve o `ChatModel` apropriado a cada chamada do agente.
 
 ```
-                 @Inject TicketClassifier classifier;
-                 @Inject @ModelName("smaller") ChatModel modeloRapido;
-                 @Inject                        ChatModel modeloRobusto;
-                                  │
-                                  ▼
-                       ┌────────────────────────┐
-                       │     TicketRouter       │
-                       │     (orchestrator)     │
-                       └────────────┬───────────┘
-                                    │
-                  ┌─────────────────┼─────────────────┐
-                  ▼                                   ▼
-        ┌────────────────────┐              ┌────────────────────┐
-        │ TicketClassifier   │              │   TicketHandler    │
-        │ @RegisterAiService │              │     (interface)    │
-        │ (smaller)          │              │ AgenticServices    │
-        │ classifica em      │              │ .agentBuilder()    │
-        │ FAQ/BUG/SEC/FEAT   │              │ .chatModel(modelo) │
-        │                    │              │ .build()           │
-        └────────────────────┘              └────────────────────┘
-                                                     │
-                            ┌────────────────────────┴────────────────────────┐
-                            ▼                                                 ▼
-                  modeloRapido (FAQ/FEATURE)                       modeloRobusto (BUG/SECURITY)
-                  gpt-oss:20b-cloud                                deepseek-v4-pro:cloud
+                  @Inject TicketAgent ticketAgent;
+                                │
+                                ▼
+                  ┌────────────────────────┐
+                  │     @SequenceAgent     │   TicketAgent.java
+                  │   (TicketClassifier,   │   1) classifica
+                  │    TicketHandler)      │   2) responde
+                  └────────────┬───────────┘
+                               │
+                ┌──────────────┴──────────────┐
+                ▼                             ▼
+       ┌────────────────────┐       ┌────────────────────┐
+       │ TicketClassifier   │       │   TicketHandler    │
+       │ @RegisterAiService │       │  (interface pura)  │
+       │   (modelo smaller) │       │ @ChatModelSupplier │
+       │ classifica em      │       │ static method      │
+       │ FAQ/BUG/SEC/FEAT   │       │ escolhe o modelo   │
+       └────────────────────┘       └─────────┬──────────┘
+                                              │
+                            ┌─────────────────┼─────────────────┐
+                            ▼                                   ▼
+                  ChatModel @ModelName("smaller")       ChatModel @Default
+                  gpt-oss:20b-cloud                     deepseek-v4-pro:cloud
+                  (categorias FAQ, FEATURE)             (categorias BUG, SECURITY)
 ```
 
 ## Como rodar
@@ -55,10 +52,11 @@ Abra <http://localhost:8080/>.
 src/main/java/com/eldermoraes/
 ├── ai/
 │   ├── TicketClassifier.java   classifica em FAQ, BUG, SECURITY ou FEATURE (modelName="smaller")
-│   ├── TicketHandler.java      AI Service único; responde adaptando estrutura à categoria
-│   └── ExampleGenerator.java   AI Service auxiliar; gera tickets de exemplo
+│   ├── TicketHandler.java      agente único; @ChatModelSupplier escolhe o modelo
+│   └── ExampleGenerator.java   AI Service auxiliar (gera tickets de exemplo)
 ├── workflow/
-│   └── TicketRouter.java       orchestrator: classifica, escolhe modelo, constrói handler via builder
+│   ├── TicketAgent.java        @SequenceAgent compõe classifier + handler + @Output
+│   └── TicketRouter.java       wrapper Multi<TicketEvent>
 ├── rest/
 │   └── ExampleResource.java    endpoint /api/example/ticket
 ├── dto/                         TicketCategory, ModelTier, TicketResponse, TicketEvent, TicketInput
@@ -82,58 +80,109 @@ public interface TicketClassifier {
 }
 ```
 
-#### 2. `TicketHandler` é uma interface "pura"
+#### 2. `TicketHandler` declara o agente e o supplier de modelo
 
-A interface declara um único método de resposta. Note que ela **não usa `@RegisterAiService`**. A instância é construída pelo orchestrator a cada requisição, via `AgenticServices.agentBuilder(TicketHandler.class)`, fornecendo o `ChatModel` específico daquela chamada.
+A interface tem o método `@Agent` que responde o ticket e um método `static @ChatModelSupplier` que recebe `@V("category") TicketCategory` do `AgenticScope` e devolve o `ChatModel` apropriado a cada chamada. **Não há `@RegisterAiService`**: a Quarkus extension reconhece a interface por causa do `@Agent` e respeita o supplier ao construir o agente dentro da composição.
 
 ```java
 public interface TicketHandler {
+
     @SystemMessage("Adapte tom e estrutura à categoria...")
     @UserMessage("Categoria: {category}\n\nTicket: {ticket}")
     @Agent(name = "handler",
            description = "Responde tickets de TI adaptando estrutura à categoria",
            outputKey = "answer")
     String responder(@V("category") TicketCategory category, @V("ticket") String ticket);
+
+    @ChatModelSupplier
+    static ChatModel chatModel(@V("category") TicketCategory category) {
+        return switch (category) {
+            case FAQ, FEATURE -> CDI.current()
+                    .select(ChatModel.class, ModelName.Literal.of("smaller"))
+                    .get();
+            case BUG, SECURITY -> CDI.current()
+                    .select(ChatModel.class)
+                    .get();
+        };
+    }
 }
 ```
 
-#### 3. `TicketRouter` injeta dois `ChatModel` e troca em runtime
+O static method `chatModel(@V("category") ...)` é **invocado pelo framework a cada chamada** do agente. Como ele faz lookup via `CDI.current().select(ChatModel.class, ModelName.Literal.of("smaller"))`, os `ChatModel` beans usados são exatamente os configurados em `application.properties`. Sem duplicação de configuração.
+
+#### 3. `TicketAgent` compõe classifier + handler em sequência
+
+A composição declarativa é o que ativa o supplier. Em invocação standalone (`@Inject TicketHandler handler; handler.responder(...)`) o supplier não é honrado: a feature exige composição agentic.
 
 ```java
-@Inject
-@ModelName("smaller")
-ChatModel modeloRapido;        // gpt-oss:20b-cloud
+public interface TicketAgent {
 
-@Inject
-ChatModel modeloRobusto;       // deepseek-v4-pro:cloud (default)
-```
+    @SequenceAgent(
+            outputKey = "ticketResponse",
+            subAgents = { TicketClassifier.class, TicketHandler.class })
+    TicketResponse processar(@V("ticket") String ticket);
 
-O qualifier `@ModelName("smaller")` do Quarkus aponta para a configuração nomeada `quarkus.langchain4j.ollama.smaller.*`. Sem qualifier, o `ChatModel` injetado é o configurado em `quarkus.langchain4j.ollama.chat-model.*`. Os dois beans coexistem.
+    @Output
+    static TicketResponse assemble(AgenticScope scope) {
+        TicketCategory categoria = (TicketCategory) scope.readState("category");
+        String resposta = (String) scope.readState("answer");
+        ModelTier tier = tierFor(categoria);
+        return new TicketResponse(categoria, tier, tier.modelId(), "TicketHandler", resposta, 0L);
+    }
 
-Para cada ticket, o orchestrator decide qual modelo usar e constrói o handler com `AgenticServices.agentBuilder(...)`:
-
-```java
-TicketCategory categoria = classifier.classify(ticket);
-ChatModel selecionado = tierFor(categoria) == ModelTier.FAST ? modeloRapido : modeloRobusto;
-
-TicketHandler handler = AgenticServices.agentBuilder(TicketHandler.class)
-        .chatModel(selecionado)
-        .build();
-String resposta = handler.responder(categoria, ticket);
-```
-
-A função `tierFor(...)` é local e simples:
-
-```java
-static ModelTier tierFor(TicketCategory c) {
-    return switch (c) {
-        case FAQ, FEATURE -> ModelTier.FAST;
-        case BUG, SECURITY -> ModelTier.ROBUST;
-    };
+    static ModelTier tierFor(TicketCategory category) {
+        return switch (category) {
+            case FAQ, FEATURE -> ModelTier.FAST;
+            case BUG, SECURITY -> ModelTier.ROBUST;
+        };
+    }
 }
 ```
 
-#### 4. Configuração em `application.properties`
+#### 4. `TicketRouter` injeta a interface composta
+
+O orchestrator é trivial: recebe o texto do ticket pelo WebSocket, delega ao `TicketAgent` e emite os eventos `RECEIVED`, `CLASSIFICATION` e `ANSWER`.
+
+```java
+@Inject
+TicketAgent ticketAgent;
+
+private void runRouting(String ticket, MultiEmitter<? super TicketEvent> emitter) {
+    emitter.emit(TicketEvent.received(preview(ticket)));
+    TicketResponse response = ticketAgent.processar(ticket);
+    emitter.emit(TicketEvent.classification(
+            response.category(), response.tier(), response.modelId(), response.agentName()));
+    emitter.emit(TicketEvent.answer(response));
+    emitter.complete();
+}
+```
+
+#### 5. Override de versão no `pom.xml`
+
+A feature `@ChatModelSupplier` com parâmetros `@V` chegou na Quarkiverse LangChain4j 1.11.0.CR1 (langchain4j-agentic 1.15.1-beta25). Como o Quarkus 3.35.2 ainda resolve a versão estável anterior, sobrescrevemos o BOM Quarkiverse direto no projeto:
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>${quarkus.platform.group-id}</groupId>
+            <artifactId>${quarkus.platform.artifact-id}</artifactId>
+            <version>${quarkus.platform.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-bom</artifactId>
+            <version>1.11.0.CR1</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+#### 6. Configuração em `application.properties`
 
 ```properties
 quarkus.langchain4j.ollama.chat-model.model-id=deepseek-v4-pro:cloud
@@ -143,32 +192,32 @@ quarkus.langchain4j.ollama.smaller.chat-model.model-id=gpt-oss:20b-cloud
 quarkus.langchain4j.ollama.smaller.chat-model.temperature=0
 ```
 
-O Quarkus produz dois beans `ChatModel` a partir dessas duas seções: o `default` e o nomeado `smaller`.
+O Quarkus produz dois `ChatModel` beans a partir dessas seções: o default (acessado via `CDI.current().select(ChatModel.class)`) e o nomeado `smaller` (acessado via `ModelName.Literal.of("smaller")`).
 
 ## Mapa de roteamento
 
 | Categoria | Tier | Modelo | Latência típica |
 |---|---|---|---|
-| FAQ | FAST | `gpt-oss:20b-cloud` | 1 a 4 s |
-| FEATURE | FAST | `gpt-oss:20b-cloud` | 1 a 4 s |
-| BUG | ROBUST | `deepseek-v4-pro:cloud` | 20 a 50 s |
-| SECURITY | ROBUST | `deepseek-v4-pro:cloud` | 20 a 50 s |
+| FAQ | FAST | `gpt-oss:20b-cloud` | 5 a 20 s |
+| FEATURE | FAST | `gpt-oss:20b-cloud` | 5 a 15 s |
+| BUG | ROBUST | `deepseek-v4-pro:cloud` | 30 a 50 s |
+| SECURITY | ROBUST | `deepseek-v4-pro:cloud` | 20 a 40 s |
 
 ## O que observar
 
 | Observação | Explica |
 |---|---|
 | Sequência WS: `RECEIVED`, `CLASSIFICATION`, `ANSWER` | O orchestrator emite 3 marcos para a UI |
-| Logs do servidor mostram o modelo usado por categoria | A linha `>> categoria=... tier=... modelo=...` no log do `TicketRouter` |
-| Resposta a FAQ chega rapido; a BUG demora mais | O orchestrator escolheu o `modeloRapido` ou o `modeloRobusto` conforme o caso |
-| O nome do agent reportado na UI é sempre `TicketHandler` | É o mesmo agente para todas as categorias; o que muda é o `ChatModel` |
+| Logs do servidor mostram a categoria, tier e modelo escolhidos | A linha `>> categoria=... tier=... modelo=...` no `TicketRouter` |
+| Respostas a FAQ chegam mais rapido que a BUG | O `@ChatModelSupplier` escolheu o modelo `smaller` para FAQ e o default para BUG |
+| O agent reportado na UI é sempre `TicketHandler` | É o mesmo agente em todas as categorias; o que muda é o `ChatModel` |
 
 ## Para experimentar
 
-* Edite o `System Message` do `TicketHandler` para dar instruções diferentes por categoria. Veja o impacto da clareza do prompt na qualidade da resposta.
-* Adicione uma 5ª categoria (por exemplo `BILLING`): basta atualizar `TicketCategory`, `tierFor(...)`, o classificador e o frontend.
-* Adicione um terceiro `ChatModel` (por exemplo um modelo local sem Cloud) via nova seção `quarkus.langchain4j.ollama.<nome>.*` e amplie a lógica de roteamento.
-* Capture o tempo de resposta e o custo (token) por categoria para comparar tiers.
+* Altere a `@ChatModelSupplier` para usar um terceiro `ChatModel` em uma categoria nova. Configure mais uma seção `quarkus.langchain4j.ollama.<nome>.*` em `application.properties` e selecione via `ModelName.Literal.of("<nome>")`.
+* Imprima a categoria no static method (`System.out.println` ou logger) para visualizar a decisão a cada chamada.
+* Use o supplier para escolher modelos de provedores diferentes (Ollama, OpenAI, Anthropic) coexistindo no mesmo agente.
+* Adicione uma 5ª categoria (por exemplo `BILLING`): basta atualizar `TicketCategory`, `tierFor(...)`, o classificador, o supplier e o frontend.
 
 ## Próxima aula
 
