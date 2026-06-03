@@ -1,6 +1,6 @@
-# Aula 06 — Human-in-the-Loop (HITL): Aprovação de Desconto B2B
+# Aula 06: Human-in-the-Loop (HITL) para Aprovação de Desconto B2B
 
-> **Padrão**: Human-in-the-Loop (decisão ternária — aprovar/rejeitar/contrapor)
+> **Padrão**: Human-in-the-Loop (decisão ternária: aprovar/rejeitar/contrapor)
 > **Case**: Vendedor solicita desconto → agente comercial propõe % → gerente decide
 > **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic · Ollama (`deepseek-v4-pro:cloud` + `gpt-oss:20b-cloud`) · Postgres (Dev Services)
 
@@ -53,21 +53,21 @@ Abra <http://localhost:8080/> (interface tem painéis vendedor + gerente lado a 
 ```
 src/main/java/com/eldermoraes/
 ├── ai/
-│   ├── ComercialAgent.java       — @Agent: propõe % de desconto
-│   ├── RespostaFinalAgent.java   — @Agent: redige resposta ao vendedor
-│   └── ExampleGenerator.java     — AI Service auxiliar (gera pedidos B2B)
+│   ├── ComercialAgent.java       # @Agent: propõe % de desconto
+│   ├── RespostaFinalAgent.java   # @Agent: redige resposta ao vendedor
+│   └── ExampleGenerator.java     # AI Service auxiliar (gera pedidos B2B)
 ├── hitl/
-│   ├── ApprovalService.java      — bloqueio via CompletableFuture + Postgres
-│   ├── ApprovalProposal.java     — PanacheEntity (persistência)
-│   └── ApprovalStatus.java       — enum (PENDENTE/APROVADA/REJEITADA/CONTRAPROPOSTA/EXPIRADA)
+│   ├── ApprovalService.java      # bloqueio via CompletableFuture + Postgres
+│   ├── ApprovalProposal.java     # PanacheEntity (persistência)
+│   └── ApprovalStatus.java       # enum (PENDENTE/APROVADA/REJEITADA/CONTRAPROPOSTA/EXPIRADA)
 ├── workflow/
-│   └── DescontoWorkflow.java     — orquestra: agente → bloqueio → agente
+│   └── DescontoWorkflow.java     # orquestra: agente → bloqueio → agente
 ├── ws/
-│   ├── VendedorWebSocket.java    — /ws/vendedor/{vendedorId}
-│   └── GerenteWebSocket.java     — /ws/gerente (broadcast bidirecional)
+│   ├── VendedorWebSocket.java    # /ws/vendedor/{vendedorId}
+│   └── GerenteWebSocket.java     # /ws/gerente (broadcast bidirecional)
 ├── rest/
-│   └── ExampleResource.java      — /api/example/pedido
-└── dto/                          — PropostaDesconto, ApprovalDecision, VendedorEvent, GerenteEvent
+│   └── ExampleResource.java      # /api/example/pedido
+└── dto/                          # PropostaDesconto, ApprovalDecision, VendedorEvent, GerenteEvent
 ```
 
 ### Pontos-chave
@@ -80,7 +80,7 @@ public interface ComercialAgent {
     @SystemMessage("...analista comercial sênior B2B...")
     @UserMessage("Pedido do vendedor: {descricao}")
     @Agent(name = "comercial",
-            description = "Analista comercial — propõe desconto razoável",
+            description = "Analista comercial: propõe desconto razoável",
             outputKey = "proposta")
     PropostaDesconto propor(@V("descricao") String descricaoPedido);
 }
@@ -139,9 +139,9 @@ public interface ApprovalGate {
 ```
 
 **Por que não usamos**:
-- `@HumanInTheLoop` é **binário** (aprovar/rejeitar). A decisão real é **ternária** (aprovar/rejeitar/**contrapor com % diferente**) — perderíamos uma feature do caso corporativo
-- O static method não tem `@Inject` direto — precisaria `CDI.current().select(...).get()` (cerimônia)
-- A persistência no Postgres e multi-gerente broadcast já existem no `ApprovalService` — duplicar via `@HumanInTheLoop` seria custo sem ganho
+- `@HumanInTheLoop` é **binário** (aprovar/rejeitar). A decisão real é **ternária** (aprovar/rejeitar/**contrapor com % diferente**), o que nos faria perder uma feature do caso corporativo
+- O static method não tem `@Inject` direto: precisaria de `CDI.current().select(...).get()` (cerimônia)
+- A persistência no Postgres e multi-gerente broadcast já existem no `ApprovalService`, então duplicar via `@HumanInTheLoop` seria custo sem ganho
 - **Para HITL com decisão ternária ou estado persistente, Java explícito é a forma idiomática**. `@HumanInTheLoop` é melhor para fluxos binários simples (aprovar/rejeitar uma proposta de email, p.ex.)
 
 Para casos binários puros sem persistência, a versão declarativa funcionaria:
@@ -170,13 +170,13 @@ public interface ApprovalAgent {
 
 ## Recuperação pós-restart
 
-O `ApprovalService.@PostConstruct` lê `findByStatus(PENDENTE)` no Postgres. Propostas pendentes antes do restart aparecem no painel do gerente — mas as virtual threads originais foram perdidas. Quando o gerente decide nessas propostas pós-restart, o `decidir(...)` ainda persiste o status no Postgres mas não há `waiter` (futureMap está vazio). Em produção isso seria mitigado por sticky sessions ou um broker de eventos persistente.
+O `ApprovalService.@PostConstruct` lê `findByStatus(PENDENTE)` no Postgres. Propostas pendentes antes do restart aparecem no painel do gerente, mas as virtual threads originais foram perdidas. Quando o gerente decide nessas propostas pós-restart, o `decidir(...)` ainda persiste o status no Postgres mas não há `waiter` (futureMap está vazio). Em produção isso seria mitigado por sticky sessions ou um broker de eventos persistente.
 
 ## Para experimentar
 
 - Adicione uma 5ª categoria de decisão (ex: `ENCAMINHADA_DIRETOR` para pedidos > R$ 500k): novo enum + novo handler no `decidir(...)` + novo botão no painel do gerente
-- Habilite log SQL (`quarkus.hibernate-orm.log.sql=true`) — veja todas as transações
-- Force timeout reduzido (`hitl.approval.timeout.minutes=1`) — veja a EXPIRADA acontecer
+- Habilite log SQL (`quarkus.hibernate-orm.log.sql=true`) para ver todas as transações
+- Force timeout reduzido (`hitl.approval.timeout.minutes=1`) para ver a EXPIRADA acontecer
 - Abra 2 abas do gerente: ambas recebem broadcast de propostas pendentes; apenas a primeira a decidir "ganha" (race condition controlada pelo Postgres + future)
 
 ## Conclusão do módulo
