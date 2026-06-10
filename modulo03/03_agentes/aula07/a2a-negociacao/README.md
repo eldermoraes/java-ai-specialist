@@ -28,21 +28,21 @@ O padrão **Agent-to-Agent (A2A)** é arquiteturalmente diferente dos outros do 
    └────────────────────────────┘                └─────────────────────────────┘
 ```
 
-Cada lado continua com um **agente real** (`@RegisterAiService` + `@Agent` com `description`). O `CompradorAgent` decide ACEITAR/CONTRAPOR/DESISTIR; o `VendedorAgent` propõe preço respeitando o preço mínimo do catálogo. O que mudou de aulas anteriores é o **transporte entre os agentes**: protocolo A2A de verdade.
+Como nas demais aulas do módulo, cada lado tem um **agente real** (`@RegisterAiService` + `@Agent` com `description`). O `CompradorAgent` decide ACEITAR/CONTRAPOR/DESISTIR; o `VendedorAgent` propõe preço respeitando o preço mínimo do catálogo. A novidade desta aula é o **transporte entre os agentes**: os dois apps não conversam por uma API proprietária, e sim pelo protocolo A2A (SDK Java oficial **1.0.0.Final**, groupId `org.a2aproject.sdk`, alinhado à spec A2A 1.0.0).
 
-## De REST simulado a A2A real
+## Por que um protocolo, e não um endpoint REST qualquer?
 
-A primeira versão desta aula "simulava" A2A com `@RegisterRestClient` + um endpoint JAX-RS — e o README avisava: *"quando o SDK A2A estabilizar, a migração é localizada"*. O SDK estabilizou (**1.0.0.Final**, groupId permanente `org.a2aproject.sdk`, alinhado à spec A2A 1.0.0), e esta versão completa a migração. O que o protocolo real acrescenta:
+Dois apps poderiam trocar JSON por um endpoint REST inventado por nós — mas aí só *esses dois* apps se entenderiam. O ponto do A2A é ser um **padrão aberto de interoperabilidade**: qualquer agente que fale o protocolo conversa com o vendedor desta aula sem ler o código dele. O que o protocolo padroniza:
 
-| Antes (REST simulado) | Agora (A2A 1.0) |
+| Aspecto | Como o A2A resolve |
 |---|---|
-| URL + path proprietário hardcoded (`POST /a2a/negociacao`) | **Discovery**: card público em `GET /.well-known/agent-card.json` descreve skills, transportes e formatos |
-| Contrato implícito (só quem leu o código sabe o schema) | **Agent Card** documenta a skill `negociar` e seu payload |
-| Request/response HTTP anônimo | **Task** com id e ciclo de vida (`submitted → working → completed/failed`) |
-| Correlação de rodadas via campo ad-hoc (`compradorId` no body) | **`contextId`** padronizado pelo protocolo: as N rodadas de uma negociação compartilham o mesmo contexto |
-| Envelope = JSON arbitrário | **JSON-RPC 2.0** (`method: "SendMessage"`), igual para qualquer agente A2A do planeta |
+| **Discovery** | Card público em `GET /.well-known/agent-card.json` descreve skills, transportes e formatos — nada de URL+path combinados por e-mail |
+| **Contrato** | O **Agent Card** documenta a skill `negociar` e seu payload |
+| **Ciclo de vida** | Cada mensagem vira uma **Task** com id e estados (`submitted → working → completed/failed`) |
+| **Multi-turno** | **`contextId`** padronizado: as N rodadas de uma negociação compartilham o mesmo contexto |
+| **Envelope** | **JSON-RPC 2.0** (`method: "SendMessage"`), igual para qualquer agente A2A do planeta |
 
-O importante pedagogicamente: **os records de domínio (`MensagemNegociacao`, `RespostaVendedor`) não mudaram em nada**. Mudou o transporte; o contrato de negócio viaja agora dentro de um `DataPart` (JSON estruturado) em vez de ser o body inteiro.
+O contrato de **negócio** continua sendo nosso: os records `MensagemNegociacao` e `RespostaVendedor` viajam como JSON estruturado dentro de um `DataPart` — o protocolo padroniza o envelope e o ciclo de vida, não o domínio.
 
 ## Como rodar
 
@@ -71,7 +71,7 @@ aula07/a2a-negociacao/
 │       ├── ai/ExampleGenerator.java      # AI Service (gera EntradaCompra de exemplo)
 │       ├── a2a/VendedorA2AClient.java    # Client do SDK: discovery + sendMessage síncrono
 │       ├── a2a/NegociacaoPayloadMapper.java # record ↔ Map do DataPart (Jackson)
-│       ├── negociacao/NegociacaoCoordinator.java # loop manual 5 rodadas (inalterado!)
+│       ├── negociacao/NegociacaoCoordinator.java # loop manual 5 rodadas
 │       ├── ws/CompradorWebSocket.java
 │       └── rest/ExampleResource.java     # /api/example/compra
 └── vendedor-app/                    # porta 8081 — lado SERVIDOR A2A
@@ -201,17 +201,17 @@ O consumer extrai o `DataPart` dos artifacts da `Task` (`TaskEvent → task.arti
 
 #### 5. O loop de negociação continua no orchestrator Java
 
-A2A é entre **apps**, não dentro de um único JVM — o `@LoopAgent` declarativo orquestra sub-agents do mesmo processo. O `NegociacaoCoordinator` ficou **idêntico** à versão REST, trocando apenas a injeção:
+A2A é entre **apps**, não dentro de um único JVM — o `@LoopAgent` declarativo orquestra sub-agents do mesmo processo. Aqui o loop é código Java imperativo, e o `NegociacaoCoordinator` não sabe nada de protocolo: ele injeta o `VendedorA2AClient` e chama um método síncrono comum:
 
 ```java
 @Inject
-VendedorA2AClient vendedorRemoto;   // antes: @Inject @RestClient VendedorRemote
+VendedorA2AClient vendedorRemoto;
 
-// loop inalterado:
+// dentro do loop de rodadas:
 RespostaVendedor resp = vendedorRemoto.negociar(new MensagemNegociacao(...));
 ```
 
-Essa é a prova prática de que a migração REST → A2A é **localizada**: o domínio e a orquestração não souberam da mudança.
+Todo o A2A (discovery, JSON-RPC, task, DataPart) fica **isolado no pacote `a2a/`** — domínio e orquestração não dependem do transporte.
 
 #### 6. `ExampleGenerator` retorna `EntradaCompra` tipada via LLM
 
@@ -242,7 +242,7 @@ O LangChain4j Agentic tem **`@A2AClientAgent(a2aServerUrl = "...")`**, que subst
 - O `langchain4j-agentic-a2a` **lançado** ainda depende do SDK antigo (`io.github.a2asdk` 0.3.x), que fala o protocolo v0.3 — **incompatível** com um servidor 1.0 (métodos JSON-RPC diferentes: `message/send` → `SendMessage`).
 - O `main` do LangChain4j já aponta para `org.a2aproject.sdk:1.0.0.CR1`, mas sem release; o quarkus-langchain4j ainda não expõe.
 
-Quando o quarkus-langchain4j atualizar, a migração imperativo → declarativo fica confinada ao `VendedorA2AClient` (o coordinator não muda — de novo). O lado servidor (`@PublicAgentCard` + `AgentExecutor`) já é exatamente o que o README da versão REST previa.
+Quando o quarkus-langchain4j atualizar, a troca imperativo → declarativo fica confinada ao `VendedorA2AClient` — o coordinator e o lado servidor (`@PublicAgentCard` + `AgentExecutor`) não mudam.
 
 ## O que observar
 
@@ -253,7 +253,7 @@ Quando o quarkus-langchain4j atualizar, a migração imperativo → declarativo 
 | Log do vendedor: `A2A task=<uuid> contextId=comp-xxx — rodada N` | Cada rodada é uma **task nova** no **mesmo contextId** (multi-turno A2A) |
 | Log do comprador: `Agent Card resolvido: Vendedor B2B v1.0.0` | Resolução lazy + cache do card |
 | Executor roda em `executor-thread-N` | Worker pool do SDK — LLM blocking seguro |
-| Dashboard vendedor mostra cada rodada em tempo real | Broadcast WebSocket read-only (inalterado) |
+| Dashboard vendedor mostra cada rodada em tempo real | Broadcast WebSocket read-only |
 | 2 chamadas LLM por rodada (comprador + vendedor) | Cada agente roda no seu app |
 
 Para ver o protocolo cru (dispara 1 chamada LLM real):
@@ -278,4 +278,4 @@ A resposta é uma `Task` completa: `status.state: TASK_STATE_COMPLETED` e o arti
 
 ## Conclusão do módulo
 
-Você passou por 6 padrões em 6 aulas, todos usando `@Agent` + composições declarativas (`@ParallelAgent`, `@ParallelMapperAgent`, `@SequenceAgent`, `@SupervisorAgent`, `@ConditionalAgent`, `@LoopAgent`, `@HumanInTheLoop`) ou comunicação inter-app — que nesta aula evoluiu de REST simulado para o **protocolo A2A 1.0 com o SDK Java oficial**. Os 3 conceitos centrais (`@Agent` em workers + composição declarativa em interfaces marker + `@Inject` direto da interface composta) formam o vocabulário canônico do framework agentic em Quarkus; o A2A acrescenta o quarto: **interoperabilidade entre agentes de processos (e fornecedores) diferentes via protocolo aberto**.
+Você passou por 6 padrões em 6 aulas, todos usando `@Agent` + composições declarativas (`@ParallelAgent`, `@ParallelMapperAgent`, `@SequenceAgent`, `@SupervisorAgent`, `@ConditionalAgent`, `@LoopAgent`, `@HumanInTheLoop`) ou comunicação inter-app — nesta aula, o **protocolo A2A 1.0 com o SDK Java oficial**. Os 3 conceitos centrais (`@Agent` em workers + composição declarativa em interfaces marker + `@Inject` direto da interface composta) formam o vocabulário canônico do framework agentic em Quarkus; o A2A acrescenta o quarto: **interoperabilidade entre agentes de processos (e fornecedores) diferentes via protocolo aberto**.

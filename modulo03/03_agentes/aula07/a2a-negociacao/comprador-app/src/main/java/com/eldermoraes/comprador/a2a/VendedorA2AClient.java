@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Lado cliente do protocolo A2A, encapsulando o Client oficial do SDK atrás
- * da mesma assinatura síncrona que o NegociacaoCoordinator sempre usou:
+ * de uma assinatura síncrona simples para o NegociacaoCoordinator:
  * RespostaVendedor negociar(MensagemNegociacao).
  *
  * Discovery: o Agent Card do vendedor é resolvido de /.well-known/agent-card.json

@@ -11,9 +11,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Map;
 
 /**
- * Converte os records do domínio de/para o Map carregado no DataPart A2A.
- * O contrato (campos de MensagemNegociacao/RespostaVendedor) é o mesmo da
- * versão REST — só o transporte mudou.
+ * Converte os records do domínio de/para o Map carregado no DataPart A2A:
+ * o contrato de negócio (MensagemNegociacao/RespostaVendedor) viaja como
+ * JSON estruturado dentro do envelope do protocolo.
  */
 @ApplicationScoped
 public class NegociacaoPayloadMapper {
