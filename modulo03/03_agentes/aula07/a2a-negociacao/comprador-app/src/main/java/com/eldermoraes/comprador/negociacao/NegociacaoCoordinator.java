@@ -1,5 +1,6 @@
 package com.eldermoraes.comprador.negociacao;
 
+import com.eldermoraes.comprador.a2a.VendedorA2AClient;
 import com.eldermoraes.comprador.ai.CompradorAgent;
 import com.eldermoraes.comprador.dto.Acao;
 import com.eldermoraes.comprador.dto.DecisaoComprador;
@@ -13,7 +14,6 @@ import io.smallrye.mutiny.subscription.MultiEmitter;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import java.math.BigDecimal;
@@ -28,8 +28,7 @@ public class NegociacaoCoordinator {
     CompradorAgent comprador;
 
     @Inject
-    @RestClient
-    VendedorRemote vendedorRemoto;
+    VendedorA2AClient vendedorRemoto;
 
     @ConfigProperty(name = "negociacao.max-rodadas", defaultValue = "5")
     int maxRodadas;

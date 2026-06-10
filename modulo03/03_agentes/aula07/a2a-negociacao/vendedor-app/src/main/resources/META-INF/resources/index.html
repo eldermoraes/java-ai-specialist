@@ -107,7 +107,7 @@
     <header>
         <div>
             <h1>🏪 Vendedor — A2A Dashboard</h1>
-            <div class="subtitle">Recebe mensagens via POST /a2a/negociacao do comprador-app (porta 8080)</div>
+            <div class="subtitle">Recebe tasks A2A (JSON-RPC 2.0) do comprador-app (porta 8080)</div>
         </div>
         <span class="status connecting" id="statusBadge">conectando</span>
     </header>
@@ -115,9 +115,10 @@
     <div class="panel">
         <h2>Endpoint A2A</h2>
         <div class="info">
-            Mensagens recebidas via <code>POST http://localhost:8081/a2a/negociacao</code>.
-            Schema do request: <code>{ compradorId, rodada, produto, ultimoValorProposto, mensagem }</code>.
-            Response: <code>{ produto, precoOferecido, prazoEntrega, condicoes, mensagem, limiteAtingido }</code>.
+            Agent Card em <code>GET /.well-known/agent-card.json</code> ·
+            JSON-RPC 2.0 em <code>POST /</code> (método <code>message/send</code>).
+            DataPart do request: <code>{ compradorId, rodada, produto, ultimoValorProposto, mensagem }</code>.
+            Artifact da resposta: <code>{ produto, precoOferecido, prazoEntrega, condicoes, mensagem, limiteAtingido }</code>.
         </div>
     </div>
 
@@ -143,7 +144,7 @@
 
     async function loadCatalogo() {
         try {
-            const r = await fetch('/a2a/negociacao/catalogo');
+            const r = await fetch('/api/catalogo');
             const cat = await r.json();
             catalogoEl.innerHTML = cat.map(p => `
                 <div class="produto-line">
