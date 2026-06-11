@@ -276,6 +276,6 @@ A resposta é uma `Task` completa: `status.state: TASK_STATE_COMPLETED` e o arti
 - Derrube o vendedor e tente negociar: `ERROR` imediato com mensagem clara (resolução/conexão)
 - Adicione um terceiro app (terceiro agente intermediário): com A2A real, ele descobre os dois pelo Agent Card — clássico em supply chains
 
-## Conclusão do módulo
+## Conclusão
 
-Você passou por 6 padrões em 6 aulas, todos usando `@Agent` + composições declarativas (`@ParallelAgent`, `@ParallelMapperAgent`, `@SequenceAgent`, `@SupervisorAgent`, `@ConditionalAgent`, `@LoopAgent`, `@HumanInTheLoop`) ou comunicação inter-app — nesta aula, o **protocolo A2A 1.0 com o SDK Java oficial**. Os 3 conceitos centrais (`@Agent` em workers + composição declarativa em interfaces marker + `@Inject` direto da interface composta) formam o vocabulário canônico do framework agentic em Quarkus; o A2A acrescenta o quarto: **interoperabilidade entre agentes de processos (e fornecedores) diferentes via protocolo aberto**.
+Os 3 conceitos centrais das aulas anteriores (`@Agent` em workers + composição declarativa em interfaces marker + `@Inject` direto da interface composta) formam o vocabulário canônico do framework agentic em Quarkus; esta aula acrescenta o quarto: **interoperabilidade entre agentes de processos (e fornecedores) diferentes via protocolo aberto** — o **protocolo A2A 1.0 com o SDK Java oficial**.
