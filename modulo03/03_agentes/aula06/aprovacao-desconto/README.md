@@ -179,6 +179,6 @@ O `ApprovalService.@PostConstruct` lê `findByStatus(PENDENTE)` no Postgres. Pro
 - Force timeout reduzido (`hitl.approval.timeout.minutes=1`) para ver a EXPIRADA acontecer
 - Abra 2 abas do gerente: ambas recebem broadcast de propostas pendentes; apenas a primeira a decidir "ganha" (race condition controlada pelo Postgres + future)
 
-## Conclusão do módulo
+## Conclusão
 
-Você passou pelos 6 padrões clássicos de agentes em produção. O módulo demonstrou que o framework Quarkus + LangChain4j Agentic resolve o vocabulário declarativo (`@Agent`, composições `@SequenceAgent`/`@ParallelAgent`/`@ParallelMapperAgent`/`@SequenceAgent`/`@SupervisorAgent`/`@ConditionalAgent`/`@LoopAgent`/`@HumanInTheLoop`/`@A2AClientAgent`) e quando recorrer a Java imperativo (HITL ternário com persistência, A2A REST entre apps separados).
+Esta aula mostra onde o vocabulário declarativo (`@Agent`, composições `@SequenceAgent`/`@ParallelAgent`/`@ParallelMapperAgent`/`@SupervisorAgent`/`@ConditionalAgent`/`@LoopAgent`/`@HumanInTheLoop`) encontra seu limite — e quando recorrer a Java imperativo: uma decisão humana ternária, com persistência e timeout, pede `CompletableFuture` + Postgres em vez do `@HumanInTheLoop` binário.

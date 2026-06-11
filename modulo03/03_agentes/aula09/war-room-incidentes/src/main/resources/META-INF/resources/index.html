@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War-Room de Incidentes - Blackboard</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f4f6fa;
+            color: #1f2330;
+        }
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+        header .subtitle { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+        .status {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .status::before {
+            content: ""; width: 8px; height: 8px; border-radius: 50%;
+            background: #94a3b8; transition: background 0.2s;
+        }
+        .status.connected::before { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+        .status.connecting::before { background: #fbbf24; animation: pulse 1.2s infinite; }
+        .status.disconnected::before { background: #f87171; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .input-card {
+            background: white;
+            padding: 16px 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+        }
+        .input-card h2 {
+            margin: 0 0 12px 0;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .campos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .campo label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+        .campo textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d3d8e0;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+            line-height: 1.45;
+            resize: vertical;
+            outline: none;
+        }
+        .campo textarea:focus { border-color: #2563eb; }
+        .campo.sintoma { grid-column: 1 / -1; }
+        .campo.sintoma textarea { font-family: inherit; font-size: 13px; }
+        .examples {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e6e9ef;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .examples a { color: #2563eb; cursor: pointer; text-decoration: underline; }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        button.primary {
+            padding: 12px 26px;
+            border: none;
+            border-radius: 10px;
+            background: #2563eb;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button.primary:hover { background: #1d4ed8; }
+        button.primary:disabled { background: #94a3b8; cursor: not-allowed; }
+        button.ghost {
+            padding: 12px 18px;
+            border: 1px solid #d3d8e0;
+            background: white;
+            color: #1f2330;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .quadro-title {
+            font-size: 13px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0 0 12px 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quadro {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 900px) { .quadro { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 540px) { .quadro { grid-template-columns: 1fr; } .campos { grid-template-columns: 1fr; } }
+
+        .card-quadro {
+            background: white;
+            padding: 14px 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-left: 4px solid #d3d8e0;
+            transition: border-color 0.4s, box-shadow 0.4s;
+            min-height: 120px;
+        }
+        .card-quadro.preenchido {
+            border-left-color: #2563eb;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.12);
+        }
+        .card-quadro h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .ordem {
+            display: none;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 24px;
+            text-align: center;
+        }
+        .ordem.visivel { display: inline-block; }
+        .card-quadro pre.conteudo {
+            margin: 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 11.5px;
+            line-height: 1.5;
+            color: #4b5563;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .card-quadro pre.conteudo.aguardando { color: #94a3b8; font-style: italic; }
+
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid #e6e9ef;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .relatorio {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            display: none;
+        }
+        .relatorio.visible { display: block; }
+        .relatorio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .relatorio-header h2 { margin: 0; font-size: 18px; font-weight: 600; }
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge.sev1 { background: #fee2e2; color: #991b1b; }
+        .badge.sev2 { background: #fef3c7; color: #92400e; }
+        .badge.sev3 { background: #dcfce7; color: #166534; }
+        .causa-raiz {
+            padding: 12px;
+            background: #f9fafb;
+            border-left: 4px solid #2563eb;
+            border-radius: 4px;
+            line-height: 1.6;
+            color: #1f2937;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .relatorio h4 {
+            margin: 16px 0 6px 0;
+            font-size: 13px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .relatorio ol, .relatorio ul { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.7; color: #1f2937; }
+        .resumo-exec {
+            margin-top: 16px;
+            padding: 12px 14px;
+            background: #f4f6fa;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        .relatorio.erro .causa-raiz { border-left-color: #ef4444; color: #991b1b; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div>
+            <h1>🚨 War-Room de Incidentes</h1>
+            <div class="subtitle">Padrão Blackboard · 5 especialistas, 1 quadro compartilhado, 0 LLM de orquestração</div>
+        </div>
+        <span class="status connecting" id="statusBadge">conectando</span>
+    </header>
+
+    <div class="input-card">
+        <h2>📟 Abrir incidente</h2>
+        <div class="campos">
+            <div class="campo sintoma">
+                <label for="sintomaInput">Sintoma (texto do alerta)</label>
+                <textarea id="sintomaInput" rows="2" placeholder="Texto do alerta: o que está acontecendo?"></textarea>
+            </div>
+            <div class="campo">
+                <label for="logsInput">Logs da aplicação</label>
+                <textarea id="logsInput" rows="6" placeholder="Trecho dos logs da aplicação…"></textarea>
+            </div>
+            <div class="campo">
+                <label for="metricasInput">Métricas de infraestrutura</label>
+                <textarea id="metricasInput" rows="6" placeholder="Snapshot das métricas de infraestrutura…"></textarea>
+            </div>
+            <div class="campo">
+                <label for="bancoInput">Diagnóstico do banco de dados</label>
+                <textarea id="bancoInput" rows="5" placeholder="Diagnóstico do banco de dados…"></textarea>
+            </div>
+        </div>
+        <div class="examples">
+            <a id="exampleIncidente">↳ gerar incidente de exemplo</a>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button type="button" class="ghost" id="resetBtn">Limpar</button>
+        <button type="button" class="primary" id="investigarBtn" disabled>Abrir war-room</button>
+    </div>
+
+    <div class="quadro-title">Quadro da war-room <span id="quadroSpinner" style="display:none;"><span class="spinner"></span></span></div>
+    <div class="quadro">
+        <div class="card-quadro" data-key="evidenciaAplicacao">
+            <h3>📱 Aplicação <span class="ordem"></span></h3>
+            <pre class="conteudo aguardando">aguardando…</pre>
+        </div>
+        <div class="card-quadro" data-key="evidenciaInfra">
+            <h3>🖥️ Infraestrutura <span class="ordem"></span></h3>
+            <pre class="conteudo aguardando">aguardando…</pre>
+        </div>
+        <div class="card-quadro" data-key="evidenciaBanco">
+            <h3>🗄️ Banco de Dados <span class="ordem"></span></h3>
+            <pre class="conteudo aguardando">aguardando…</pre>
+        </div>
+        <div class="card-quadro" data-key="hipotese">
+            <h3>🔗 Correlação <span class="ordem"></span></h3>
+            <pre class="conteudo aguardando">aguardando…</pre>
+        </div>
+        <div class="card-quadro" data-key="relatorioIncidente">
+            <h3>🎯 Causa Raiz <span class="ordem"></span></h3>
+            <pre class="conteudo aguardando">aguardando…</pre>
+        </div>
+    </div>
+
+    <div class="relatorio" id="relatorio">
+        <div class="relatorio-header">
+            <h2>📋 Relatório do incidente</h2>
+            <span class="badge" id="severidadeBadge"></span>
+        </div>
+        <div class="causa-raiz" id="causaRaiz"></div>
+        <h4>Ações imediatas</h4>
+        <ol id="acoesImediatas"></ol>
+        <h4>Prevenção (post-mortem)</h4>
+        <ul id="prevencao"></ul>
+        <div class="resumo-exec" id="resumoExecutivo"></div>
+    </div>
+</div>
+
+<script>
+    const statusEl = document.getElementById('statusBadge');
+    const sintomaInput = document.getElementById('sintomaInput');
+    const logsInput = document.getElementById('logsInput');
+    const metricasInput = document.getElementById('metricasInput');
+    const bancoInput = document.getElementById('bancoInput');
+    const investigarBtn = document.getElementById('investigarBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const quadroSpinner = document.getElementById('quadroSpinner');
+    const relatorio = document.getElementById('relatorio');
+    const textareas = [sintomaInput, logsInput, metricasInput, bancoInput];
+
+    const cardByKey = {};
+    document.querySelectorAll('.card-quadro').forEach(el => { cardByKey[el.dataset.key] = el; });
+
+    let ws = null;
+    let passo = 0;
+
+    function setStatus(state, label) {
+        statusEl.className = 'status ' + state;
+        statusEl.textContent = label;
+    }
+
+    function resetQuadro() {
+        passo = 0;
+        Object.values(cardByKey).forEach(el => {
+            el.classList.remove('preenchido');
+            const ordem = el.querySelector('.ordem');
+            ordem.classList.remove('visivel');
+            ordem.textContent = '';
+            const pre = el.querySelector('pre.conteudo');
+            pre.classList.add('aguardando');
+            pre.textContent = 'aguardando…';
+        });
+        relatorio.classList.remove('visible', 'erro');
+        quadroSpinner.style.display = 'inline-block';
+    }
+
+    function preencherCard(key, conteudo, ordem) {
+        const el = cardByKey[key];
+        if (!el) return;
+        el.classList.add('preenchido');
+        const pre = el.querySelector('pre.conteudo');
+        pre.classList.remove('aguardando');
+        pre.textContent = conteudo || '—';
+        if (ordem) {
+            const badge = el.querySelector('.ordem');
+            badge.textContent = ordem + 'º';
+            badge.classList.add('visivel');
+        }
+    }
+
+    function preencherSeVazio(key, conteudo) {
+        const el = cardByKey[key];
+        if (!el || el.classList.contains('preenchido')) return;
+        preencherCard(key, conteudo, null);
+    }
+
+    function renderRelatorio(rel) {
+        if (!rel) return;
+        const sev = (rel.severidade || '').toLowerCase();
+        const badge = document.getElementById('severidadeBadge');
+        badge.textContent = rel.severidade || '—';
+        badge.className = 'badge ' + sev;
+        document.getElementById('causaRaiz').textContent = rel.causaRaiz || '';
+        const ol = document.getElementById('acoesImediatas');
+        ol.innerHTML = '';
+        (rel.acoesImediatas || []).forEach(a => {
+            const li = document.createElement('li');
+            li.textContent = a;
+            ol.appendChild(li);
+        });
+        const ul = document.getElementById('prevencao');
+        ul.innerHTML = '';
+        (rel.prevencao || []).forEach(p => {
+            const li = document.createElement('li');
+            li.textContent = p;
+            ul.appendChild(li);
+        });
+        document.getElementById('resumoExecutivo').textContent = rel.resumoExecutivo || '';
+        relatorio.classList.add('visible');
+    }
+
+    function mostrarErro(mensagem) {
+        relatorio.classList.add('visible', 'erro');
+        document.getElementById('severidadeBadge').className = 'badge';
+        document.getElementById('severidadeBadge').textContent = 'erro';
+        document.getElementById('causaRaiz').textContent = mensagem || 'erro desconhecido';
+        document.getElementById('acoesImediatas').innerHTML = '';
+        document.getElementById('prevencao').innerHTML = '';
+        document.getElementById('resumoExecutivo').textContent = '';
+    }
+
+    function finalizar() {
+        quadroSpinner.style.display = 'none';
+        investigarBtn.disabled = false;
+    }
+
+    async function carregarExemplo(link) {
+        const labelOriginal = link.textContent;
+        link.textContent = '↻ gerando…';
+        link.style.pointerEvents = 'none';
+        textareas.forEach(ta => { ta.disabled = true; });
+        sintomaInput.placeholder = 'Gerando incidente via AI Service…';
+        try {
+            const resp = await fetch('/api/example/incidente');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const inc = await resp.json();
+            sintomaInput.value = inc.sintoma || '';
+            logsInput.value = inc.logs || '';
+            metricasInput.value = inc.metricas || '';
+            bancoInput.value = inc.bancoDados || '';
+        } catch (e) {
+            sintomaInput.placeholder = 'Falha ao gerar exemplo: ' + e.message;
+        } finally {
+            link.textContent = labelOriginal;
+            link.style.pointerEvents = '';
+            textareas.forEach(ta => { ta.disabled = false; });
+        }
+    }
+
+    function connect() {
+        setStatus('connecting', 'conectando');
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(proto + '//' + location.host + '/ws/warroom');
+        ws.onopen = () => {
+            setStatus('connected', 'conectado');
+            investigarBtn.disabled = false;
+        };
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'ABERTO') {
+                resetQuadro();
+                setStatus('connected', 'investigando…');
+            } else if (msg.type === 'CONTRIBUICAO') {
+                preencherCard(msg.outputKey, msg.payload, ++passo);
+            } else if (msg.type === 'RELATORIO') {
+                const q = msg.payload || {};
+                // tolerante: preenche qualquer card que não recebeu CONTRIBUICAO
+                preencherSeVazio('evidenciaAplicacao', q.evidenciaAplicacao);
+                preencherSeVazio('evidenciaInfra', q.evidenciaInfra);
+                preencherSeVazio('evidenciaBanco', q.evidenciaBanco);
+                preencherSeVazio('hipotese', q.hipotese);
+                if (q.relatorio) {
+                    const el = cardByKey['relatorioIncidente'];
+                    el.classList.add('preenchido');
+                    const pre = el.querySelector('pre.conteudo');
+                    pre.classList.remove('aguardando');
+                    pre.textContent = q.relatorio.causaRaiz || '—';
+                }
+                renderRelatorio(q.relatorio);
+                setStatus('connected', 'conectado');
+                finalizar();
+            } else if (msg.type === 'ERROR') {
+                mostrarErro(msg.error);
+                setStatus('connected', 'conectado');
+                finalizar();
+            }
+        };
+        ws.onclose = () => { setStatus('disconnected', 'desconectado'); investigarBtn.disabled = true; };
+        ws.onerror = () => { setStatus('disconnected', 'erro'); };
+    }
+
+    investigarBtn.addEventListener('click', () => {
+        const sintoma = sintomaInput.value.trim();
+        const logs = logsInput.value.trim();
+        const metricas = metricasInput.value.trim();
+        const bancoDados = bancoInput.value.trim();
+        if (!sintoma || !logs || !metricas || !bancoDados) {
+            alert('Preencha os 4 campos do incidente: sintoma, logs, métricas e banco de dados.');
+            return;
+        }
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        resetQuadro();
+        investigarBtn.disabled = true;
+        ws.send(JSON.stringify({ sintoma, logs, metricas, bancoDados }));
+    });
+
+    resetBtn.addEventListener('click', () => {
+        textareas.forEach(ta => { ta.value = ''; });
+        passo = 0;
+        Object.values(cardByKey).forEach(el => {
+            el.classList.remove('preenchido');
+            const ordem = el.querySelector('.ordem');
+            ordem.classList.remove('visivel');
+            ordem.textContent = '';
+            const pre = el.querySelector('pre.conteudo');
+            pre.classList.add('aguardando');
+            pre.textContent = 'aguardando…';
+        });
+        relatorio.classList.remove('visible', 'erro');
+        quadroSpinner.style.display = 'none';
+    });
+
+    document.getElementById('exampleIncidente').addEventListener('click', (e) => {
+        e.preventDefault();
+        carregarExemplo(e.currentTarget);
+    });
+
+    connect();
+</script>
+</body>
+</html>

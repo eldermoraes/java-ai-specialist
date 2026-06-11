@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendedor A2A Dashboard</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0fdf4; color: #1f2330;
+        }
+        .app { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; padding: 18px 22px;
+            background: linear-gradient(135deg, #166534 0%, #14532d 100%);
+            color: white; border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+        header .subtitle { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+        .status {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.15);
+            padding: 5px 12px; border-radius: 999px;
+            font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+        .status.connected::before { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+        .status.connecting::before { background: #fbbf24; animation: pulse 1.2s infinite; }
+        .status.disconnected::before { background: #f87171; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .panel {
+            background: white; border-radius: 12px;
+            padding: 18px; margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .panel h2 {
+            margin: 0 0 12px 0; font-size: 14px; font-weight: 700;
+            color: #166534; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .catalogo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        @media (max-width: 700px) { .catalogo { grid-template-columns: 1fr; } }
+        .produto-line {
+            background: #f9fafb; padding: 10px 12px; border-radius: 8px;
+            font-size: 13px; border-left: 3px solid #166534;
+        }
+        .produto-line strong { color: #1f2330; }
+        .produto-line span { color: #6b7280; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+        .info {
+            font-size: 13px; color: #4b5563; line-height: 1.5;
+        }
+        .info code {
+            background: #f3f4f6; padding: 2px 6px; border-radius: 4px;
+            font-size: 12px; color: #166534;
+        }
+
+        .rodadas {
+            display: flex; flex-direction: column; gap: 10px;
+            max-height: 600px; overflow-y: auto;
+        }
+        .rodada-card {
+            background: #f9fafb; border-radius: 8px;
+            padding: 12px; border-left: 4px solid #166534;
+        }
+        .rodada-header {
+            display: flex; justify-content: space-between;
+            font-size: 11px; color: #6b7280;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            margin-bottom: 6px;
+        }
+        .rodada-section {
+            background: white; padding: 8px 10px; border-radius: 6px;
+            font-size: 13px; line-height: 1.4; margin: 4px 0;
+        }
+        .rodada-section.in {
+            border-left: 3px solid #2563eb;
+        }
+        .rodada-section.out {
+            border-left: 3px solid #16a34a;
+        }
+        .rodada-section .label {
+            font-weight: 700; color: #6b7280; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px;
+        }
+        .preco {
+            font-size: 18px; font-weight: 800; color: #1f2330;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .limite {
+            display: inline-block; background: #fee2e2; color: #991b1b;
+            padding: 2px 8px; border-radius: 4px;
+            font-size: 11px; font-weight: 700; margin-left: 6px;
+        }
+        .empty-state {
+            text-align: center; color: #94a3b8;
+            font-size: 13px; padding: 30px 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div>
+            <h1>🏪 Vendedor — A2A Dashboard</h1>
+            <div class="subtitle">Recebe tasks A2A (JSON-RPC 2.0) do comprador-app (porta 8080)</div>
+        </div>
+        <span class="status connecting" id="statusBadge">conectando</span>
+    </header>
+
+    <div class="panel">
+        <h2>Endpoint A2A</h2>
+        <div class="info">
+            Agent Card em <code>GET /.well-known/agent-card.json</code> ·
+            JSON-RPC 2.0 em <code>POST /</code> (método <code>message/send</code>).
+            DataPart do request: <code>{ compradorId, rodada, produto, ultimoValorProposto, mensagem }</code>.
+            Artifact da resposta: <code>{ produto, precoOferecido, prazoEntrega, condicoes, mensagem, limiteAtingido }</code>.
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Catálogo + Margem Mínima</h2>
+        <div class="catalogo" id="catalogo"></div>
+    </div>
+
+    <div class="panel">
+        <h2>Rodadas de Negociação Recebidas</h2>
+        <div class="rodadas" id="rodadasEl">
+            <div class="empty-state">Aguardando contato do comprador…</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const statusEl = document.getElementById('statusBadge');
+    const rodadasEl = document.getElementById('rodadasEl');
+    const catalogoEl = document.getElementById('catalogo');
+    let ws = null;
+    let totalRodadas = 0;
+
+    async function loadCatalogo() {
+        try {
+            const r = await fetch('/api/catalogo');
+            const cat = await r.json();
+            catalogoEl.innerHTML = cat.map(p => `
+                <div class="produto-line">
+                    <strong>${p.nome}</strong><br>
+                    <span>tabela: R$ ${p.precoTabela} · mínimo: R$ ${p.precoMinimo} · ${p.prazoPadrao}</span>
+                </div>
+            `).join('');
+        } catch (e) {
+            catalogoEl.innerHTML = '<div class="empty-state">erro carregando catálogo</div>';
+        }
+    }
+
+    function escapeHtml(s) {
+        return (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    }
+
+    function setStatus(state, label) {
+        statusEl.className = 'status ' + state;
+        statusEl.textContent = label;
+    }
+
+    function addRodada(ev) {
+        if (totalRodadas === 0) rodadasEl.innerHTML = '';
+        totalRodadas++;
+        const m = ev.mensagem;
+        const r = ev.resposta;
+        const p = ev.produto;
+        const limite = r.limiteAtingido ? '<span class="limite">LIMITE ATINGIDO</span>' : '';
+        const card = document.createElement('div');
+        card.className = 'rodada-card';
+        card.innerHTML = `
+            <div class="rodada-header">
+                <span>Rodada ${m.rodada} · comprador: ${m.compradorId} · ${new Date().toLocaleTimeString('pt-BR')}</span>
+                <span>${p.nome}</span>
+            </div>
+            <div class="rodada-section in">
+                <div class="label">📥 Comprador propôs</div>
+                R$ <span class="preco">${m.ultimoValorProposto || '—'}</span>
+                <div style="margin-top:4px;color:#4b5563;">"${escapeHtml(m.mensagem || '')}"</div>
+            </div>
+            <div class="rodada-section out">
+                <div class="label">📤 Vendedor respondeu ${limite}</div>
+                R$ <span class="preco">${r.precoOferecido}</span> · ${escapeHtml(r.prazoEntrega || '')}
+                <div style="margin-top:4px;color:#4b5563;">"${escapeHtml(r.mensagem || '')}"</div>
+                <div style="margin-top:4px;font-size:11px;color:#6b7280;">${escapeHtml(r.condicoes || '')}</div>
+            </div>
+        `;
+        rodadasEl.prepend(card);
+    }
+
+    function connect() {
+        setStatus('connecting', 'conectando');
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(proto + '//' + location.host + '/ws/dashboard');
+        ws.onopen = () => setStatus('connected', 'conectado');
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'RODADA') addRodada(msg);
+        };
+        ws.onclose = () => setStatus('disconnected', 'desconectado');
+        ws.onerror = () => setStatus('disconnected', 'erro');
+    }
+
+    loadCatalogo();
+    connect();
+</script>
+</body>
+</html>
