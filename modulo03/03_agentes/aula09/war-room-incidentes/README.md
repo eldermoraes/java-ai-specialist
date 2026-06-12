@@ -2,7 +2,7 @@
 
 > **Padrão**: Blackboard
 > **Case**: War-room de incidente (especialistas de aplicação, infra e banco colaboram num quadro compartilhado até a causa raiz)
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic (`@PlannerAgent` + `BlackboardPlanner`) · Ollama (`deepseek-v4-pro:cloud` + `deepseek-v4-flash:cloud`)
+> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic (`@PlannerAgent` + `BlackboardPlanner`) · Ollama (`deepseek-v4-pro:cloud` + `gemma4:31b-cloud`)
 
 ---
 
@@ -34,7 +34,7 @@ A execução termina quando uma de três condições é atingida: (1) o **goal p
 │Analista │  │Analista │  │Analista de│  │Correlacionador │  │Engenheiro de     │
 │de Aplic.│  │de Infra │  │Banco Dados│  │de Hipóteses    │  │Causa Raiz        │
 │lê: logs │  │lê: metr.│  │lê: banco  │  │lê: 3 evidências│  │lê: sintoma+hipót.│
-│(flash)  │  │(flash)  │  │(flash)    │  │(pro)           │  │(pro)             │
+│(gemma4)  │  │(gemma4)  │  │(gemma4)    │  │(pro)           │  │(pro)             │
 └────┬────┘  └────┬────┘  └─────┬─────┘  └───────┬────────┘  └────────┬─────────┘
      │escreve     │escreve      │escreve         │escreve             │escreve
      ▼            ▼             ▼                ▼                    ▼
@@ -57,7 +57,7 @@ passo 4  CorrelacionadorDeHipoteses lê as 3 evidências     → hipotese       
 passo 5  EngenheiroDeCausaRaiz      lê sintoma + hipotese  → relatorioIncidente   → GOAL atingido, fim
 ```
 
-São **5 chamadas LLM por investigação** (3× `deepseek-v4-flash` + 2× `deepseek-v4-pro`) e **zero chamadas LLM de orquestração**: contraste direto com o Supervisor da aula 04, onde cada decisão de roteamento custa uma chamada ao planner LLM (e por isso lá o modelo default precisa de `format=json`; aqui o planner é código, e não precisa).
+São **5 chamadas LLM por investigação** (3× `gemma4:31b-cloud` + 2× `deepseek-v4-pro`) e **zero chamadas LLM de orquestração**: contraste direto com o Supervisor da aula 04, onde cada decisão de roteamento custa uma chamada ao planner LLM (e por isso lá o modelo default precisa de `format=json`; aqui o planner é código, e não precisa).
 
 ## Como rodar
 
@@ -68,7 +68,7 @@ cd modulo03/03_agentes/aula09/war-room-incidentes
 
 Abra <http://localhost:8080/>.
 
-Pré-requisito: Ollama em `localhost:11434` (Ollama Cloud) com os modelos `deepseek-v4-pro:cloud` e `deepseek-v4-flash:cloud` disponíveis.
+Pré-requisito: Ollama em `localhost:11434` (Ollama Cloud) com os modelos `deepseek-v4-pro:cloud` e `gemma4:31b-cloud` disponíveis.
 
 ## Estrutura do código
 
@@ -79,12 +79,12 @@ war-room-incidentes/
     ├── java/com/eldermoraes/
     │   ├── WarRoomWebsocket.java            # @WebSocket /ws/warroom; @OnTextMessage retorna Multi<WarRoomEvent>
     │   ├── ai/
-    │   │   ├── AnalistaDeAplicacao.java     # lê logs            → escreve evidenciaAplicacao (flash)
-    │   │   ├── AnalistaDeInfra.java         # lê metricas        → escreve evidenciaInfra (flash)
-    │   │   ├── AnalistaDeBancoDeDados.java  # lê bancoDados      → escreve evidenciaBanco (flash)
+    │   │   ├── AnalistaDeAplicacao.java     # lê logs            → escreve evidenciaAplicacao (gemma4)
+    │   │   ├── AnalistaDeInfra.java         # lê metricas        → escreve evidenciaInfra (gemma4)
+    │   │   ├── AnalistaDeBancoDeDados.java  # lê bancoDados      → escreve evidenciaBanco (gemma4)
     │   │   ├── CorrelacionadorDeHipoteses.java # lê as 3 evidências → escreve hipotese (pro)
     │   │   ├── EngenheiroDeCausaRaiz.java   # lê sintoma+hipotese → escreve relatorioIncidente (pro)
-    │   │   └── ExampleGenerator.java        # gera Incidente de exemplo (flash)
+    │   │   └── ExampleGenerator.java        # gera Incidente de exemplo (gemma4)
     │   ├── workflow/
     │   │   ├── WarRoomAgent.java            # @PlannerAgent + @PlannerSupplier + @Output (o coração da aula)
     │   │   ├── ObservablePlanner.java       # decorator do SPI Planner: publica cada passo do quadro
@@ -135,7 +135,7 @@ A **regra de ativação** do Blackboard é toda declarativa: o agente fica "read
 Dois detalhes importam aqui:
 
 - O prompt **proíbe resposta vazia**. String blank no `outputKey` não conta como "estado presente": se um analista devolvesse `""`, o correlacionador nunca ficaria ready e a investigação morreria por quiescência.
-- O `@ModelName("smaller")` no método `@Agent` define qual `ChatModel` o agentic usa para **este** knowledge source dentro da composição: os três analistas extraem evidência com o modelo barato (flash); correlação e causa raiz, que exigem raciocínio de síntese, ficam no modelo robusto (pro, o default). O `modelName = "smaller"` do `@RegisterAiService` cobre o outro caminho (a interface usada como AI service comum, injetada com `@Inject`); por isso os dois aparecem juntos e devem ficar alinhados.
+- O `@ModelName("smaller")` no método `@Agent` define qual `ChatModel` o agentic usa para **este** knowledge source dentro da composição: os três analistas extraem evidência com o modelo barato (gemma4); correlação e causa raiz, que exigem raciocínio de síntese, ficam no modelo robusto (pro, o default). O `modelName = "smaller"` do `@RegisterAiService` cobre o outro caminho (a interface usada como AI service comum, injetada com `@Inject`); por isso os dois aparecem juntos e devem ficar alinhados.
 
 #### 2. `@PlannerAgent` + `@PlannerSupplier`: o quadro tem um scheduler, não um roteiro
 
@@ -228,7 +228,7 @@ O `nextAction` recebe um `PlanningContext` com o `AgenticScope` e a invocação 
 | Sintoma citando "pool de conexões" faz o card **Banco de Dados** receber o badge **1º** | `agentOfType(AnalistaDeBancoDeDados.class, condition)` com condição sobre o `scope` |
 | Sintoma sem menção a banco → card **Aplicação** recebe o **1º** | Fallback `or(declarationOrder())`: vale a ordem de `subAgents` |
 | O card **Correlação** só preenche depois dos três analistas | ready = todas as `@V` presentes no quadro (`evidenciaAplicacao` + `evidenciaInfra` + `evidenciaBanco`) |
-| 5 chamadas LLM por investigação (3× flash + 2× pro) e **nenhuma** de orquestração | O planner é algoritmo, não LLM; confira com `quarkus.langchain4j.log-requests=true` |
+| 5 chamadas LLM por investigação (3× gemma4 + 2× pro) e **nenhuma** de orquestração | O planner é algoritmo, não LLM; confira com `quarkus.langchain4j.log-requests=true` |
 | Linha `>> quadro[...]: X escreveu 'Y'` no log a cada passo | `ObservablePlanner.nextAction` + `context.previousAgentInvocation()` |
 | A investigação termina exatamente quando `relatorioIncidente` aparece no quadro | Goal predicate `scope.hasState("relatorioIncidente")` (condição de parada nº 1) |
 | Campo vazio → evento `ERROR` imediato, zero chamadas LLM | Validação no `WarRoomOrchestrator`: estado blank causaria quiescência silenciosa |
@@ -258,19 +258,6 @@ A consequência prática é poderosa: **trocar o padrão de orquestração é tr
 - Adicione um 6º agente `AnalistaDeSeguranca` que lê `logs` e escreve `evidenciaSeguranca`, **sem mexer em mais nada**: o scheduler o encaixa sozinho no fluxo (depois inclua a nova chave no `CorrelacionadorDeHipoteses` para ela pesar na hipótese).
 - Reduza `warroom.max-passos` para `3` e observe a condição de parada nº 3 interromper a investigação antes do goal; o mesmo `ERROR` com as pendências chega ao cliente.
 
-## Conclusão do módulo
+## Blackboard vs demais padrões
 
-Esta aula fecha o módulo de Agentes, e vale olhar a jornada inteira por um único eixo: **quem decide a ordem em que os agentes trabalham?**
-
-| Aula | Padrão | Quem decide a ordem |
-|---|---|---|
-| 02 | Orchestrator-Workers | o **código** (sequência fixa, workers em paralelo) |
-| 03 | Parallel (`@ParallelMapperAgent`) | o **código** (mesmo agente, N inputs simultâneos) |
-| 04 | Supervisor | um **LLM planner**, a cada passo |
-| 05 | Dynamic Routing (`@ChatModelSupplier`) | o **código**, trocando o modelo em runtime |
-| 06 | Human-in-the-Loop | um **humano**, no meio do fluxo |
-| 07 | Agent-to-Agent (A2A) | **outro agente**, negociando por protocolo |
-| 08 | Voting | **ninguém**: todos opinam em paralelo e uma estratégia consolida |
-| 09 | Blackboard | os **DADOS** no quadro compartilhado |
-
-O Blackboard é o extremo "emergente" desse espectro: nenhum roteiro, nenhum chefe, nenhum LLM coordenando: a ordem **emerge** do que já se sabe. Na prática, você raramente escolhe um padrão puro: um sistema real pode usar um Blackboard cujos knowledge sources são supervisores, com um humano como knowledge source de aprovação e um agente remoto via A2A publicando evidências. O que este módulo te deu foi o vocabulário e os critérios para compor essas peças com intenção, sabendo o custo, o determinismo e a falha típica de cada uma.
+O Blackboard é o extremo "emergente" desse espectro: nenhum roteiro, nenhum chefe, nenhum LLM coordenando: a ordem **emerge** do que já se sabe. Na prática, você raramente escolhe um padrão puro: um sistema real pode usar um Blackboard cujos knowledge sources são supervisores, com um humano como knowledge source de aprovação e um agente remoto via A2A publicando evidências.

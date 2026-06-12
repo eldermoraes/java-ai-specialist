@@ -2,7 +2,7 @@
 
 > **Padrão**: Voting (council pattern)
 > **Case**: Comitê de crédito PJ (5 analistas votam, maioria decide, relator redige o parecer)
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic (`@PlannerAgent` + `VotingPlanner`) · Ollama (`deepseek-v4-pro:cloud` + `deepseek-v4-flash:cloud`)
+> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic (`@PlannerAgent` + `VotingPlanner`) · Ollama (`deepseek-v4-pro:cloud` + `gemma4:31b-cloud`)
 
 ---
 
