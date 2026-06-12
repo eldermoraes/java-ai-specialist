@@ -130,6 +130,8 @@ public AgentCard agentCard(@ConfigProperty(name = "vendedor.a2a.public-url") Str
 }
 ```
 
+**De onde vem esse endpoint?** Não existe `@Path` nem `@GET` em lugar nenhum do projeto para `/.well-known/agent-card.json`: quem registra essa rota é a dependência `a2a-java-sdk-reference-jsonrpc`, que ao detectar o bean anotado com `@PublicAgentCard` serializa o `AgentCard` para JSON e o publica nesse caminho. O prefixo `/.well-known/` é a convenção de descoberta da web (RFC 8615) que a spec A2A adota, então qualquer cliente sabe onde procurar sem combinar URL por fora. Essa é a ponta servidora do discovery; a ponta cliente é o `A2A.getAgentCard(vendedorUrl)` da seção 4, que faz um `GET` nesse mesmo caminho e reconstrói o `AgentCard`. Ou seja, o card que o comprador lê é o próprio bean que o vendedor produziu aqui, sem nenhuma rota escrita à mão.
+
 #### 2. O `AgentExecutor` é o lado servidor do protocolo
 
 Cada `SendMessage` vira uma chamada a `execute()`. O `AgentEmitter` controla o ciclo de vida da task — e o erro vira `fail(...)`, que o cliente recebe como `TASK_STATE_FAILED`:
