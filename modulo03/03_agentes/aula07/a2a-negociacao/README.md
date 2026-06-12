@@ -8,7 +8,7 @@
 
 ## O que você vai aprender
 
-O padrão **Agent-to-Agent (A2A)** é arquiteturalmente diferente dos outros do módulo: aqui há **dois processos Quarkus separados**, cada um com seu próprio agente LLM, conversando pelo **protocolo A2A** — o padrão aberto (criado pelo Google, hoje na Linux Foundation) para interoperabilidade entre agentes. Nada de endpoint REST proprietário: o vendedor **publica um Agent Card**, o comprador **descobre** o agente por ele e envia mensagens **JSON-RPC 2.0** que viram **tasks** com ciclo de vida padronizado.
+O padrão **Agent-to-Agent (A2A)** é arquiteturalmente diferente dos outros do módulo: aqui há **dois processos Quarkus separados**, cada um com seu próprio agente LLM, conversando pelo **protocolo A2A**, o padrão aberto (criado pelo Google, hoje na Linux Foundation) para interoperabilidade entre agentes. Nada de endpoint REST proprietário: o vendedor **publica um Agent Card**, o comprador **descobre** o agente por ele e envia mensagens **JSON-RPC 2.0** que viram **tasks** com ciclo de vida padronizado.
 
 ```
    comprador-app (porta 8080)                    vendedor-app (porta 8081)
@@ -32,17 +32,17 @@ Como nas demais aulas do módulo, cada lado tem um **agente real** (`@RegisterAi
 
 ## Por que um protocolo, e não um endpoint REST qualquer?
 
-Dois apps poderiam trocar JSON por um endpoint REST inventado por nós — mas aí só *esses dois* apps se entenderiam. O ponto do A2A é ser um **padrão aberto de interoperabilidade**: qualquer agente que fale o protocolo conversa com o vendedor desta aula sem ler o código dele. O que o protocolo padroniza:
+Dois apps poderiam trocar JSON por um endpoint REST inventado por nós, mas aí só *esses dois* apps se entenderiam. O ponto do A2A é ser um **padrão aberto de interoperabilidade**: qualquer agente que fale o protocolo conversa com o vendedor desta aula sem ler o código dele. O que o protocolo padroniza:
 
-| Aspecto | Como o A2A resolve |
-|---|---|
-| **Discovery** | Card público em `GET /.well-known/agent-card.json` descreve skills, transportes e formatos — nada de URL+path combinados por e-mail |
-| **Contrato** | O **Agent Card** documenta a skill `negociar` e seu payload |
-| **Ciclo de vida** | Cada mensagem vira uma **Task** com id e estados (`submitted → working → completed/failed`) |
-| **Multi-turno** | **`contextId`** padronizado: as N rodadas de uma negociação compartilham o mesmo contexto |
-| **Envelope** | **JSON-RPC 2.0** (`method: "SendMessage"`), igual para qualquer agente A2A do planeta |
+| Aspecto | Como o A2A resolve                                                                                                                  |
+|---|-------------------------------------------------------------------------------------------------------------------------------------|
+| **Discovery** | Card público em `GET /.well-known/agent-card.json` descreve skills, transportes e formatos (nada de URL+path combinados por e-mail) |
+| **Contrato** | O **Agent Card** documenta a skill `negociar` e seu payload                                                                         |
+| **Ciclo de vida** | Cada mensagem vira uma **Task** com id e estados (`submitted → working → completed/failed`)                                         |
+| **Multi-turno** | **`contextId`** padronizado: as N rodadas de uma negociação compartilham o mesmo contexto                                           |
+| **Envelope** | **JSON-RPC 2.0** (`method: "SendMessage"`), igual para qualquer agente A2A do planeta                                               |
 
-O contrato de **negócio** continua sendo nosso: os records `MensagemNegociacao` e `RespostaVendedor` viajam como JSON estruturado dentro de um `DataPart` — o protocolo padroniza o envelope e o ciclo de vida, não o domínio.
+O contrato de **negócio** continua sendo nosso: os records `MensagemNegociacao` e `RespostaVendedor` viajam como JSON estruturado dentro de um `DataPart`. O protocolo padroniza o envelope e o ciclo de vida, não o domínio.
 
 ## Como rodar
 
@@ -58,7 +58,7 @@ cd modulo03/03_agentes/aula07/a2a-negociacao/comprador-app
 ./mvnw quarkus:dev
 ```
 
-Abra <http://localhost:8080/> (comprador) e <http://localhost:8081/> (dashboard vendedor). A resolução do Agent Card é **lazy**: acontece na primeira negociação e fica cacheada — se o vendedor estiver fora do ar, o comprador emite um `ERROR` claro ("Vendedor A2A indisponível…") em vez de travar.
+Abra <http://localhost:8080/> (comprador) e <http://localhost:8081/> (dashboard vendedor). A resolução do Agent Card é **lazy**: acontece na primeira negociação e fica cacheada. Se o vendedor estiver fora do ar, o comprador emite um `ERROR` claro ("Vendedor A2A indisponível…") em vez de travar.
 
 ## Estrutura
 
@@ -157,7 +157,7 @@ public AgentExecutor agentExecutor(NegociacaoService negociacao, NegociacaoPaylo
 }
 ```
 
-O `execute()` roda em worker thread do SDK (`executor-thread-N`) — chamada LLM blocking é segura.
+O `execute()` roda em worker thread do SDK (`executor-thread-N`) (chamada LLM blocking é segura).
 
 #### 3. Payload tipado via `DataPart` (e um gotcha do SDK)
 
@@ -169,11 +169,11 @@ private final ObjectMapper mapper = new ObjectMapper()
         .configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true); // ② preserva valores monetários
 ```
 
-① é obrigatório: o conversor `Struct → Map` do SDK 1.0.0.Final (`A2ACommonFieldMapper.structToMap`) usa `Collectors.toMap`, que **lança NPE com valores null** — e o servidor responde um `Internal Error` opaco e sem `id`, que quebra o parse no cliente. Na rodada 1, `ultimoValorProposto` é null: omitido do payload, o vendedor o trata como "use o preço de tabela" (campo ausente vira null no record ao desserializar — o contrato se mantém).
+① é obrigatório: o conversor `Struct → Map` do SDK 1.0.0.Final (`A2ACommonFieldMapper.structToMap`) usa `Collectors.toMap`, que **lança NPE com valores null** — e o servidor responde um `Internal Error` opaco e sem `id`, que quebra o parse no cliente. Na rodada 1, `ultimoValorProposto` é null: omitido do payload, o vendedor o trata como "use o preço de tabela" (campo ausente vira null no record ao desserializar e o contrato se mantém).
 
 #### 4. Ponte síncrona no cliente: `Client` + consumers por chamada
 
-O `Client` do SDK entrega respostas via **consumers** (estilo callback). O loop do coordinator precisa de request→response síncrono por rodada — a ponte é um `CompletableFuture` completado por consumers registrados **por chamada** (negociações concorrentes não se misturam):
+O `Client` do SDK entrega respostas via **consumers** (estilo callback). O loop do coordinator precisa de request→response síncrono por rodada. A ponte é um `CompletableFuture` completado por consumers registrados **por chamada** (negociações concorrentes não se misturam):
 
 ```java
 // criação (uma vez, lazy): discovery + transporte JSON-RPC em modo blocking
@@ -201,7 +201,7 @@ O consumer extrai o `DataPart` dos artifacts da `Task` (`TaskEvent → task.arti
 
 #### 5. O loop de negociação continua no orchestrator Java
 
-A2A é entre **apps**, não dentro de um único JVM — o `@LoopAgent` declarativo orquestra sub-agents do mesmo processo. Aqui o loop é código Java imperativo, e o `NegociacaoCoordinator` não sabe nada de protocolo: ele injeta o `VendedorA2AClient` e chama um método síncrono comum:
+A2A é entre **apps**, não dentro de um único JVM. O `@LoopAgent` declarativo orquestra sub-agents do mesmo processo. Aqui o loop é código Java imperativo, e o `NegociacaoCoordinator` não sabe nada de protocolo: ele injeta o `VendedorA2AClient` e chama um método síncrono comum:
 
 ```java
 @Inject
@@ -211,7 +211,7 @@ VendedorA2AClient vendedorRemoto;
 RespostaVendedor resp = vendedorRemoto.negociar(new MensagemNegociacao(...));
 ```
 
-Todo o A2A (discovery, JSON-RPC, task, DataPart) fica **isolado no pacote `a2a/`** — domínio e orquestração não dependem do transporte.
+Todo o A2A (discovery, JSON-RPC, task, DataPart) fica **isolado no pacote `a2a/`**. Domínio e orquestração não dependem do transporte.
 
 #### 6. `ExampleGenerator` retorna `EntradaCompra` tipada via LLM
 
@@ -229,11 +229,11 @@ Frontend chama `/api/example/compra` e preenche os 4 campos do formulário a par
 
 Cada rodada atravessa três camadas com timeout próprio — cada uma precisa exceder a anterior:
 
-| Camada | Config | Valor | Onde |
-|---|---|---|---|
-| LLM (Ollama) | `quarkus.langchain4j.timeout` | 120s | ambos os apps |
-| Servidor A2A (espera do executor em modo blocking) | `a2a.blocking.agent.timeout.seconds` | 150s | vendedor-app (default do SDK é **30s** — estouraria com LLM lento!) |
-| Cliente A2A (espera fim-a-fim da rodada) | `vendedor.a2a.timeout-segundos` | 180s | comprador-app (config própria, usada no `futuro.get`) |
+| Camada | Config | Valor | Onde                                                              |
+|---|---|---|-------------------------------------------------------------------|
+| LLM (Ollama) | `quarkus.langchain4j.timeout` | 120s | ambos os apps                                                     |
+| Servidor A2A (espera do executor em modo blocking) | `a2a.blocking.agent.timeout.seconds` | 150s | vendedor-app (default do SDK é **30s**: estouraria com LLM lento) |
+| Cliente A2A (espera fim-a-fim da rodada) | `vendedor.a2a.timeout-segundos` | 180s | comprador-app (config própria, usada no `futuro.get`)             |
 
 ## Trade-off: `@A2AClientAgent` declarativo
 
@@ -242,19 +242,19 @@ O LangChain4j Agentic tem **`@A2AClientAgent(a2aServerUrl = "...")`**, que subst
 - O `langchain4j-agentic-a2a` **lançado** ainda depende do SDK antigo (`io.github.a2asdk` 0.3.x), que fala o protocolo v0.3 — **incompatível** com um servidor 1.0 (métodos JSON-RPC diferentes: `message/send` → `SendMessage`).
 - O `main` do LangChain4j já aponta para `org.a2aproject.sdk:1.0.0.CR1`, mas sem release; o quarkus-langchain4j ainda não expõe.
 
-Quando o quarkus-langchain4j atualizar, a troca imperativo → declarativo fica confinada ao `VendedorA2AClient` — o coordinator e o lado servidor (`@PublicAgentCard` + `AgentExecutor`) não mudam.
+Quando o quarkus-langchain4j atualizar, a troca imperativo → declarativo fica confinada ao `VendedorA2AClient`. O coordinator e o lado servidor (`@PublicAgentCard` + `AgentExecutor`) não mudam.
 
 ## O que observar
 
-| Observação | Explica… |
-|---|---|
+| Observação | Explica…                                                                                       |
+|---|------------------------------------------------------------------------------------------------|
 | `curl http://localhost:8081/.well-known/agent-card.json` | Discovery: card com skill `negociar`, `supportedInterfaces` JSONRPC e `protocolVersion: "1.0"` |
-| Sequência WS comprador: `INICIADA → RODADA×N → ACORDO/IMPASSE` | Loop emite eventos por rodada |
-| Log do vendedor: `A2A task=<uuid> contextId=comp-xxx — rodada N` | Cada rodada é uma **task nova** no **mesmo contextId** (multi-turno A2A) |
-| Log do comprador: `Agent Card resolvido: Vendedor B2B v1.0.0` | Resolução lazy + cache do card |
-| Executor roda em `executor-thread-N` | Worker pool do SDK — LLM blocking seguro |
-| Dashboard vendedor mostra cada rodada em tempo real | Broadcast WebSocket read-only |
-| 2 chamadas LLM por rodada (comprador + vendedor) | Cada agente roda no seu app |
+| Sequência WS comprador: `INICIADA → RODADA×N → ACORDO/IMPASSE` | Loop emite eventos por rodada                                                                  |
+| Log do vendedor: `A2A task=<uuid> contextId=comp-xxx — rodada N` | Cada rodada é uma **task nova** no **mesmo contextId** (multi-turno A2A)                       |
+| Log do comprador: `Agent Card resolvido: Vendedor B2B v1.0.0` | Resolução lazy + cache do card                                                                 |
+| Executor roda em `executor-thread-N` | Worker pool do SDK (LLM blocking seguro)                                                       |
+| Dashboard vendedor mostra cada rodada em tempo real | Broadcast WebSocket read-only                                                                  |
+| 2 chamadas LLM por rodada (comprador + vendedor) | Cada agente roda no seu app                                                                    |
 
 Para ver o protocolo cru (dispara 1 chamada LLM real):
 
@@ -278,4 +278,4 @@ A resposta é uma `Task` completa: `status.state: TASK_STATE_COMPLETED` e o arti
 
 ## Conclusão
 
-Os 3 conceitos centrais das aulas anteriores (`@Agent` em workers + composição declarativa em interfaces marker + `@Inject` direto da interface composta) formam o vocabulário canônico do framework agentic em Quarkus; esta aula acrescenta o quarto: **interoperabilidade entre agentes de processos (e fornecedores) diferentes via protocolo aberto** — o **protocolo A2A 1.0 com o SDK Java oficial**.
+Os 3 conceitos centrais das aulas anteriores (`@Agent` em workers + composição declarativa em interfaces marker + `@Inject` direto da interface composta) formam o vocabulário canônico do framework agentic em Quarkus; esta aula acrescenta o quarto: **interoperabilidade entre agentes de processos (e fornecedores) diferentes via protocolo aberto** (o **protocolo A2A 1.0 com o SDK Java oficial)**.
