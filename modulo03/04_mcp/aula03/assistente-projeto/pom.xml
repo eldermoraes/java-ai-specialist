@@ -29,11 +29,13 @@
             </dependency>
             <!-- O BOM do quarkus-langchain4j governa TODAS as versões de LangChain4j,
                  inclusive as classes de MCP (McpClient, transportes, McpToolProvider).
-                 Nunca fixe versão de LangChain4j à mão. -->
+                 Nunca fixe versão de LangChain4j à mão: usamos o BOM gerenciado pela
+                 PLATAFORMA Quarkus (io.quarkus.platform), alinhado à mesma
+                 ${quarkus.platform.version} do quarkus-bom. -->
             <dependency>
-                <groupId>io.quarkiverse.langchain4j</groupId>
+                <groupId>io.quarkus.platform</groupId>
                 <artifactId>quarkus-langchain4j-bom</artifactId>
-                <version>1.11.0.CR2</version>
+                <version>${quarkus.platform.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -48,7 +50,7 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-jsonb</artifactId>
+            <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
 
         <!-- Modelo via Ollama -->
