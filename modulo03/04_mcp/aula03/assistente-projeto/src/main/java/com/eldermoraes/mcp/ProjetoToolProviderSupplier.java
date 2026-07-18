@@ -12,11 +12,11 @@ import jakarta.inject.Inject;
  *
  * <p>O {@link McpToolProvider} adapta um (ou vários) {@link dev.langchain4j.mcp.client.McpClient}
  * para o contrato {@link ToolProvider} que o LangChain4j entende: a cada pergunta, ele
- * lista as tools dos servidores conectados e as oferece ao modelo. Um ÚNICO provider
- * expõe as tools de TODOS os servidores (filesystem + remoto) ao mesmo agente.
+ * lista as tools dos servidores conectados e as oferece ao modelo. Um único provider
+ * expõe as tools de todos os servidores (filesystem + remoto) ao mesmo agente.
  *
  * <p>O {@code @AiService} recebe este provider por referência de classe no atributo
- * {@code toolProviderSupplier} do {@code @RegisterAiService} — daí este bean precisar
+ * {@code toolProviderSupplier} do {@code @RegisterAiService}: daí este bean precisar
  * implementar {@link Supplier}{@code <}{@link ToolProvider}{@code >}.
  */
 @ApplicationScoped

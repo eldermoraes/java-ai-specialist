@@ -1,7 +1,7 @@
-# Aula 03 (MCP): Assistente de Projeto — consumindo servidores MCP no LangChain4j
+# Aula 03 (MCP): Assistente de Projeto · consumindo servidores MCP no LangChain4j
 
 > **Bloco**: MCP · **Foco**: MCP *client* no LangChain4j (fiação programática)
-> **Case**: um agente que responde perguntas sobre os arquivos de um projeto/repositório usando tools que **não estão no seu código** — vêm de servidores MCP externos
+> **Case**: um agente que responde perguntas sobre os arquivos de um projeto/repositório usando tools que **não estão no seu código**: vêm de servidores MCP externos
 > **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` (nunca fixe versão) · Ollama (`deepseek-v4-pro:cloud`)
 
 ---
@@ -10,7 +10,7 @@
 
 Nas aulas anteriores deste bloco vimos **por que** o MCP existe (conectividade padronizada, o "USB-C para IA") e **como** o protocolo se organiza (client–host–server, as primitivas Tools/Resources/Prompts, os transportes STDIO e Streamable HTTP). Agora é o **primeiro hands-on**: vamos ser o **lado client** e consumir servidores MCP prontos a partir de um agente LangChain4j.
 
-O case é um **assistente de projeto**: um `@AiService` que responde perguntas sobre arquivos. A sacada é que ele **não sabe ler arquivos** — não há nenhum método `@Tool` no código dele. As capacidades chegam de fora, de dois servidores MCP:
+O case é um **assistente de projeto**: um `@AiService` que responde perguntas sobre arquivos. A sacada é que ele **não sabe ler arquivos**: não há nenhum método `@Tool` no código dele. As capacidades chegam de fora, de dois servidores MCP:
 
 - um **servidor de filesystem** rodando como processo local (transporte **STDIO**), que dá ao agente tools como `list_directory`, `read_file`, `directory_tree`;
 - um **servidor remoto** na nuvem (transporte **Streamable HTTP**), o [DeepWiki](https://deepwiki.com), que responde perguntas sobre repositórios públicos do GitHub.
@@ -26,17 +26,17 @@ As três peças que você vai montar à mão:
 E o `@AiService` recebe esse provider pelo atributo `toolProviderSupplier` do `@RegisterAiService`.
 
 > **Por que fazer isso em código, se dá para configurar por `application.properties`?**
-> Porque a fiação declarativa (`quarkus.langchain4j.mcp.*`, extensão + Dev UI) é justamente o assunto da **próxima aula**. Fazendo à mão primeiro, cada peça do protocolo fica visível — e quando a versão declarativa aparecer, você vai saber exatamente o que ela está escondendo de você.
+> Porque a fiação declarativa (`quarkus.langchain4j.mcp.*`, extensão + Dev UI) é justamente o assunto da **próxima aula**. Fazendo à mão primeiro, cada peça do protocolo fica visível. E quando a versão declarativa aparecer, você vai saber exatamente o que ela está montando por você.
 
 ### O que é o "servidor de filesystem"?
 
 É um servidor MCP de referência mantido pelo projeto oficial, distribuído como pacote npm
 (`@modelcontextprotocol/server-filesystem`). Ele expõe, como **tools MCP**, operações de
-leitura/navegação sobre **um diretório que você autoriza** — e só ele. Nós o subimos com
+leitura/navegação sobre **um diretório que você autoriza**, e só ele. Nós o subimos com
 `npx`, e o Quarkus o mantém como um **processo filho**, conversando por stdin/stdout.
 
-No projeto ele aponta, por padrão, para o **próprio diretório do projeto** (`${user.dir}`) —
-por isso o assistente já consegue responder "quais arquivos existem aqui?". Mas o interesse
+No projeto ele aponta, por padrão, para o **próprio diretório do projeto** (`${user.dir}`).
+Por isso o assistente já consegue responder "quais arquivos existem aqui?". Mas o interesse
 real é **apontar para um projeto do seu domínio**: troque `assistente.projeto.diretorio`
 para o caminho do seu repositório e o mesmo agente passa a responder sobre o **seu** código.
 
@@ -80,11 +80,11 @@ assistente-projeto/
     │   │   ├── McpClients.java               # ⭐ o coração: monta transporte + cliente dos 2 servidores
     │   │   └── ProjetoToolProviderSupplier.java  # adapta os McpClient num McpToolProvider
     │   ├── ai/
-    │   │   └── AssistenteProjeto.java        # @AiService SEM nenhum @Tool — as tools vêm do MCP
+    │   │   └── AssistenteProjeto.java        # @AiService sem nenhum @Tool: as tools vêm do MCP
     │   └── rest/
     │       └── AssistenteResource.java       # POST /api/assistente (@RunOnVirtualThread)
     └── resources/
-        ├── application.properties            # modelo + config PRÓPRIA (diretório + url remota)
+        ├── application.properties            # modelo + config própria (diretório + url remota)
         └── META-INF/resources/index.html     # chat simples
 ```
 
@@ -96,14 +96,14 @@ Os dois servidores são montados no mesmo lugar. Repare que a **única** diferen
 eles é a linha do transporte:
 
 ```java
-// BLOCO 1 — STDIO: o Quarkus sobe o servidor de filesystem como processo filho (npx)
+// BLOCO 1 (STDIO): o Quarkus sobe o servidor de filesystem como processo filho (npx)
 McpTransport transporteLocal = new StdioMcpTransport.Builder()
         .command(List.of("npx", "-y", "@modelcontextprotocol/server-filesystem", diretorioProjeto))
         .logEvents(true)
         .build();
 filesystem = abrir("filesystem", transporteLocal);
 
-// BLOCO 2 — Streamable HTTP: MESMO cliente, só o transporte muda
+// BLOCO 2 (Streamable HTTP): mesmo cliente, só o transporte muda
 McpTransport transporteRemoto = new StreamableHttpMcpTransport.Builder()
         .url(remotoUrl)          // https://mcp.deepwiki.com/mcp
         .logRequests(true).logResponses(true)
@@ -117,7 +117,7 @@ E o método que cria o cliente é **idêntico** para os dois:
 private McpClient abrir(String chave, McpTransport transporte) {
     return new DefaultMcpClient.Builder()
             .key(chave)
-            .transport(transporte)   // <- a ÚNICA coisa que diferencia local de remoto
+            .transport(transporte)   // <- a única coisa que diferencia local de remoto
             .build();
 }
 ```
@@ -159,7 +159,7 @@ public interface AssistenteProjeto {
 Compare com o módulo de Agentes, onde as tools eram métodos `@Tool` **dentro** do seu
 código. Aqui não há nenhum: o `toolProviderSupplier` aponta para um bean
 `Supplier<ToolProvider>`, e as capacidades chegam de servidores externos. Adicionar,
-remover ou trocar um servidor MCP **não muda uma linha** desta interface — é exatamente a
+remover ou trocar um servidor MCP **não muda uma linha** desta interface: é exatamente a
 promessa de reutilização que o MCP faz.
 
 ## O que observar
@@ -189,7 +189,7 @@ acompanhe o log:
 | Nesta aula | `@modelcontextprotocol/server-filesystem` via `npx` | DeepWiki (`https://mcp.deepwiki.com/mcp`) |
 
 > **Nota (jul/2026):** *Streamable HTTP* é o transporte HTTP atual do MCP. O antigo
-> *HTTP+SSE* é legado e está sendo depreciado — não use `HttpMcpTransport` (SSE) em
+> *HTTP+SSE* é legado e está sendo depreciado: não use `HttpMcpTransport` (SSE) em
 > projetos novos.
 
 ## Para experimentar
@@ -199,7 +199,7 @@ acompanhe o log:
   que o servidor de filesystem enxerga.
 - **Troque o servidor remoto:** troque `assistente.mcp.remoto.url` para
   `https://mcp.context7.com/mcp` (Context7, também sem auth, especializado em documentação
-  de bibliotecas) e veja as tools mudarem — sem tocar no `@AiService`.
+  de bibliotecas) e veja as tools mudarem, sem tocar no `@AiService`.
 - **Desligue o remoto:** `assistente.mcp.remoto.habilitado=false` e confirme que o
   assistente continua respondendo sobre arquivos locais.
 - **Espie o handshake:** com `logEvents(true)`/`logRequests(true)` já ligados, observe no

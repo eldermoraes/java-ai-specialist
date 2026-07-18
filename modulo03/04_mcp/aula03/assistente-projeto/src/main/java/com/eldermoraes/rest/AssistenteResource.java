@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.MediaType;
  *
  * <p>Roda em virtual thread ({@code @RunOnVirtualThread}) porque a chamada encadeia
  * operações bloqueantes: o modelo raciocina, decide chamar uma tool MCP, o servidor MCP
- * responde, e o modelo volta a raciocinar — tudo de forma síncrona.
+ * responde, e o modelo volta a raciocinar, tudo de forma síncrona.
  */
 @Path("/api/assistente")
 public class AssistenteResource {

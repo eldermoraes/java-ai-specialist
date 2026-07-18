@@ -11,7 +11,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  *
  * <p>Repare no que este código <b>não</b> tem: nenhum método {@code @Tool}, nenhuma
  * lógica de leitura de arquivos, nenhuma chamada HTTP. As capacidades do agente vêm de
- * FORA — de servidores MCP — através do {@code toolProviderSupplier}. Trocar/adicionar
+ * fora, de servidores MCP, através do {@code toolProviderSupplier}. Trocar/adicionar
  * servidores não muda uma linha desta interface.
  */
 @ApplicationScoped

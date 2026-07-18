@@ -15,19 +15,19 @@ import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * Fábrica dos clientes MCP do assistente — o CORAÇÃO desta aula.
+ * Fábrica dos clientes MCP do assistente: o coração desta aula.
  *
- * <p>Aqui a fiação é 100% PROGRAMÁTICA (em código Java), de propósito. A configuração
+ * <p>Aqui a fiação é 100% programática (em código Java), de propósito. A configuração
  * declarativa por {@code application.properties} ({@code quarkus.langchain4j.mcp.*}) é
  * assunto da próxima aula. Fazendo à mão, fica visível cada peça do protocolo:
  * <ul>
- *   <li>o <b>transporte</b> ({@link StdioMcpTransport} / {@link StreamableHttpMcpTransport}) —
+ *   <li>o <b>transporte</b> ({@link StdioMcpTransport} / {@link StreamableHttpMcpTransport}):
  *       como o cliente conversa com o servidor;</li>
- *   <li>o <b>cliente</b> ({@link DefaultMcpClient}) — quem fala o protocolo MCP (JSON-RPC);</li>
+ *   <li>o <b>cliente</b> ({@link DefaultMcpClient}): quem fala o protocolo MCP (JSON-RPC);</li>
  * </ul>
  *
  * <p>A mensagem central da aula está no método {@link #abrir(String, McpTransport)}:
- * a construção do cliente é IDÊNTICA para os dois servidores. <b>Trocou o transporte,
+ * a construção do cliente é idêntica para os dois servidores. <b>Trocou o transporte,
  * o resto do código fica intacto.</b>
  */
 @ApplicationScoped
@@ -35,7 +35,7 @@ public class McpClients {
 
     private static final Logger log = Logger.getLogger(McpClients.class);
 
-    /** Diretório que o servidor MCP de filesystem enxerga. Aponte para um projeto SEU. */
+    /** Diretório que o servidor MCP de filesystem enxerga. Aponte para um projeto seu. */
     @ConfigProperty(name = "assistente.projeto.diretorio")
     String diretorioProjeto;
 
@@ -52,9 +52,9 @@ public class McpClients {
     @PostConstruct
     void iniciar() {
         // ─── BLOCO 1: transporte STDIO ────────────────────────────────────────────────
-        // O Quarkus sobe o servidor de filesystem de referência como um PROCESSO FILHO
+        // O Quarkus sobe o servidor de filesystem de referência como um processo filho
         // (via npx) e conversa com ele por stdin/stdout. Nenhuma dessas tools
-        // (list_directory, read_file, ...) existe no nosso código — elas vêm do servidor.
+        // (list_directory, read_file, ...) existe no nosso código: elas vêm do servidor.
         McpTransport transporteLocal = new StdioMcpTransport.Builder()
                 .command(List.of(
                         "npx", "-y", "@modelcontextprotocol/server-filesystem", diretorioProjeto))
@@ -63,9 +63,9 @@ public class McpClients {
         filesystem = abrir("filesystem", transporteLocal);
         log.infof("Servidor MCP de filesystem conectado (stdio) sobre '%s'", diretorioProjeto);
 
-        // ─── BLOCO 2: MESMO cliente, transporte diferente ─────────────────────────────
-        // Streamable HTTP aponta para um servidor MCP REMOTO (sem auth). Repare que só
-        // a linha do transporte muda em relação ao bloco acima — a ideia da aula.
+        // ─── BLOCO 2: mesmo cliente, transporte diferente ─────────────────────────────
+        // Streamable HTTP aponta para um servidor MCP remoto (sem auth). Repare que só
+        // a linha do transporte muda em relação ao bloco acima: a ideia da aula.
         if (remotoHabilitado) {
             try {
                 McpTransport transporteRemoto = new StreamableHttpMcpTransport.Builder()
@@ -87,8 +87,8 @@ public class McpClients {
     }
 
     /**
-     * Constrói um {@link McpClient} sobre um transporte qualquer. É EXATAMENTE o mesmo
-     * código para stdio e para Streamable HTTP — essa é a mensagem da aula.
+     * Constrói um {@link McpClient} sobre um transporte qualquer. É exatamente o mesmo
+     * código para stdio e para Streamable HTTP: essa é a mensagem da aula.
      */
     private McpClient abrir(String chave, McpTransport transporte) {
         return new DefaultMcpClient.Builder()

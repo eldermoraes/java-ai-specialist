@@ -27,10 +27,10 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- O BOM do quarkus-langchain4j governa TODAS as versões de LangChain4j,
+            <!-- O BOM do quarkus-langchain4j governa todas as versões de LangChain4j,
                  inclusive as classes de MCP (McpClient, transportes, McpToolProvider).
                  Nunca fixe versão de LangChain4j à mão: usamos o BOM gerenciado pela
-                 PLATAFORMA Quarkus (io.quarkus.platform), alinhado à mesma
+                 plataforma Quarkus (io.quarkus.platform), alinhado à mesma
                  ${quarkus.platform.version} do quarkus-bom. -->
             <dependency>
                 <groupId>io.quarkus.platform</groupId>
@@ -59,10 +59,10 @@
             <artifactId>quarkus-langchain4j-ollama</artifactId>
         </dependency>
 
-        <!-- Extensão MCP: nesta aula usamos APENAS as classes programáticas que ela
+        <!-- Extensão MCP: nesta aula usamos apenas as classes programáticas que ela
              traz no classpath (McpClient, StdioMcpTransport, StreamableHttpMcpTransport,
              McpToolProvider). A configuração declarativa por application.properties
-             (quarkus.langchain4j.mcp.*) é assunto da AULA 04 — aqui a fiação é 100% em código. -->
+             (quarkus.langchain4j.mcp.*) é assunto da aula 04; aqui a fiação é 100% em código. -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mcp</artifactId>
