@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.eldermoraes</groupId>
+    <artifactId>vinyl-vault</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         vinyl-vault — o Sebo do Vini (aula 11, desafio do bloco MCP)
+
+         Este é o pom pai agregador: ele não tem código nenhum, só reúne os dois
+         módulos do projeto num único build (`./mvnw package` na raiz constrói os
+         dois). Cada módulo é um projeto Quarkus autossuficiente, com seu próprio
+         pom e suas próprias extensões, de propósito, porque eles vivem em lados
+         opostos do fio MCP:
+
+         - vinyl-vault-server → o MCP server (quem expõe as tools; sem LLM nenhum)
+         - vinyl-vault-client → o client declarativo de teste (quem consome o
+                               server, com agente LangChain4j + Ollama)
+
+         Repare que os módulos não herdam deste pom (não há <parent> neles):
+         usamos agregação pura, sem herança. Assim cada pom de módulo conta a
+         história completa das suas dependências, mais didático para estudar.
+
+         Este é o projeto-gabarito do desafio. O aluno deve refazê-lo com o seu
+         próprio domínio (o estoque da loja, a coleção de Magic, a carteira na
+         bolsa...): a estrutura é idêntica, muda só a história.
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <modules>
+        <module>vinyl-vault-server</module>
+        <module>vinyl-vault-client</module>
+    </modules>
+</project>
