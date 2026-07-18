@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Desk · balcão de decisões de engenharia</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f1117;
+            color: #e6e9ef;
+        }
+        .wrap { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #263243;
+            border-radius: 12px; margin-bottom: 20px;
+        }
+        header h1 { margin: 0; font-size: 19px; font-weight: 600; }
+        header .subtitle { font-size: 12px; opacity: 0.6; margin-top: 4px; }
+        .status {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 5px 12px; border-radius: 999px;
+            font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .status::before {
+            content: ""; width: 8px; height: 8px; border-radius: 50%;
+            background: #64748b; transition: background 0.2s;
+        }
+        .status.connected::before { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+        .status.connecting::before { background: #fbbf24; animation: pulse 1.2s infinite; }
+        .status.disconnected::before { background: #f87171; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .card {
+            background: #161a23; border: 1px solid #263243;
+            border-radius: 12px; padding: 18px; margin-bottom: 16px;
+        }
+        label {
+            display: block; font-size: 11px; font-weight: 600;
+            color: #94a3b8; text-transform: uppercase;
+            letter-spacing: 0.05em; margin-bottom: 8px;
+        }
+        textarea {
+            width: 100%; min-height: 80px;
+            padding: 12px 14px;
+            border: 1px solid #2d3a4d; border-radius: 8px;
+            background: #0f1117; color: #e6e9ef;
+            font-family: inherit; font-size: 14px;
+            line-height: 1.5; resize: vertical; outline: none;
+        }
+        textarea:focus { border-color: #7c3aed; }
+        .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        button {
+            font-family: inherit; font-size: 14px; cursor: pointer;
+            border-radius: 8px; padding: 10px 18px; border: none;
+        }
+        button.primary { background: #7c3aed; color: white; font-weight: 600; }
+        button.primary:hover { background: #6d28d9; }
+        button.primary:disabled { background: #3b3f52; cursor: not-allowed; }
+        button.ghost { background: transparent; color: #cbd5e1; border: 1px solid #2d3a4d; }
+        button.ghost:hover { background: #1c2231; }
+
+        .feed { display: flex; flex-direction: column; gap: 12px; }
+        .event {
+            background: #161a23; border: 1px solid #263243;
+            border-left: 3px solid #475569;
+            border-radius: 10px; padding: 14px 16px;
+        }
+        .event .phase {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+            text-transform: uppercase; color: #94a3b8; margin-bottom: 8px;
+        }
+        .event.recebido    { border-left-color: #38bdf8; }
+        .event.gate        { border-left-color: #fbbf24; }
+        .event.enviada     { border-left-color: #a78bfa; }
+        .event.decidida    { border-left-color: #4ade80; }
+        .event.erro        { border-left-color: #f87171; }
+        .event pre {
+            white-space: pre-wrap; word-break: break-word;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12.5px; line-height: 1.55; color: #cbd5e1; margin: 0;
+        }
+        .section-title { font-size: 12px; font-weight: 700; color: #a78bfa; margin: 14px 0 6px; }
+        .gate-buttons { display: flex; gap: 10px; margin-top: 14px; }
+        button.approve { background: #16a34a; color: white; font-weight: 600; }
+        button.approve:hover { background: #15803d; }
+        button.deny { background: #dc2626; color: white; font-weight: 600; }
+        button.deny:hover { background: #b91c1c; }
+        .spinner {
+            width: 15px; height: 15px; border: 2px solid #2d3a4d;
+            border-top-color: #7c3aed; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block; vertical-align: middle; margin-left: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <div>
+            <h1>🏛️ Decision Desk</h1>
+            <div class="subtitle">balcão de decisões de engenharia · MCP na camada do agente</div>
+        </div>
+        <span class="status connecting" id="statusBadge">conectando</span>
+    </header>
+
+    <div class="card">
+        <label for="perguntaInput">Sua pergunta de engenharia</label>
+        <textarea id="perguntaInput" placeholder="Ex: devo adotar virtual threads no serviço de pedidos?"></textarea>
+        <div class="actions">
+            <button type="button" class="ghost" id="exemploBtn">↻ pergunta de exemplo</button>
+            <button type="button" class="primary" id="enviarBtn" disabled>Levar ao balcão</button>
+        </div>
+    </div>
+
+    <div class="feed" id="feed"></div>
+</div>
+
+<script>
+    const statusEl = document.getElementById('statusBadge');
+    const perguntaInput = document.getElementById('perguntaInput');
+    const enviarBtn = document.getElementById('enviarBtn');
+    const exemploBtn = document.getElementById('exemploBtn');
+    const feed = document.getElementById('feed');
+
+    let ws = null;
+
+    function setStatus(state, label) {
+        statusEl.className = 'status ' + state;
+        statusEl.textContent = label;
+    }
+
+    function escapeHtml(s) {
+        return (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    }
+
+    function addEvent(cssClass, phaseLabel, innerHtml) {
+        const el = document.createElement('div');
+        el.className = 'event ' + cssClass;
+        el.innerHTML = `<div class="phase">${phaseLabel}</div>${innerHtml}`;
+        feed.appendChild(el);
+        el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        return el;
+    }
+
+    function clearFeed() { feed.innerHTML = ''; }
+
+    function sendDecision(resposta) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(resposta);
+        // desabilita os botões do gate já enviado
+        document.querySelectorAll('.gate-buttons button').forEach(b => b.disabled = true);
+    }
+
+    function renderDecisao(d) {
+        const bloco = (titulo, texto) =>
+            `<div class="section-title">${titulo}</div><pre>${escapeHtml(texto || '—')}</pre>`;
+        return bloco('Análise do repositório (AgenteRepo · caixa filesystem)', d.analiseRepo)
+             + bloco('Visão do ecossistema (AgenteEcossistema · caixa deepwiki)', d.visaoEcossistema)
+             + bloco('Decisão humana no gate', d.aprovacao)
+             + bloco('Registro em disco', d.registro);
+    }
+
+    function connect() {
+        setStatus('connecting', 'conectando');
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(proto + '//' + location.host + '/ws/desk');
+        ws.onopen = () => { setStatus('connected', 'conectado'); enviarBtn.disabled = false; };
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.fase === 'RECEBIDO') {
+                addEvent('recebido', '① pergunta recebida',
+                    `<pre>A equipe está investigando o repositório e o ecossistema…<span class="spinner"></span></pre>`);
+            } else if (msg.fase === 'AGUARDANDO_APROVACAO') {
+                addEvent('gate', '② gate humano: gravar este mini-ADR no disco?',
+                    `<pre>${escapeHtml(msg.detalhe)}</pre>
+                     <div class="gate-buttons">
+                         <button class="approve" onclick="sendDecision('sim')">Aprovar (sim)</button>
+                         <button class="deny" onclick="sendDecision('nao')">Negar (não)</button>
+                     </div>`);
+            } else if (msg.fase === 'APROVACAO_RECEBIDA') {
+                addEvent('enviada', '③ decisão enviada',
+                    `<pre>Você respondeu: ${escapeHtml(msg.detalhe)}. Finalizando…<span class="spinner"></span></pre>`);
+            } else if (msg.fase === 'DECIDIDA') {
+                addEvent('decidida', '④ decisão concluída', renderDecisao(msg.decisao));
+                enviarBtn.disabled = false;
+            } else if (msg.fase === 'ERRO') {
+                addEvent('erro', 'erro', `<pre>${escapeHtml(msg.detalhe || 'erro desconhecido')}</pre>`);
+                enviarBtn.disabled = false;
+            }
+        };
+        ws.onclose = () => { setStatus('disconnected', 'desconectado'); enviarBtn.disabled = true; };
+        ws.onerror = () => setStatus('disconnected', 'erro');
+    }
+
+    enviarBtn.addEventListener('click', () => {
+        const texto = perguntaInput.value.trim();
+        if (!texto) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        clearFeed();
+        enviarBtn.disabled = true;
+        ws.send(texto);
+    });
+
+    exemploBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const btn = e.currentTarget;
+        const original = btn.textContent;
+        btn.textContent = '↻ gerando…';
+        btn.disabled = true;
+        perguntaInput.disabled = true;
+        try {
+            const resp = await fetch('/api/example/pergunta');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            perguntaInput.value = (await resp.text()).trim();
+        } catch (err) {
+            perguntaInput.placeholder = 'Falha ao gerar exemplo: ' + err.message;
+        } finally {
+            btn.textContent = original;
+            btn.disabled = false;
+            perguntaInput.disabled = false;
+        }
+    });
+
+    connect();
+</script>
+</body>
+</html>
