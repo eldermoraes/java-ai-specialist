@@ -64,10 +64,10 @@
             <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
         </dependency>
         <!-- Extensão MCP: agora usada de verdade. Na aula03 pegávamos dela só as classes
-             programáticas (McpClient, transportes, McpToolProvider) e montávamos a fiação
+             programáticas (McpClient, transportes, McpToolProvider) e montávamos tudo
              à mão. Aqui a mesma extensão faz o trabalho pesado de forma declarativa:
              os clients nascem do application.properties (quarkus.langchain4j.mcp.*) e o
-             agente pede as tools com @McpToolBox. Some o código de fiação: esse é o ponto. -->
+             agente pede as tools com @McpToolBox. Some o código que ligava as peças: esse é o ponto. -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mcp</artifactId>

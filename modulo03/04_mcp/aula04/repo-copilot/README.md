@@ -1,22 +1,22 @@
 # Aula 04 (MCP): Repo Copilot · o caminho declarativo (clients MCP no Quarkus)
 
 > **Bloco**: MCP · **Foco**: clients MCP declarativos + produção
-> **Case**: o mesmo assistente da aula03 (responde sobre arquivos de um projeto usando tools de servidores MCP), reconstruído sem uma linha de fiação em código
+> **Case**: o mesmo assistente da aula03 (responde sobre arquivos de um projeto usando tools de servidores MCP), reconstruído sem uma linha de código para montar as peças
 > **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` (nunca fixe versão) · Ollama (`deepseek-v4-pro:cloud`)
 
 ---
 
 ## O que você vai aprender
 
-Na aula03 montamos a fiação MCP **à mão**: um `StdioMcpTransport` e um
+Na aula03 montamos o MCP **à mão**: um `StdioMcpTransport` e um
 `StreamableHttpMcpTransport`, um `DefaultMcpClient` para cada, um `McpToolProvider`
 agregando tudo, e um `Supplier<ToolProvider>` que o `@RegisterAiService` recebia. Cada
 peça do protocolo ficava visível: esse era o objetivo pedagógico.
 
-Agora fazemos o **mesmo agente** do jeito que você usaria em produção: **a fiação vira
+Agora fazemos o **mesmo agente** do jeito que você usaria em produção: **a montagem vira
 configuração**. Os clients MCP nascem do `application.properties`
-(`quarkus.langchain4j.mcp.*`), o agente pede as tools com `@McpToolBox`, e as classes de
-fiação **somem**. E de brinde vêm as peças de produção: Dev UI, health checks,
+(`quarkus.langchain4j.mcp.*`), o agente pede as tools com `@McpToolBox`, e as classes que
+ligavam as peças **somem**. E de brinde vêm as peças de produção: Dev UI, health checks,
 autenticação client-side, métricas, traces (OpenTelemetry) e Langfuse.
 
 **Mapa de tradução (aula03 → aula04):**
@@ -78,7 +78,7 @@ repo-copilot/
     │   └── rest/
     │       └── AssistenteResource.java       # POST /api/assistente (@RunOnVirtualThread)
     └── resources/
-        ├── application.properties            # ⭐ a fiação MCP agora mora aqui (quarkus.langchain4j.mcp.*)
+        ├── application.properties            # ⭐ a configuração do MCP fica toda aqui agora (quarkus.langchain4j.mcp.*)
         └── META-INF/resources/index.html     # chat simples
 ```
 

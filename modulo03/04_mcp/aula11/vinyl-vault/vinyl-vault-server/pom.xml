@@ -39,7 +39,7 @@
 
                  Repare que o groupId mudou: saímos de io.quarkus.platform (o BOM
                  da plataforma, que traria a 1.12.0) para io.quarkiverse.mcp (o BOM
-                 do próprio projeto da extensão, onde vive a 1.13.1).
+                 do próprio projeto da extensão, que traz a 1.13.1).
                  ═══════════════════════════════════════════════════════════════ -->
             <dependency>
                 <groupId>io.quarkiverse.mcp</groupId>

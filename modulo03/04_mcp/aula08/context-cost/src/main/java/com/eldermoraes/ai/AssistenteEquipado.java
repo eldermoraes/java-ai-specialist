@@ -11,9 +11,9 @@ import jakarta.enterprise.context.ApplicationScoped;
  * <p>Repare no que este código <b>não</b> tem: nenhum método {@code @Tool} local. Todas
  * as capacidades vêm de fora, de três servidores MCP plugados de forma declarativa no
  * {@code application.properties} ({@code quarkus.langchain4j.mcp.*}). É o contraste com a
- * aula 03, onde a fiação MCP foi feita à mão, em código (transporte + cliente + tool
- * provider). Aqui não há uma linha de fiação: a anotação {@link McpToolBox} abaixo é a
- * única cola entre o agente e os servidores.
+ * aula 03, onde tudo foi montado à mão, em código (transporte + cliente + tool
+ * provider). Aqui não há uma linha de código para ligar as peças: a anotação
+ * {@link McpToolBox} abaixo é a única cola entre o agente e os servidores.
  *
  * <p><b>Por que superequipar de propósito?</b> Porque este projeto existe para medir o
  * custo do superequipamento, não para resolvê-lo. Três servidores despejam todas as suas

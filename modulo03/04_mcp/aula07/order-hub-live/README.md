@@ -92,7 +92,7 @@ order-hub-live/
         │   ├── application.properties        # porta 8081; modelos Ollama; bloco mcp.central-pedidos.*
         │   └── META-INF/resources/index.html # chat da Central de Pedidos
         └── test/java/com/eldermoraes/ai/
-            └── AssistentePedidosTest.java     # smoke de wiring (passa sem Ollama/server) + IT @Disabled
+            └── AssistentePedidosTest.java     # smoke de montagem (passa sem Ollama/server) + IT @Disabled
 ```
 
 > **Nota de versão: o BOM 1.13.1 (herdado da aula 6).** A plataforma Quarkus 3.35.2 alinha o `quarkus-mcp-server` na 1.12.0; o pom do server sobrepõe isso importando o BOM `io.quarkiverse.mcp:quarkus-mcp-server-bom:1.13.1`, um override deliberado (a regra "nunca fixar versão" vale para o LangChain4j, não para este BOM). A 1.13.0 (04/06/2026) foi o marco em que o server Java passou a falar Streamable HTTP e ganhou o suporte inicial ao protocolo stateless do RC: exatamente os temas desta aula.

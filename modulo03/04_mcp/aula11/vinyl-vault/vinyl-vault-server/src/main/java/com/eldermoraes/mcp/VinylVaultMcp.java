@@ -34,7 +34,7 @@ import jakarta.inject.Inject;
  * fio, não um humano. Por isso elas dizem só o que a tool faz, quando usá-la e o que espera de
  * cada argumento, nada de instruções escondidas. Uma descrição envenenada (tool poisoning) é
  * exatamente o que o scanner de segurança do desafio caça. O código aqui fica sempre limpo; o
- * experimento de sabotagem controlada vive só no README, como exercício guiado.
+ * experimento de sabotagem controlada fica só no README, como exercício guiado.
  */
 public class VinylVaultMcp {
 

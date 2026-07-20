@@ -65,7 +65,7 @@ curl -s -X POST http://localhost:8080/api/assistente \
 
 ```
 context-cost/
-├── pom.xml                                   # quarkus-langchain4j-ollama + quarkus-langchain4j-mcp (fiação declarativa)
+├── pom.xml                                   # quarkus-langchain4j-ollama + quarkus-langchain4j-mcp (montagem declarativa)
 └── src/main/
     ├── java/com/eldermoraes/
     │   ├── ai/
@@ -75,7 +75,7 @@ context-cost/
     │   └── rest/
     │       └── AssistenteResource.java        # POST /api/assistente (@RunOnVirtualThread), mesmo shape da aula 03
     └── resources/
-        ├── application.properties            # a fiação declarativa dos 3 clientes MCP (contraste com a aula 03)
+        ├── application.properties            # a montagem declarativa dos 3 clientes MCP (contraste com a aula 03)
         ├── dados/
         │   ├── relatorio-grande.md           # ~34 KB, o arquivo grande do cenário B
         │   ├── notas.md                       # arquivo pequeno
@@ -85,11 +85,11 @@ context-cost/
 
 ### Pontos-chave
 
-#### 1. Fiação declarativa: o contraste com a aula 03
+#### 1. A montagem vira configuração: o contraste com a aula 03
 
-Na aula 03 a fiação foi **manual**: `StdioMcpTransport`, `DefaultMcpClient` e
-`McpToolProvider` montados à mão, cada peça do protocolo visível no código. Aqui **não há
-uma linha** de fiação Java. Os três clientes nascem só destas chaves:
+Na aula 03 você montou tudo **à mão**: `StdioMcpTransport`, `DefaultMcpClient` e
+`McpToolProvider`, peça por peça, cada parte do protocolo visível no código. Aqui **não há
+uma linha** de código Java ligando as peças. Os três clientes nascem só destas chaves:
 
 ```properties
 quarkus.langchain4j.mcp.filesystem.transport-type=stdio
@@ -224,7 +224,7 @@ solução. Ficam como **conceito da aula**, sem código aqui:
 
 ## Revalidar antes da gravação
 
-Convenção do bloco: esta superfície se move release a release. Antes de gravar, confirme:
+Convenção do bloco: esta parte da API muda a cada release. Antes de gravar, confirme:
 
 - **(a)** a API vigente do **subset de servidores por AI service** (`@McpToolBox`) no
   `quarkus-langchain4j` da plataforma **3.35.x**: nome da anotação, pacote

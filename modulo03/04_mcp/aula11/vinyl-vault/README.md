@@ -92,7 +92,7 @@ vinyl-vault/
         │   ├── application.properties   # porta 8081; modelos Ollama; bloco mcp.sebo.*
         │   └── META-INF/resources/index.html # chat do Sebo do Vini
         └── test/java/com/eldermoraes/ai/
-            └── AssistenteSeboTest.java  # smoke de wiring (passa sem Ollama/server) + IT @Disabled
+            └── AssistenteSeboTest.java  # smoke de montagem (passa sem Ollama/server) + IT @Disabled
 ```
 
 ---
@@ -163,7 +163,7 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 
 Duas lentes, as duas locais e **sem conta em serviço nenhum**.
 
-**Lente 1: o inventário, pelo scanner.** O `mcp-scan`, que hoje vive na Snyk como **agent-scan**, é o mesmo scanner da aula de segurança. Com o server no ar (`http://localhost:8080/mcp`), rode o modo `inspect` sobre o [`mcp-scan.config.json`](./mcp-scan.config.json) versionado aqui:
+**Lente 1: o inventário, pelo scanner.** O `mcp-scan`, que hoje faz parte da Snyk como **agent-scan**, é o mesmo scanner da aula de segurança. Com o server no ar (`http://localhost:8080/mcp`), rode o modo `inspect` sobre o [`mcp-scan.config.json`](./mcp-scan.config.json) versionado aqui:
 
 ```bash
 uvx snyk-agent-scan inspect mcp-scan.config.json
@@ -173,7 +173,7 @@ Ele conecta no seu server pelo protocolo ("auto-allowed", sem subprocess) e list
 
 **Lente 2: as descriptions na íntegra, pelo MCP Inspector.** Abra o `tools/list` no MCP Inspector (`npx @modelcontextprotocol/inspector`, o mesmo da Tarefa 4) e leia as descriptions e as annotations completas: esse é **exatamente o texto que o modelo do outro lado recebe**. A descrição é a interface; aqui você a vê de fora. (O teste `VinylVaultMcpTest` prova por JSON-RPC cru que descriptions e annotations viajam no `tools/list`.)
 
-**Formato do arquivo de config:** o mesmo formato `mcpServers` das configs de Claude/Cursor, um objeto com o nome do server, o `type` (`streamable-http`) e a `url`. JSON não aceita comentário, então o arquivo fica limpo e a documentação mora aqui.
+**Formato do arquivo de config:** o mesmo formato `mcpServers` das configs de Claude/Cursor, um objeto com o nome do server, o `type` (`streamable-http`) e a `url`. JSON não aceita comentário, então o arquivo fica limpo e a explicação dele está aqui no README.
 
 > **Opcional, para quem quiser ir além:** o agent-scan tem também uma análise verificada automatizada (acusa tool poisoning sozinha), que exige um `SNYK_TOKEN` (conta gratuita em app.snyk.io). **Não é pré-requisito nem tarefa deste desafio**: o caminho oficial é a auditoria guiada abaixo, 100% local. Se usar a análise verificada, saiba que ela pode enviar as descriptions das suas tools para API externa; aqui é um server de exercício, sem dado sensível.
 
@@ -230,9 +230,9 @@ O antes-e-depois é a evidência da sua entrega: é o que transforma "fiz um ser
 O roteiro de teste completo está no enunciado ([`planejamento/mcp/11.md`](../../../../../jas-aulas/planejamento/mcp/11.md)). Em resumo, prove que:
 
 1. `tools/list` mostra as tools em snake_case com annotations corretas (leitura com `readOnlyHint`, venda com `destructiveHint`).
-2. `tools/call` de `buscar_disco` devolve `structuredContent` tipado — não texto solto.
+2. `tools/call` de `buscar_disco` devolve `structuredContent` tipado, não texto solto.
 3. Venda num client **com** elicitation → pedido de confirmação (comprador, preço); recusar → nada muda; aceitar → o disco sai.
-4. Venda num client **sem** elicitation → recusa clara, nunca executada. (O seu client declarativo da Tarefa 4 já é esse client — ele não declara a capability. O teste `VinylVaultMcpTest` prova isso via JSON-RPC cru.)
+4. Venda num client **sem** elicitation → recusa clara, nunca executada. (O seu client declarativo da Tarefa 4 já é esse client: ele não declara a capability. O teste `VinylVaultMcpTest` prova isso via JSON-RPC cru.)
 5. Id inexistente → `isError` (não HTTP 500).
 6. Pergunta em linguagem natural no client ("tem algum disco do Pink Floyd?") → o agente descobre e chama a tool certa.
 7. Visibilidade e endurecimento: `snyk-agent-scan inspect` lista as 3 tools (sem conta) → com o veneno, o `tools/list` no MCP Inspector mostra a instrução escondida → após a auditoria, o diff das descriptions + o `tools/list` limpo provam o antes-e-depois.

@@ -62,7 +62,7 @@
         <!-- Extensão MCP: nesta aula usamos apenas as classes programáticas que ela
              traz no classpath (McpClient, StdioMcpTransport, StreamableHttpMcpTransport,
              McpToolProvider). A configuração declarativa por application.properties
-             (quarkus.langchain4j.mcp.*) é assunto da aula 04; aqui a fiação é 100% em código. -->
+             (quarkus.langchain4j.mcp.*) é assunto da aula 04; aqui montamos tudo em código. -->
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-mcp</artifactId>

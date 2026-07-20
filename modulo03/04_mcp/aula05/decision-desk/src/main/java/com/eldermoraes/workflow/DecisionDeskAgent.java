@@ -12,7 +12,7 @@ import dev.langchain4j.service.V;
  * A cola do balcão: quatro passos em sequência.
  *
  * <p>São os mesmos {@code @SequenceAgent}/{@code outputKey}/{@code subAgents} do módulo de
- * Agentes: a costura não muda. A novidade da aula inteira mora no {@code @McpToolBox} de
+ * Agentes: a costura não muda. A novidade da aula inteira está no {@code @McpToolBox} de
  * cada sub-agente: analisar o repositório → confrontar com o ecossistema → gate humano →
  * registrar (se aprovado). O padrão é o de sempre; o que mudou foi o alcance de cada membro.
  */

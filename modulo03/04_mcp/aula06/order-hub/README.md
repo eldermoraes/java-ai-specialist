@@ -85,7 +85,7 @@ order-hub/
         │   ├── application.properties   # porta 8081; modelos Ollama; bloco mcp.central-pedidos.*
         │   └── META-INF/resources/index.html # chat da Central de Pedidos
         └── test/java/com/eldermoraes/ai/
-            └── AssistentePedidosTest.java# smoke de wiring (passa sem Ollama/server) + IT @Disabled
+            └── AssistentePedidosTest.java# smoke de montagem (passa sem Ollama/server) + IT @Disabled
 ```
 
 ---
@@ -105,7 +105,7 @@ public Pedido buscarPedido(...) { ... } // método Java: camelCase
 
 ### 3. O server não tem LLM (por isso é barato)
 
-Nenhuma chave de modelo no `application.properties` do server. Ele é uma casca de lógica de negócio publicada pelo protocolo; a inteligência mora no client. Serviço HTTP comum: sem inferência, sem GPU, sem token.
+Nenhuma chave de modelo no `application.properties` do server. Ele é uma casca de lógica de negócio publicada pelo protocolo; quem pensa é o client. Serviço HTTP comum: sem inferência, sem GPU, sem token.
 
 ### 4. A descrição é a interface para o modelo
 

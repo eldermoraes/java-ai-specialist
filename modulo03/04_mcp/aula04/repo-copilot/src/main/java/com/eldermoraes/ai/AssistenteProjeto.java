@@ -11,9 +11,10 @@ import jakarta.enterprise.context.ApplicationScoped;
  *
  * <p>Compare com a aula03: lá o {@code @RegisterAiService} recebia um
  * {@code toolProviderSupplier = ProjetoToolProviderSupplier.class}, e existiam duas
- * classes de fiação (McpClients + ProjetoToolProviderSupplier) montando transporte,
- * cliente e provider à mão. Aqui nada disso existe: não há {@code toolProviderSupplier},
- * não há classe de fiação. A extensão MCP cria os clients a partir do
+ * classes só para ligar as peças (McpClients + ProjetoToolProviderSupplier), montando
+ * transporte, cliente e provider à mão. Aqui nada disso existe: não há
+ * {@code toolProviderSupplier}, não há classe para ligar as peças. A extensão MCP cria
+ * os clients a partir do
  * {@code application.properties} (quarkus.langchain4j.mcp.*), e este agente só declara,
  * por método, quais clients quer usar, via {@link McpToolBox}.
  *
@@ -23,7 +24,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * request significa prompt mais enxuto, ou seja, menos token gasto por chamada.
  *
  * <p>Assim como na aula03: nenhum método {@code @Tool}, nenhuma lógica de leitura de
- * arquivos. A diferença é que agora nem a fiação é sua: é da extensão. Sobra só a
+ * arquivos. A diferença é que agora nem a montagem é sua: é da extensão. Sobra só a
  * assinatura e a caixa de ferramentas nomeada.
  */
 @ApplicationScoped

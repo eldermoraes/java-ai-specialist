@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Prova de fiação, não de modelo. Subir o container do Quarkus já exige que os AI services,
+ * Prova de montagem, não de modelo. Subir o container do Quarkus já exige que os AI services,
  * o workflow agêntico ({@code @SequenceAgent}) e os clients MCP declarados estejam bem
- * construídos e injetáveis. Nenhum modelo é chamado aqui: se a fiação estiver errada, a
- * aplicação nem sobe.
+ * construídos e injetáveis. Nenhum modelo é chamado aqui: se as peças não estiverem bem
+ * ligadas, a aplicação nem sobe.
  */
 @QuarkusTest
 class WiringTest {

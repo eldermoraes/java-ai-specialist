@@ -10,10 +10,10 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 
 /**
- * Smoke test de fiação: não chama o modelo nem os servidores MCP.
+ * Smoke test de montagem: não chama o modelo nem os servidores MCP.
  *
  * <p>O objetivo é só garantir que a aplicação sobe e que o AI service superequipado é um
- * bean válido e injetável (fiação declarativa OK). O teste roda offline de propósito: no
+ * bean válido e injetável (montagem declarativa OK). O teste roda offline de propósito: no
  * perfil {@code %test}, o {@code application.properties} desliga os três clientes MCP e o
  * medidor de contexto, então o boot não tenta subir npx nem falar com a internet.
  *

@@ -17,7 +17,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 /**
  * Fábrica dos clientes MCP do assistente: o coração desta aula.
  *
- * <p>Aqui a fiação é 100% programática (em código Java), de propósito. A configuração
+ * <p>Aqui a montagem é 100% programática (em código Java), de propósito. A configuração
  * declarativa por {@code application.properties} ({@code quarkus.langchain4j.mcp.*}) é
  * assunto da próxima aula. Fazendo à mão, fica visível cada peça do protocolo:
  * <ul>

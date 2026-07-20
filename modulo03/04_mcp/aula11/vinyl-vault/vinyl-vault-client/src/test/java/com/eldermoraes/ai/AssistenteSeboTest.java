@@ -12,7 +12,7 @@ import jakarta.inject.Inject;
 /**
  * Testes do client.
  *
- * <p>O teste de fumaça ({@link #assistenteFoiInjetado()}) prova o wiring: que o CDI conseguiu
+ * <p>O teste de fumaça ({@link #assistenteFoiInjetado()}) prova a montagem: que o CDI conseguiu
  * construir o proxy do {@code @RegisterAiService} e que a augmentation do LangChain4j amarrou
  * o {@code @McpToolBox} ao client MCP declarativo, tudo isso sem chamar o modelo e sem o
  * server estar no ar. Por isso ele passa em qualquer ambiente (CI incluído), sem Ollama e sem
@@ -27,7 +27,7 @@ class AssistenteSeboTest {
     @Test
     void assistenteFoiInjetado() {
         assertNotNull(assistente,
-                "O @RegisterAiService deveria ter sido construído pelo CDI (prova de wiring).");
+                "O @RegisterAiService deveria ter sido construído pelo CDI (prova de montagem).");
     }
 
     /**

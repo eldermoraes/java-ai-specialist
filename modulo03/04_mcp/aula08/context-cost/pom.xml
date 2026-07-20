@@ -53,7 +53,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-openapi</artifactId>
         </dependency>
-        <!-- Extensão MCP. Nesta aula a fiação é declarativa, via application.properties
+        <!-- Extensão MCP. Nesta aula a montagem é declarativa, via application.properties
              (quarkus.langchain4j.mcp.*), em contraste com a aula 03, que montou tudo à mão
              em código. Sem versão aqui: quem governa é o quarkus-langchain4j-bom acima. -->
         <dependency>

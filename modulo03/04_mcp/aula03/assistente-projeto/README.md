@@ -1,6 +1,6 @@
 # Aula 03 (MCP): Assistente de Projeto · consumindo servidores MCP no LangChain4j
 
-> **Bloco**: MCP · **Foco**: MCP *client* no LangChain4j (fiação programática)
+> **Bloco**: MCP · **Foco**: MCP *client* no LangChain4j (montado em código)
 > **Case**: um agente que responde perguntas sobre os arquivos de um projeto/repositório usando tools que **não estão no seu código**: vêm de servidores MCP externos
 > **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` (nunca fixe versão) · Ollama (`deepseek-v4-pro:cloud`)
 
@@ -26,7 +26,7 @@ As três peças que você vai montar à mão:
 E o `@AiService` recebe esse provider pelo atributo `toolProviderSupplier` do `@RegisterAiService`.
 
 > **Por que fazer isso em código, se dá para configurar por `application.properties`?**
-> Porque a fiação declarativa (`quarkus.langchain4j.mcp.*`, extensão + Dev UI) é justamente o assunto da **próxima aula**. Fazendo à mão primeiro, cada peça do protocolo fica visível. E quando a versão declarativa aparecer, você vai saber exatamente o que ela está montando por você.
+> Porque a configuração declarativa (`quarkus.langchain4j.mcp.*`, extensão + Dev UI) é justamente o assunto da **próxima aula**. Fazendo à mão primeiro, cada peça do protocolo fica visível. E quando a versão declarativa aparecer, você vai saber exatamente o que ela está montando por você.
 
 ### O que é o "servidor de filesystem"?
 
