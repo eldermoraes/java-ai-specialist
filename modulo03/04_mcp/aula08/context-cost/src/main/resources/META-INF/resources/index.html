@@ -89,12 +89,11 @@
             try {
                 const resp = await fetch('/api/assistente', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pergunta })
+                    body: pergunta
                 });
-                const dados = await resp.json();
+                const resposta = await resp.text();
                 pensando.remove();
-                bolha(dados.resposta || '(resposta vazia)', 'bot');
+                bolha(resposta || '(resposta vazia)', 'bot');
             } catch (err) {
                 pensando.remove();
                 bolha('Erro ao falar com o assistente: ' + err.message, 'bot');

@@ -52,8 +52,7 @@ Abra <http://localhost:8080/> e experimente os cenários A, B e C abaixo. Ou via
 
 ```bash
 curl -s -X POST http://localhost:8080/api/assistente \
-  -H 'Content-Type: application/json' \
-  -d '{"pergunta":"Quanto é 2 + 2?"}' | jq
+  -d 'Quanto é 2 + 2?'
 ```
 
 > **O interessante é o log, não o corpo da resposta.** Rode com `log-requests` /

@@ -57,8 +57,7 @@ Ou via `curl`:
 
 ```bash
 curl -s -X POST http://localhost:8080/api/assistente \
-  -H 'Content-Type: application/json' \
-  -d '{"pergunta":"Quais arquivos .java existem e o que cada um faz?"}' | jq
+  -d 'Quais arquivos .java existem e o que cada um faz?'
 ```
 
 > Para apontar o assistente para **outro** projeto, mude `assistente.projeto.diretorio`
