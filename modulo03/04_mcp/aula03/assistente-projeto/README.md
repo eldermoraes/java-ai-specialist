@@ -1,8 +1,8 @@
 # Aula 03 (MCP): Assistente de Projeto · consumindo servidores MCP no LangChain4j
 
-> **Bloco**: MCP · **Foco**: MCP *client* no LangChain4j (montado em código)
-> **Case**: um agente que responde perguntas sobre os arquivos de um projeto/repositório usando tools que **não estão no seu código**: vêm de servidores MCP externos
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` (nunca fixe versão) · Ollama (`deepseek-v4-pro:cloud`)
+> - **Foco**: MCP *client* no LangChain4j
+> - **Case**: um agente que responde perguntas sobre os arquivos de um projeto/repositório usando tools que **não estão no seu código**: vêm de servidores MCP externos
+> - **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` · Ollama (`deepseek-v4-pro:cloud`)
 
 ---
 
@@ -25,9 +25,6 @@ As três peças que você vai montar à mão:
 
 E o `@AiService` recebe esse provider pelo atributo `toolProviderSupplier` do `@RegisterAiService`.
 
-> **Por que fazer isso em código, se dá para configurar por `application.properties`?**
-> Porque a configuração declarativa (`quarkus.langchain4j.mcp.*`, extensão + Dev UI) é justamente o assunto da **próxima aula**. Fazendo à mão primeiro, cada peça do protocolo fica visível. E quando a versão declarativa aparecer, você vai saber exatamente o que ela está montando por você.
-
 ### O que é o "servidor de filesystem"?
 
 É um servidor MCP de referência mantido pelo projeto oficial, distribuído como pacote npm
@@ -36,9 +33,9 @@ leitura/navegação sobre **um diretório que você autoriza**, e só ele. Nós 
 `npx`, e o Quarkus o mantém como um **processo filho**, conversando por stdin/stdout.
 
 No projeto ele aponta, por padrão, para o **próprio diretório do projeto** (`${user.dir}`).
-Por isso o assistente já consegue responder "quais arquivos existem aqui?". Mas o interesse
-real é **apontar para um projeto do seu domínio**: troque `assistente.projeto.diretorio`
-para o caminho do seu repositório e o mesmo agente passa a responder sobre o **seu** código.
+Por isso o assistente já consegue responder "quais arquivos existem aqui?". Se quiser apontar
+para outro projeto, apenas mude o `assistente.projeto.diretorio`
+para o caminho desejado e o mesmo agente passará a responder sobre ele.
 
 ## Como rodar
 
@@ -65,8 +62,6 @@ curl -s -X POST http://localhost:8080/api/assistente \
   -d 'Quais arquivos .java existem e o que cada um faz?'
 ```
 
-> Para apontar o assistente para **outro** projeto, mude `assistente.projeto.diretorio`
-> no `application.properties` (ou passe `-Dassistente.projeto.diretorio=/caminho/do/seu/projeto`).
 
 ## Estrutura do código
 
@@ -76,7 +71,7 @@ assistente-projeto/
 └── src/main/
     ├── java/com/eldermoraes/
     │   ├── mcp/
-    │   │   ├── McpClients.java               # ⭐ o coração: monta transporte + cliente dos 2 servidores
+    │   │   ├── McpClients.java               # O coração: monta transporte + cliente dos 2 servidores
     │   │   └── ProjetoToolProviderSupplier.java  # adapta os McpClient num McpToolProvider
     │   ├── ai/
     │   │   └── AssistenteProjeto.java        # @AiService sem nenhum @Tool: as tools vêm do MCP
@@ -110,7 +105,7 @@ McpTransport transporteRemoto = new StreamableHttpMcpTransport.Builder()
 remoto = abrir("remoto", transporteRemoto);
 ```
 
-E o método que cria o cliente é **idêntico** para os dois:
+E o método que cria o cliente é **o mesmo** para os dois:
 
 ```java
 private McpClient abrir(String chave, McpTransport transporte) {
@@ -166,16 +161,16 @@ promessa de reutilização que o MCP faz.
 Rode com `quarkus.langchain4j.log-requests=true` / `log-responses=true` (já ligados) e
 acompanhe o log:
 
-| Observação no log | Explica… |
-|---|---|
+| Observação no log | Explicação                                                                              |
+|---|-----------------------------------------------------------------------------------------|
 | No boot: `Servidor MCP de filesystem conectado (stdio) sobre '...'` | O `@PostConstruct` de `McpClients` sobe o processo `npx` e faz o handshake `initialize` |
-| No boot: `Servidor MCP remoto conectado (Streamable HTTP) em https://mcp.deepwiki.com/mcp` | O mesmo `DefaultMcpClient`, agora sobre `StreamableHttpMcpTransport` |
-| Na 1ª pergunta, a request ao modelo já traz uma **lista de tools** (`list_directory`, `read_file`, `ask_question`, ...) | O `McpToolProvider` listou as tools dos servidores e as injetou no request |
-| A resposta do modelo vem com um **tool call** (ex.: `read_file` com `{"path": "README.md"}`) | O modelo decidiu usar uma tool MCP em vez de responder direto |
-| Uma **segunda** ida ao servidor MCP e o resultado voltando pro modelo | Ciclo tool-calling: pergunta → tool → resultado → resposta final |
-| A resposta final cita **caminhos e conteúdo reais** dos arquivos | O agente respondeu com base no resultado da tool, não em "chute" |
-| Pergunta sobre repositório do GitHub → tool `ask_question` (DeepWiki) em vez de `read_file` | O modelo escolhe o servidor certo pela descrição das tools |
-| Derrube a internet e reinicie → `Servidor MCP remoto indisponível ... Seguindo apenas com filesystem` | Resiliência: `try/catch` no boot + `failIfOneServerFails(false)` no provider |
+| No boot: `Servidor MCP remoto conectado (Streamable HTTP) em https://mcp.deepwiki.com/mcp` | O mesmo `DefaultMcpClient`, agora sobre `StreamableHttpMcpTransport`                    |
+| Na 1ª pergunta, a request ao modelo já traz uma **lista de tools** (`list_directory`, `read_file`, `ask_question`, ...) | O `McpToolProvider` listou as tools dos servidores e as injetou no request              |
+| A resposta do modelo vem com um **tool call** (ex.: `read_file` com `{"path": "README.md"}`) | O modelo decidiu usar uma tool MCP em vez de responder direto                           |
+| Uma **segunda** ida ao servidor MCP e o resultado voltando pro modelo | Ciclo tool-calling: pergunta → tool → resultado → resposta final                        |
+| A resposta final cita **caminhos e conteúdo reais** dos arquivos | O agente respondeu com base no resultado da tool, não em "chute"                        |
+| Pergunta sobre repositório do GitHub → tool `ask_question` (DeepWiki) em vez de `read_file` | O modelo escolhe o servidor certo pela descrição das tools                              |
+| Derrube a internet e reinicie → `Servidor MCP remoto indisponível ... Seguindo apenas com filesystem` | Resiliência: `try/catch` no boot + `failIfOneServerFails(false)` no provider            |
 
 ## STDIO × Streamable HTTP (quando usar cada um)
 
