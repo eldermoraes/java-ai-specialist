@@ -3,6 +3,7 @@ package com.eldermoraes.mcp;
 import io.quarkiverse.langchain4j.mcp.auth.McpClientAuthProvider;
 import io.quarkiverse.langchain4j.mcp.runtime.McpClientName;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.util.Optional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
@@ -28,6 +29,12 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  * mostrar o par (client protegido + provider) e fechará o circuito quando construirmos
  * nosso próprio server MCP mais adiante no bloco.
  *
+ * <p><b>Configuração do token:</b> o token é opcional na configuração (a propriedade
+ * {@code assistente.mcp.token} tem default vazio, pois {@code MCP_TOKEN} normalmente não
+ * está definida). Por isso a injeção é {@code Optional<String>}: o SmallRye Config trata
+ * string vazia como ausência de valor. Se o client protegido for habilitado sem um token
+ * presente, {@link #getAuthorization} falha com erro claro pedindo a variável de ambiente.
+ *
  * <p><b>Alternativas prontas (OIDC):</b> quando o token vier de um fluxo OIDC, a
  * comunidade já oferece providers plugáveis, sem escrever esta classe:
  * <ul>
@@ -42,10 +49,14 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class TokenAuthProvider implements McpClientAuthProvider {
 
     @ConfigProperty(name = "assistente.mcp.token")
-    String token;
+    Optional<String> token;
 
     @Override
     public String getAuthorization(Input input) {
-        return "Bearer " + token;
+        return token.filter(t -> !t.isBlank())
+                .map(t -> "Bearer " + t)
+                .orElseThrow(() -> new IllegalStateException(
+                        "A variável de ambiente MCP_TOKEN precisa estar definida quando o "
+                        + "client \"protegido\" estiver habilitado."));
     }
 }

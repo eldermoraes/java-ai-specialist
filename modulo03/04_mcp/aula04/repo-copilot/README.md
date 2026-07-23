@@ -1,8 +1,9 @@
 # Aula 04 (MCP): Repo Copilot · o caminho declarativo (clients MCP no Quarkus)
 
-> **Bloco**: MCP · **Foco**: clients MCP declarativos + produção
-> **Case**: o mesmo assistente da aula03 (responde sobre arquivos de um projeto usando tools de servidores MCP), reconstruído sem uma linha de código para montar as peças
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` (nunca fixe versão) · Ollama (`deepseek-v4-pro:cloud`)
+> - **Módulo**: MCP 
+> - **Foco**: clients MCP declarativos + produção
+> - **Case**: o mesmo assistente da aula03 (responde sobre arquivos de um projeto usando tools de servidores MCP), reconstruído sem uma linha de código para montar as peças
+> - **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` · Ollama (`deepseek-v4-pro:cloud`)
 
 ---
 
@@ -28,10 +29,6 @@ autenticação client-side, métricas, traces (OpenTelemetry) e Langfuse.
 | `McpClients` com `@PostConstruct` / `@PreDestroy` | ciclo de vida do client é da **extensão** (abre no boot, fecha no shutdown) |
 | `ProjetoToolProviderSupplier` + `toolProviderSupplier=...` | `@McpToolBox({"filesystem","deepwiki"})` no método |
 | `try/catch` de resiliência no boot | `quarkus.langchain4j.mcp.<nome>.enabled=false` |
-
-> A pergunta que fechava a aula03 (*"por que fazer isto em código se dá para configurar
-> por `application.properties`?"*) se responde aqui: porque agora você **sabe** o que a
-> versão declarativa está fazendo por baixo.
 
 ## Como rodar
 
@@ -109,8 +106,10 @@ menos tools no request. Prompt mais enxuto, menos token por chamada.
 O `TokenAuthProvider` (`@McpClientName("protegido")`) mostra como o agente se **autentica**
 num server protegido: devolve um `Bearer <token>`. O client `protegido` está
 `enabled=false` (só demonstra o par). E o token vem de `assistente.mcp.token=${MCP_TOKEN:}`,
-com **default vazio obrigatório**: sem ele, como `MCP_TOKEN` normalmente não existe na
-máquina do aluno, a aplicação nem subiria. O valor real **nunca** é hardcoded nem comitado.
+com **default vazio** porque `MCP_TOKEN` normalmente não existe na máquina do aluno. O
+provider injeta esse token como `Optional<String>` justamente por isso: o SmallRye Config
+trata string vazia como ausência de valor (um `String` obrigatório receberia `null` e a
+aplicação nem subiria). O valor real **nunca** é hardcoded nem comitado.
 
 #### 4. Server MCP é dependência de infraestrutura
 
