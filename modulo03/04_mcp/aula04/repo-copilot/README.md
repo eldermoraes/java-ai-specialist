@@ -3,7 +3,7 @@
 > - **Módulo**: MCP 
 > - **Foco**: clients MCP declarativos + produção
 > - **Case**: o mesmo assistente da aula03 (responde sobre arquivos de um projeto usando tools de servidores MCP), reconstruído sem uma linha de código para montar as peças
-> - **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` · Ollama (`deepseek-v4-pro:cloud`)
+> - **Stack**: Quarkus 3.36.3 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` · Ollama (`deepseek-v4-pro:cloud`)
 
 ---
 
@@ -19,6 +19,13 @@ configuração**. Os clients MCP nascem do `application.properties`
 (`quarkus.langchain4j.mcp.*`), o agente pede as tools com `@McpToolBox`, e as classes que
 ligavam as peças **somem**. E de brinde vêm as peças de produção: Dev UI, health checks,
 autenticação client-side, métricas, traces (OpenTelemetry) e Langfuse.
+
+> **Langfuse, o novato da stack:** é a primeira vez que ele aparece no curso. O Langfuse é
+> uma plataforma **open source** de observabilidade para aplicações de IA: cada conversa
+> vira um **trace navegável**, com prompt, resposta, tool calls e latência de cada passo
+> (pense num APM especializado em LLM). Em dev, a extensão `quarkus-langfuse` sobe uma
+> instância local dele para você, sem configurar nada. Para conhecer mais:
+> <https://langfuse.com>.
 
 **Mapa de tradução (aula03 → aula04):**
 
