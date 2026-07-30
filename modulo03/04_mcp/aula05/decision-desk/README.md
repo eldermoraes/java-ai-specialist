@@ -1,6 +1,6 @@
 # Aula 05 (bloco MCP): Decision Desk · um toolbox MCP por agente
 
-> **Padrão**: workflow agêntico sequencial + human-in-the-loop binário, com uma caixa de ferramentas MCP por agente
+> **Padrão**: workflow agêntico sequencial + human-in-the-loop binário, com um toolbox MCP por agente
 > **Case**: pergunta de engenharia entra → Agente Repo lê o repositório local → Agente Ecossistema confronta com a doc externa → gate humano (sim/não) → se "sim", grava um mini-ADR em `decisions/`
 > **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic + MCP · Ollama (`deepseek-v4-pro:cloud` + `gemma4:31b-cloud`) · MCP servers: filesystem (stdio/npx) + DeepWiki (streamable-http)
 
@@ -12,7 +12,7 @@ Você já sabe montar equipes de agentes (módulo de Agentes) e já sabe plugar 
 
 > **MCP entra na camada do agente, não na do padrão.**
 
-O desenho da equipe (a cola `@SequenceAgent`) é o mesmo de sempre. A novidade da aula inteira cabe no `@McpToolBox` de cada sub-agente: cada membro recebe a sua caixa de ferramentas, e nada além: **menor privilégio por agente**. E repare: **não existe um único `@Tool` local neste projeto**; todas as mãos dos agentes vêm de fora, via MCP.
+O desenho da equipe (a cola `@SequenceAgent`) é o mesmo de sempre. A novidade da aula inteira cabe no `@McpToolBox` de cada sub-agente: cada membro recebe o seu toolbox, e nada além: **menor privilégio por agente**. E repare: **não existe um único `@Tool` local neste projeto**; todas as mãos dos agentes vêm de fora, via MCP.
 
 ```
    PERGUNTA
