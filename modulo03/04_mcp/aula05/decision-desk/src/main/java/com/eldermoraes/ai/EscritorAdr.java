@@ -11,11 +11,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 /**
  * Agente que grava o mini-ADR aprovado no disco.
  *
- * <p>É a mesma caixa {@code "filesystem"} do {@link AgenteRepo}: quem lê o repositório é
- * quem segura a caneta, porque leitura e escrita chegam juntas no mesmo server MCP. O grão
- * do {@code @McpToolBox} é o server, não a tool. Não há um segundo server só de escrita a
- * quem delegar o risco. É exatamente por isso que o gate humano vem antes deste agente:
- * o {@code write_file} de um server de terceiros só acontece depois do "sim" do humano.
+ * <p>É a mesma caixa {@code "filesystem"} do {@link AgenteRepo}: leitura e escrita chegam
+ * juntas no mesmo server MCP; a granularidade do {@code @McpToolBox} é o server, não a tool.
+ * Não há um segundo server só de escrita a quem delegar o risco. É exatamente por isso que
+ * o gate humano vem antes deste agente: o {@code write_file} de um server de terceiros só
+ * acontece depois do "sim" do humano.
  */
 @ApplicationScoped
 @RegisterAiService(modelName = "smaller")

@@ -100,9 +100,9 @@ String consultarEcossistema(@V("pergunta") String pergunta, @V("analiseRepo") St
 
 O AgenteRepo nunca enxerga o DeepWiki; o AgenteEcossistema nunca enxerga o filesystem. É a promessa "Secure & Isolated" da Parte 1 virando prática concreta.
 
-### 2. O grão é o server, não a tool: quem lê também segura a caneta
+### 2. A granularidade é o server, não a tool: leitura e escrita vêm juntas
 
-`@McpToolBox("filesystem")` entrega **todas** as tools do server de filesystem: as de leitura e as de escrita, juntas. Não dá para pegar só `read_file` sem `write_file` no caminho declarativo. Por isso o mesmo AgenteRepo que lê o repositório é quem, no passo ④ (via `EscritorAdr`, mesma caixa), empunha o `write_file`. Não há um segundo agente "de escrita" a quem delegar o risco: o que separa a leitura da escrita é o gate, não a arquitetura.
+`@McpToolBox("filesystem")` entrega **todas** as tools do server de filesystem: as de leitura e as de escrita, juntas. Não dá para pegar só `read_file` sem `write_file` no caminho declarativo. Por isso o mesmo AgenteRepo que lê o repositório é quem, no passo ④ (via `EscritorAdr`, mesma caixa), chama o `write_file`. Não há um segundo agente "de escrita" a quem delegar o risco: o que separa a leitura da escrita é o gate, não a arquitetura.
 
 ### 3. Gate humano binário: `@HumanInTheLoop` declarativo + fallback
 
@@ -153,5 +153,5 @@ A fronteira é código Java determinístico, não a obediência do modelo.
 2. **`@McpToolBox` em métodos `@Agent` dentro de workflow agêntico**: VALIDADO (2026-07-17). Os tool calls MCP aconteceram nos dois agentes dentro da sequência. Se regressar em versão futura, cair para `toolProviderSupplier` com `McpToolProvider` filtrando os clients (o mecanismo da parte do client).
 3. **Nomes exatos das chaves `quarkus.langchain4j.mcp.*`** (`transport-type`, `command`, `url`): VALIDADOS na plataforma 3.35.2; reconferir se a plataforma for atualizada.
 4. **Disponibilidade do DeepWiki** (`mcp.deepwiki.com/mcp`) no dia: respondeu em 2026-07-17; manter o Context7 (`mcp.context7.com/mcp`) como alternativa sem auth.
-5. **Opções de filtro por tool** (grão mais fino que o server) na versão vigente (tanto no `McpToolProvider` programático quanto em eventual suporte declarativo), para a nota de honestidade "o grão é o server" refletir o estado real. **EM ABERTO.**
+5. **Opções de filtro por tool** (filtro mais fino que o server) na versão vigente (tanto no `McpToolProvider` programático quanto em eventual suporte declarativo), para a nota de honestidade "a granularidade é o server" refletir o estado real. **EM ABERTO.**
 6. **A mesma caixa `filesystem` em dois agentes distintos** (`AgenteRepo` e `EscritorAdr`) em passos diferentes do `@SequenceAgent`: VALIDADO (2026-07-17). Os dois compartilharam o client `filesystem` sem conflito.
