@@ -52,7 +52,7 @@ cd modulo03/04_mcp/aula05/decision-desk
 ./mvnw quarkus:dev
 ```
 
-Abra <http://localhost:8080/>, gere (ou escreva) uma pergunta e leve-a ao balcão.
+Abra <http://localhost:8080/>, gere (ou escreva) uma pergunta e leve-a ao desk.
 
 > **Aponte para um repositório seu**: por padrão `desk.repo.diretorio=${user.dir}` faz o server de filesystem enxergar a pasta do próprio projeto. Troque essa propriedade para o caminho de um repositório seu e faça uma pergunta sobre o seu código de verdade: a ferramenta é genérica, o domínio é o seu.
 
@@ -138,4 +138,4 @@ A fronteira é código Java determinístico, não a obediência do modelo.
 - **Teste de resiliência (o principal)**: derrube o DeepWiki (tire a internet ou troque `quarkus.langchain4j.mcp.deepwiki.url` por uma URL inválida) e rode de novo. O fluxo deve seguir com o que o **AgenteRepo** levantou do código local, em vez de travar a decisão inteira por causa de um server externo. É o eco do `failIfOneServerFails(false)` que você viu na parte do client: um server que cai não derruba a equipe.
 - **Troque o DeepWiki pelo Context7**: `quarkus.langchain4j.mcp.deepwiki.url=https://mcp.context7.com/mcp` (também sem auth).
 - **Aponte `desk.repo.diretorio` para outro repositório** e faça uma pergunta sobre ele.
-- **Mude o timeout do gate** (`desk.aprovacao.timeout.minutos=1`) e deixe estourar: sem resposta humana, o balcão nega por segurança e nada é gravado.
+- **Mude o timeout do gate** (`desk.aprovacao.timeout.minutos=1`) e deixe estourar: sem resposta humana, o desk nega por segurança e nada é gravado.
