@@ -12,8 +12,9 @@ import jakarta.enterprise.context.ApplicationScoped;
  * Agente investigador do repositório local.
  *
  * <p>Repare no que este agente <b>não</b> tem: nenhum método {@code @Tool}, nenhuma
- * linha que abra um arquivo. As mãos dele chegam de fora, da caixa {@code "filesystem"}
- * declarada em {@code @McpToolBox}: o server MCP de filesystem, subido via {@code npx}.
+ * linha que abra um arquivo. As ferramentas dele chegam de fora, da caixa
+ * {@code "filesystem"} declarada em {@code @McpToolBox}: o server MCP de filesystem,
+ * subido via {@code npx}.
  *
  * <p>Esta é a tese da aula em uma anotação: MCP entra na camada do agente. Cada membro
  * da equipe recebe a sua própria caixa e nada além: menor privilégio por agente.

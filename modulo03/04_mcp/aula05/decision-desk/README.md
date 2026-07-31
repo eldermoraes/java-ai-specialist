@@ -1,18 +1,16 @@
 # Aula 05 (bloco MCP): Decision Desk · um toolbox MCP por agente
 
-> **Padrão**: workflow agêntico sequencial + human-in-the-loop binário, com um toolbox MCP por agente
-> **Case**: pergunta de engenharia entra → Agente Repo lê o repositório local → Agente Ecossistema confronta com a doc externa → gate humano (sim/não) → se "sim", grava um mini-ADR em `decisions/`
-> **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic + MCP · Ollama (`deepseek-v4-pro:cloud` + `gemma4:31b-cloud`) · MCP servers: filesystem (stdio/npx) + DeepWiki (streamable-http)
+> - **Padrão**: workflow agêntico sequencial + human-in-the-loop binário, com um toolbox MCP por agente
+> - **Case**: pergunta de engenharia entra → Agente Repo lê o repositório local → Agente Ecossistema confronta com a doc externa → gate humano (sim/não) → se "sim", grava um mini-ADR em `decisions/`
+> - **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j Agentic + MCP · Ollama (`deepseek-v4-pro:cloud` + `gemma4:31b-cloud`) · MCP servers: filesystem (stdio/npx) + DeepWiki (streamable-http)
 
 ---
 
 ## O que você vai aprender
 
-Você já sabe montar equipes de agentes (módulo de Agentes) e já sabe plugar ferramentas externas via MCP (partes anteriores deste bloco). Esta aula é o encontro dos dois mundos. E a tese cabe em uma frase:
+Você já sabe montar equipes de agentes (módulo de Agentes) e já sabe plugar ferramentas externas via MCP (partes anteriores deste bloco). Esta aula é o encontro dos dois mundos.
 
-> **MCP entra na camada do agente, não na do padrão.**
-
-O desenho da equipe (a cola `@SequenceAgent`) é o mesmo de sempre. A novidade da aula inteira cabe no `@McpToolBox` de cada sub-agente: cada membro recebe o seu toolbox, e nada além: **menor privilégio por agente**. E repare: **não existe um único `@Tool` local neste projeto**; todas as mãos dos agentes vêm de fora, via MCP.
+O desenho do time de agentes (usando `@SequenceAgent`) é o mesmo de sempre. A novidade da aula inteira cabe no `@McpToolBox` de cada sub-agente: cada membro recebe o seu toolbox, e nada além: **menor privilégio por agente**. E repare: **não existe um único `@Tool` local neste projeto**; todas as capacidades dos agentes vêm de fora, via MCP.
 
 ```
    PERGUNTA
@@ -108,8 +106,6 @@ O AgenteRepo nunca enxerga o DeepWiki; o AgenteEcossistema nunca enxerga o files
 
 Na aprovação de desconto (módulo de Agentes) a decisão era **ternária** (aprovar/rejeitar/contrapor) e exigiu Java puro. Aqui a decisão é **binária** (grava ou não grava): exatamente o caso que a anotação `@HumanInTheLoop` foi feita para atender. Por baixo, o mesmo mecanismo: um `CompletableFuture` no `ApprovalService` que bloqueia a virtual thread até o "sim/não" chegar pelo WebSocket.
 
-> **Plano B (nota de produção)**: se, na semana da gravação, o `@HumanInTheLoop` declarativo não fluir bem no canal WebSocket, o fallback é o padrão **100% imperativo da aula06 de Agentes**, o mesmo `ApprovalService` com `CompletableFuture`, chamado diretamente pelo `DeskWorkflow`, sem a anotação. O padrão é idêntico; muda só o mecanismo que o implementa.
-
 ### 4. Gate duro via `@ConditionalAgent` / `@ActivationCondition`
 
 Negou? O `EscritorAdr` **nem é invocado**, sem nenhum request ao modelo nem tool call de escrita:
@@ -126,16 +122,16 @@ static boolean aprovado(@V("aprovacao") String aprovacao) {
 
 A fronteira é código Java determinístico, não a obediência do modelo.
 
-## O que observar (é no log que a aula acontece)
+## O que observar
 
-| Observação no log | Explica… |
-|---|---|
-| Request do **AgenteRepo** lista `list_directory`, `read_file`, `directory_tree`, `write_file`… | A caixa `filesystem` inteira: todas as tools do server |
-| Request do **AgenteEcossistema** lista **só** `ask_question` (e afins do DeepWiki) | A caixa `deepwiki`, e apenas ela; duas listas diferentes = menor privilégio |
-| `read_file` acontece antes da resposta do AgenteRepo | Não houve chute: houve ferramenta (a "dança" pedido→resultado→resposta) |
-| `write_file` só aparece **depois** do seu "sim" | O gate segura a ferramenta externa destrutiva |
-| Ao **negar**, **nenhum** request do EscritorAdr acontece | Gate duro do `@ConditionalAgent`: o agente de escrita nem é invocado |
-| Um arquivo `decisions/adr-AAAAMMDD-….md` aparece no disco após o "sim" | O `write_file` do server de filesystem, autorizado por você |
+| Observação no log | Explica…                                                                      |
+|---|-------------------------------------------------------------------------------|
+| Request do **AgenteRepo** lista `list_directory`, `read_file`, `directory_tree`, `write_file`… | A toolbox `filesystem` inteira: todas as tools do server                      |
+| Request do **AgenteEcossistema** lista **só** `ask_question` (e afins do DeepWiki) | A toolbox `deepwiki`, e apenas ela; duas listas diferentes = menor privilégio |
+| `read_file` acontece antes da resposta do AgenteRepo | Sequência definida pela tool (pedido→resultado→resposta)            |
+| `write_file` só aparece **depois** do seu "sim" | O gate segura a ferramenta externa destrutiva                                 |
+| Ao **negar**, **nenhum** request do EscritorAdr acontece | Gate duro do `@ConditionalAgent`: o agente de escrita nem é invocado          |
+| Um arquivo `decisions/adr-AAAAMMDD-….md` aparece no disco após o "sim" | O `write_file` do server de filesystem, autorizado por você                   |
 
 ## Para experimentar
 
@@ -143,15 +139,3 @@ A fronteira é código Java determinístico, não a obediência do modelo.
 - **Troque o DeepWiki pelo Context7**: `quarkus.langchain4j.mcp.deepwiki.url=https://mcp.context7.com/mcp` (também sem auth).
 - **Aponte `desk.repo.diretorio` para outro repositório** e faça uma pergunta sobre ele.
 - **Mude o timeout do gate** (`desk.aprovacao.timeout.minutos=1`) e deixe estourar: sem resposta humana, o balcão nega por segurança e nada é gravado.
-- **O exercício da seção 8**: volte ao **seu** projeto do desafio do módulo de Agentes e pergunte "qual capacidade externa tornaria isto real?". A resposta é, literalmente, o seu par agente↔toolbox.
-
-## Itens a revalidar antes da gravação
-
-> Status (2026-07-17): o fluxo completo foi rodado de ponta a ponta em dev mode nas duas pontas: "sim" (ADR gravado em `decisions/`) e "não" (disco intacto, `EscritorAdr` nem invocado). Os itens 1, 2, 3, 4 e 6 abaixo foram, portanto, VALIDADOS ao vivo nessa data; na semana da gravação basta reconfirmar rapidamente (versões das extensões e servers públicos mudam). O item 5 segue em aberto.
-
-1. **`@HumanInTheLoop` no canal WebSocket**: VALIDADO (2026-07-17). A anotação declarativa fluiu bem com o `ApprovalService` (broadcast + `CompletableFuture`). Se algo mudar com a atualização das extensões, o fallback é o padrão 100% imperativo da aula06 (chamar o `ApprovalService` direto do `DeskWorkflow`, sem a anotação).
-2. **`@McpToolBox` em métodos `@Agent` dentro de workflow agêntico**: VALIDADO (2026-07-17). Os tool calls MCP aconteceram nos dois agentes dentro da sequência. Se regressar em versão futura, cair para `toolProviderSupplier` com `McpToolProvider` filtrando os clients (o mecanismo da parte do client).
-3. **Nomes exatos das chaves `quarkus.langchain4j.mcp.*`** (`transport-type`, `command`, `url`): VALIDADOS na plataforma 3.35.2; reconferir se a plataforma for atualizada.
-4. **Disponibilidade do DeepWiki** (`mcp.deepwiki.com/mcp`) no dia: respondeu em 2026-07-17; manter o Context7 (`mcp.context7.com/mcp`) como alternativa sem auth.
-5. **Opções de filtro por tool** (filtro mais fino que o server) na versão vigente (tanto no `McpToolProvider` programático quanto em eventual suporte declarativo), para a nota de honestidade "a granularidade é o server" refletir o estado real. **EM ABERTO.**
-6. **A mesma caixa `filesystem` em dois agentes distintos** (`AgenteRepo` e `EscritorAdr`) em passos diferentes do `@SequenceAgent`: VALIDADO (2026-07-17). Os dois compartilharam o client `filesystem` sem conflito.

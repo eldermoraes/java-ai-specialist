@@ -13,7 +13,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * {@code application.properties} ({@code quarkus.langchain4j.mcp.*}). É o contraste com a
  * aula 03, onde tudo foi montado à mão, em código (transporte + cliente + tool
  * provider). Aqui não há uma linha de código para ligar as peças: a anotação
- * {@link McpToolBox} abaixo é a única cola entre o agente e os servidores.
+ * {@link McpToolBox} abaixo é a única ligação entre o agente e os servidores.
  *
  * <p><b>Por que superequipar de propósito?</b> Porque este projeto existe para medir o
  * custo do superequipamento, não para resolvê-lo. Três servidores despejam todas as suas

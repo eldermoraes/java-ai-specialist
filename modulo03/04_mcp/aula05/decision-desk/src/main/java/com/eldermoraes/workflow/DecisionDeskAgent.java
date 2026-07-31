@@ -9,7 +9,7 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.service.V;
 
 /**
- * A cola do balcão: quatro passos em sequência.
+ * O workflow do balcão: quatro passos em sequência.
  *
  * <p>São os mesmos {@code @SequenceAgent}/{@code outputKey}/{@code subAgents} do módulo de
  * Agentes: a costura não muda. A novidade da aula inteira está no {@code @McpToolBox} de
