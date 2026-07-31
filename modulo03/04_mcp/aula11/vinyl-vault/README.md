@@ -18,7 +18,7 @@ vinyl-vault/                    ← POM pai agregador (sem código)
 
 ## O que este desafio pede
 
-O enunciado completo (a fala, as 5 tarefas e o desafio avançado) está em [`planejamento/mcp/11.md`](../../../../../jas-aulas/planejamento/mcp/11.md) no repositório de aulas. Em resumo:
+O enunciado completo (a fala, as 5 tarefas e o desafio avançado) está na aula. Em resumo:
 
 - 📍 **Tarefa 1: construir e expor o server.** Streamable HTTP, pelo menos 3 tools: **duas de leitura e uma destrutiva**. Aqui: `buscar_disco`, `listar_discos_por_artista`, `vender_disco`.
 - 📍 **Tarefa 2: superpoderes, parte 1.** Structured output (record tipado, não texto solto) + **tool annotations honestas** (read-only nas de leitura, destructive na de vender).
@@ -177,8 +177,6 @@ Ele conecta no seu server pelo protocolo ("auto-allowed", sem subprocess) e list
 
 > **Opcional, para quem quiser ir além:** o agent-scan tem também uma análise verificada automatizada (acusa tool poisoning sozinha), que exige um `SNYK_TOKEN` (conta gratuita em app.snyk.io). **Não é pré-requisito nem tarefa deste desafio**: o caminho oficial é a auditoria guiada abaixo, 100% local. Se usar a análise verificada, saiba que ela pode enviar as descriptions das suas tools para API externa; aqui é um server de exercício, sem dado sensível.
 
-> **[REVALIDAR na semana da gravação]** Verificado por execução em 17/07/2026 (agent-scan v0.5.15): `uvx snyk-agent-scan inspect` conecta sem conta e lista o inventário. Se versões novas do `inspect` passarem a exibir descriptions, dá para simplificar o roteiro (uma lente só).
-
 ---
 
 ## 🔥 Desafio avançado: a auditoria de endurecimento
@@ -227,7 +225,7 @@ O antes-e-depois é a evidência da sua entrega: é o que transforma "fiz um ser
 
 ## 🧪 Critérios de aceite
 
-O roteiro de teste completo está no enunciado ([`planejamento/mcp/11.md`](../../../../../jas-aulas/planejamento/mcp/11.md)). Em resumo, prove que:
+O roteiro de teste completo está no enunciado do desafio. Em resumo, prove que:
 
 1. `tools/list` mostra as tools em snake_case com annotations corretas (leitura com `readOnlyHint`, venda com `destructiveHint`).
 2. `tools/call` de `buscar_disco` devolve `structuredContent` tipado, não texto solto.

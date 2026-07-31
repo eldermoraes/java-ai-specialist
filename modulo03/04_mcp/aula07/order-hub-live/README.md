@@ -57,7 +57,7 @@ Em **outro terminal**, com o server default de pé:
 
 Sobe em `http://localhost:8081`. Abra `http://localhost:8081/` e pergunte "qual o status do pedido PED-1001?". O agente descobre as tools do **seu** server e as chama.
 
-> **No perfil `seguro`, o client declarativo sem token não passa**, e isso é o comportamento **esperado**: é a fechadura funcionando. O circuito completo de autenticação do lado client (apresentar um token OAuth ao consumir o server) fica para a gravação / a aula de client auth. Aqui o client fecha o loop no perfil default, e o perfil `seguro` demonstra o `401`.
+> **No perfil `seguro`, o client declarativo sem token não passa**, e isso é o comportamento **esperado**: é a fechadura funcionando. O circuito completo de autenticação do lado client (apresentar um token OAuth ao consumir o server) fica para a aula de autenticação do lado client. Aqui o client fecha o loop no perfil default, e o perfil `seguro` demonstra o `401`.
 
 ---
 
@@ -119,7 +119,7 @@ No Quarkus isso é `quarkus-oidc` + a política de path padrão do HTTP (não h�
 Dois RFCs sustentam o desenho de confiança:
 
 - **RFC 9728** (Protected Resource Metadata) = o **"cartaz na porta"**: o server publica metadados dizendo "quem me protege é tal authorization server", para o client saber onde ir buscar um token. Materializado por `%seguro.quarkus.oidc.resource-metadata.enabled=true`.
-- **RFC 8707** (Resource Indicators) = o **"token com destinatário"**: amarra o token ao server de destino, para que um token emitido para o seu server não seja reusado em outro. É a linha `%seguro.quarkus.oidc.token.audience=order-hub-live-server`, deixada **comentada** e marcada `[REVALIDAR]`: com os Keycloak Dev Services, o audience padrão emitido pode não bater e derrubar toda chamada com `401`. Ative e ajuste com seu authorization server real.
+- **RFC 8707** (Resource Indicators) = o **"token com destinatário"**: amarra o token ao server de destino, para que um token emitido para o seu server não seja reusado em outro. É a linha `%seguro.quarkus.oidc.token.audience=order-hub-live-server`, deixada **comentada**: com os Keycloak Dev Services, o audience padrão emitido pode não bater e derrubar toda chamada com `401`. Ative e ajuste com seu authorization server real.
 
 Cartaz na porta e destinatário no envelope: duas peças pequenas que fecham o modelo de confiança.
 
@@ -189,23 +189,12 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 2. **Walkthrough do `server.json` + `mcp-publisher`, sem publicar.** Percorra o manifesto campo a campo, entenda a verificação de namespace (`io.github.<usuário>` via GitHub) e conheça a CLI `mcp-publisher`. **Não publique**: a Central de Pedidos é um exercício em localhost, e o registry indexa, não hospeda.
 3. **Derrube e reinicie o server, observando chamadas autossuficientes.** Suba, faça uma chamada, derrube o server, suba de novo e chame outra vez: cada chamada carrega tudo o que precisa nos argumentos, o comportamento stateless que a virada do dia 28 vai generalizar.
 
-> O fluxo completo **401 → token → 200** (obter um token do Keycloak provisionado e passá-lo como Bearer) fica para a **gravação**: exige o container de fato no ar e o ajuste fino do `token.audience` com o authorization server. O que está validado aqui é a configuração da política de path e o `resource-metadata`; o percurso com token real é o item em aberto (ver Notas de produção).
+> O fluxo completo **401 → token → 200** (obter um token do Keycloak provisionado e passá-lo como Bearer) exige o container de fato no ar e o ajuste fino do `token.audience` com o **seu** authorization server. O que este projeto demonstra é a política de path e o `resource-metadata`: a fechadura configurada, com o `401` como prova de que ela funciona.
+
+> **Sobre os testes automatizados:** o `OrderHubMcpTest` roda no **perfil de teste**, que mantém o OIDC **desligado** (o default de teste NÃO ativa `%seguro`), então os 4 testes de JSON-RPC contra o `/mcp` passam **sem Keycloak**. O teste do fluxo seguro (`401 → token → 200`) exigiria o container de Keycloak no ar; por isso não faz parte da suíte.
 
 ---
 
 ## Para experimentar
 
 **Troque a Central de Pedidos pelo seu domínio.** A estrutura é a mesma para qualquer negócio: troque `Pedido`/`PedidoRepository` pelo **estoque da sua loja**, pela **sua coleção**, pelo **seu sistema de chamados**. Proteja o **seu** `/mcp` com o mesmo perfil OIDC, escreva o `server.json` do **seu** domínio e, quando ele for real e hospedado, publique-o no registry. O protocolo é aberto: qualquer agente compatível fala com o seu server, agora com a porta trancada.
-
----
-
-## Notas de produção [REVALIDAR]
-
-Continuação da checklist da aula 6 (itens 1–8, validados no `order-hub`); aqui os itens **9–12** do roteiro 07.md:
-
-- **Item 9, OIDC + Keycloak Dev Services.** ✅ **PARCIALMENTE VALIDADO** (17/07/2026): a proteção via política de path padrão do Quarkus HTTP (`/mcp,/mcp/*` + `authenticated`) e o `quarkus.oidc.resource-metadata.enabled=true` (RFC 9728) estão validados; o perfil `seguro` liga o OIDC e os Keycloak Dev Services (default fica tudo desligado). **Em aberto:** exercitar o fluxo completo com token real; os Dev Services sobem o container, mas o percurso **401 → token → 200** e o ajuste do `token.audience` (RFC 8707, deixado comentado) ficam para a gravação.
-- **Item 10, fluxo do registry.** Em aberto: a CLI `mcp-publisher` e a verificação de namespace estão em **preview** (desde set/2025); o fluxo exato pode ter mudado, conferir na semana da gravação.
-- **Item 11, negociação stateless.** Em aberto: como a extensão `quarkus-mcp-server-http` negocia versão entre o modo com sessão e o stateless do RC.
-- **Item 12, status do RC de 28/07/2026.** Em aberto: confirmar, na semana da gravação, se o RC já saiu e o que entrou; ajustar o tempo verbal ("vai sair" → "saiu") nas seções sobre a virada stateless.
-
-> **Sobre os testes automatizados:** o `OrderHubMcpTest` roda no **perfil de teste**, que mantém o OIDC **desligado** (o default de teste NÃO ativa `%seguro`), então os 4 testes de JSON-RPC contra o `/mcp` passam **sem Keycloak**. O teste do fluxo seguro (`401 → token → 200`) exigiria o container de Keycloak no ar e, por isso, fica para a gravação; não é criado aqui.

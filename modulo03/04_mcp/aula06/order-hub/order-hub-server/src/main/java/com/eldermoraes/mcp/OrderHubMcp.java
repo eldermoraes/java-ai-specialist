@@ -66,7 +66,7 @@ public class OrderHubMcp {
         if (pedido == null) {
             // Erro de negócio, não falha de transporte. A ToolCallException vira uma
             // resposta de tool com isError=true (não um HTTP 500), e o modelo lê esse erro e
-            // se recupera (tenta outro id, avisa o usuário). Ver seção 5.4 do roteiro.
+            // se recupera (tenta outro id, avisa o usuário).
             throw new ToolCallException("Pedido não encontrado: " + id);
         }
         return pedido;

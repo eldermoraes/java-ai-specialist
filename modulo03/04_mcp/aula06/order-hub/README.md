@@ -149,7 +149,7 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 
 ## Roteiro de teste manual
 
-1. **Dev UI → página de MCP server.** Com `quarkus:dev` no server, abra `http://localhost:8080/q/dev-ui/` e ache a página da extensão MCP: inspecione as tools publicadas e chame-as do navegador, sem escrever cliente nenhum. [REVALIDAR: recursos exatos da página na versão em uso.]
+1. **Dev UI → página de MCP server.** Com `quarkus:dev` no server, abra `http://localhost:8080/q/dev-ui/` e ache a página da extensão MCP: inspecione as tools publicadas e chame-as do navegador, sem escrever cliente nenhum.
 2. **MCP Inspector, o "Postman do MCP".**
    ```bash
    npx @modelcontextprotocol/inspector
@@ -168,25 +168,6 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 ## Para experimentar
 
 **Troque a Central de Pedidos pelo seu domínio.** A estrutura é a mesma para qualquer negócio: troque `Pedido`/`PedidoRepository` pelo **estoque da sua loja**, pela **sua coleção**, pelo **seu sistema de chamados**. As tools viram `buscar_produto`/`listar_por_categoria`/`baixar_estoque`, a elicitation confirma a operação destrutiva do seu domínio, e o mesmo client (e o mesmo Claude Code) passa a conversar com ele. O protocolo é aberto: qualquer agente compatível fala com o seu server.
-
----
-
-## Notas de produção [REVALIDAR]
-
-Resumo dos itens de revalidação do roteiro (06.md itens 1–8) e do que **este projeto já validou na prática** contra a extensão **1.13.1**:
-
-**Já validado neste projeto (rodando):**
-
-- **Item 1–2, `@Tool`/`@ToolArg`.** Confirmados: `@Tool(name, description, structuredContent, annotations)` e `@ToolArg(description, required)`. Nome exposto = atributo `name` (snake_case), método camelCase. ✅
-- **Item 3, tool annotations.** `@Tool.Annotations(title, readOnlyHint, destructiveHint, idempotentHint)` confirmado (a extensão ainda expõe `openWorldHint`, default `true`, que aparece no `tools/list`). ✅
-- **Item 4, API de elicitation.** Confirmada: parâmetro `io.quarkiverse.mcp.server.Elicitation` no método; `isSupported()`/`isFormModeSupported()`; `requestBuilder().setMessage(...).addSchemaProperty("motivo", new ElicitationRequest.StringSchema...).build().sendAndAwait()`; resposta com `actionAccepted()` e `content().getString("motivo")`. **Divergência vs. roteiro:** o método de detecção é `isSupported()`/`isFormModeSupported()`; **não** existe `isServerInitiatedRequestSupported()` na 1.13.1. ✅
-- **Item 5, exceção → `isError`.** `ToolCallException` mapeia para resposta de tool com `isError: true` (não HTTP 500), confirmado por teste automatizado. ✅
-- **Item 7, traffic logging.** `quarkus.mcp.server.traffic-logging.enabled` (+ `.text-limit`) confirmado. ✅
-
-**Ainda em aberto (revalidar na semana da gravação):**
-
-- **Item 6, Dev UI.** Recursos exatos da página de MCP server no Dev UI (inspecionar/chamar tools).
-- **Item 8, helpers de teste.** A extensão pode oferecer helpers de `@QuarkusTest` para o endpoint MCP; aqui optamos por JSON-RPC cru via RestAssured (mais transparente e didático).
 
 ---
 

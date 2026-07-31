@@ -185,10 +185,9 @@ Duas passagens completas do arquivo pelo modelo. E o modelo nunca precisou **ler
 relatório para copiá-lo. É o clássico "office boy caro": carrega o papel de um lado para o
 outro sem nunca precisar entender o que carrega.
 
-> **Fallback** (se a escrita não estiver disponível no seu ambiente; ver "Revalidar" ao
-> final): peça **"leia `relatorio-grande.md` e resuma cada seção"**. O conteúdo inteiro
-> ainda passa pelo modelo **na ida**, demonstrando a falha 2 pela metade, e o roteiro se
-> ajusta na fala.
+> **Fallback** (se a escrita não estiver disponível no seu ambiente): peça **"leia
+> `relatorio-grande.md` e resuma cada seção"**. O conteúdo inteiro ainda passa pelo
+> modelo **na ida**, demonstrando a falha 2 pela metade.
 
 ### Cenário C: menos servidores, conta menor
 
@@ -218,18 +217,3 @@ solução. Ficam como **conceito da aula**, sem código aqui:
 - **MCP Fabric** e **MCP Gateway**: padrões operacionais para quando uma **empresa** tem
   dezenas de servidores MCP. Vocabulário de arquitetura para acompanhar, não receita para
   copiar.
-
----
-
-## Revalidar antes da gravação
-
-Convenção do bloco: esta parte da API muda a cada release. Antes de gravar, confirme:
-
-- **(a)** a API vigente do **subset de servidores por AI service** (`@McpToolBox`) no
-  `quarkus-langchain4j` da plataforma **3.35.x**: nome da anotação, pacote
-  (`io.quarkiverse.langchain4j.mcp.runtime`) e formato do atributo (`String[]`).
-- **(b)** que o **`@modelcontextprotocol/server-filesystem`** segue expondo **`write_file`**
-  com escrita autorizada no diretório: o **cenário B** depende disso (senão, use o
-  fallback do resumo).
-- **(c)** o **status das betas** *Tool Search Tool* e *Programmatic Tool Calling* na Claude
-  Developer Platform: são a produtização, na API da Claude, das ideias desta aula.
