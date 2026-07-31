@@ -16,11 +16,11 @@ order-hub/                    ← POM pai agregador (sem código)
 
 ## O que você vai aprender
 
-Todo o módulo até aqui te colocou de um lado só do história: o de quem **consome** tools MCP. Aqui você passa a ser quem **expõe**. E quem expõe uma capacidade para o mundo tem responsabilidades que quem só consome não tem: dar forma ao resultado e confirmar antes executar algo destrutivo.
+Todo o módulo até aqui te colocou de um lado só da história: o de quem **consome** tools MCP. Aqui você passa a ser quem **expõe**. E quem expõe uma capacidade para o mundo tem responsabilidades que quem só consome não tem: dar forma ao resultado e confirmar antes de executar algo destrutivo.
 
-- **Os dois `@Tool` de mesmo nome, em bibliotecas opostas.** `io.quarkiverse.mcp.server.Tool` (aqui, quem **expõe**) não é `dev.langchain4j.agent.tool.Tool` (nos agentes, quem **consome**). É fácil importar a classe errada.
+- **Os dois `@Tool` de mesmo nome, em bibliotecas opostas.** `io.quarkiverse.mcp.server.Tool` (aqui, quem **expõe**) não é `dev.langchain4j.agent.tool.Tool` (nos agentes, quem **consome**). Mesma palavra, lados opostos do protocolo: é fácil importar a errada.
 - **snake_case exposto × camelCase Java.** O método é `buscarPedido`; o nome de protocolo, no atributo `name`, é `buscar_pedido` (a convenção de fato do ecossistema MCP).
-- **O server não tem LLM.** Procure config de modelo no `order-hub-server`: não tem. Quem raciocina é o agente do outro lado. Consequência: server barato (sem inferência, sem GPU, sem token), e você o constrói e testa **sem modelo nenhum**.
+- **O server não tem LLM.** Procure config de modelo no `order-hub-server`: não tem. Quem raciocina é o agente do lado client. Consequência: server barato (sem inferência, sem GPU, sem token), e você o constrói e testa **sem modelo nenhum**.
 - **A descrição é a interface para o modelo.** Quem lê a descrição da tool é o LLM, não um humano. Capriche como na assinatura de um método público.
 - **structuredContent + record.** A tool devolve um `record` tipado (`Pedido`), não texto aleatório, e a extensão o serializa como `structuredContent`.
 - **Elicitation + tool annotations = "operações destrutivas nunca autônomas".** A annotation `destructiveHint` **avisa**; a elicitation **confirma** no momento da chamada. As duas metades do human-in-the-loop, agora dentro do protocolo.
@@ -72,7 +72,7 @@ order-hub/
 │       ├── main/resources/
 │       │   └── application.properties   # traffic-logging ligado; sem modelo
 │       └── test/java/com/eldermoraes/mcp/
-│           └── OrderHubMcpTest.java      # JSON-RPC cru contra /mcp (5 verificações)
+│           └── OrderHubMcpTest.java      # JSON-RPC cru contra /mcp (4 verificações)
 └── order-hub-client/                    # ── o client declarativo ──
     ├── pom.xml                          # quarkus-langchain4j-mcp + ollama
     └── src/
@@ -122,6 +122,8 @@ As descrições das três tools são caprichadas de propósito: dizem **o que** 
 3. Suporta? -> `requestBuilder().setMessage("Confirma o cancelamento do pedido X (cliente Y, valor Z)?").addSchemaProperty("motivo", ...).build().sendAndAwait()`.
 4. `actionAccepted()` → cancela e devolve "Pedido X cancelado. Motivo: ...". Senão -> "Cancelamento abortado pelo usuário."
 
+`sendAndAwait()` significa esperar de verdade: a chamada da tool fica pendurada até a resposta chegar, e quem responde é uma pessoa lendo a pergunta na tela do client. Por isso o timeout da elicitation está em `5m` no `application.properties`: o padrão da extensão é `60s`, tempo de máquina, não de gente. Estourado o prazo, o `sendAndAwait()` falha e o client não recebe a sua mensagem de negócio, recebe um erro de protocolo cru (JSON-RPC `-32603`) que o modelo do outro lado não sabe explicar. Toda vez que você põe um humano dentro de uma chamada síncrona, o timeout vira decisão de projeto.
+
 Guardrail da spec: elicitation é para **confirmação e contexto**, **nunca** para credencial (senha, token, cartão).
 
 ### 7. `ToolCallException` → `isError` que o modelo lê
@@ -155,11 +157,19 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
    Aponte para `http://localhost:8080/mcp` (transporte Streamable HTTP), liste as tools, dispare chamadas com os argumentos que quiser, veja a resposta estruturada voltar. É o protocolo puro, sem agente nem modelo.
 3. **Quebre de propósito.** Chame `buscar_pedido` com `PED-9999` (não existe) e veja, no log, o resultado com `isError`, não um HTTP 500.
 4. **Feche o loop com o client.** Suba o `order-hub-client` (porta 8081) e converse: ele consome o **seu** server pelo caminho declarativo.
-5. **Plugue num agente de verdade.**
+5. **Plugue num agente de verdade.** Com o server de pé, registre-o no seu agente. No Claude Code:
    ```bash
+   # rode este comando DENTRO da pasta do order-hub
    claude mcp add --transport http central-pedidos http://localhost:8080/mcp
+   claude mcp list   # deve mostrar: central-pedidos ... ✔ Connected
    ```
-   De dentro do Claude Code/Codex/Copilot/etc: "qual o status do pedido PED-1001?", "cancele o pedido PED-1003" (dispara a elicitation pedindo sua confirmação). O server que você escreveu do zero respondendo a uma ferramenta comercial, sem uma linha de integração dedicada.
+   Dois detalhes que derrubam o teste se você não souber deles:
+   - O registro é **por diretório**. Sem `--scope user`, o server fica gravado só para o projeto de onde você rodou o comando; abrir o agente em outra pasta é abrir sem ele.
+   - Uma sessão **já aberta** não enxerga o server novo. Registre primeiro, abra o agente depois (ou feche e abra de novo).
+
+   Aí converse: "qual o status do pedido PED-1001?" e "cancele o pedido PED-1003". O cancelamento é o momento da verdade: o agente para, e o **seu** server pergunta na tela dele "Confirma o cancelamento do pedido PED-1003 (cliente ..., valor ...)?" com um campo **Motivo** obrigatório. Preencha e confirme; só então o pedido é cancelado. Do outro lado, num terminal não interativo (`claude -p "..."`), não há a quem perguntar: o client responde `cancel` sozinho e a tool devolve "Cancelamento abortado pelo usuário". A confirmação é do humano, e sem humano ela não acontece.
+
+   Terminado o passeio, `claude mcp remove central-pedidos` desregistra o server.
 
 ---
 
