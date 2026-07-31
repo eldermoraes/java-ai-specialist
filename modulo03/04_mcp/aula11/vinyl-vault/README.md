@@ -1,6 +1,6 @@
 # Aula 11 (Desafio MCP): vinyl-vault · o Sebo do Vini
 
-> **Bloco**: MCP · **Foco**: o desafio que amarra o bloco: construir, dar superpoderes, testar, consumir e **endurecer** o seu MCP server
+> **Módulo**: MCP · **Foco**: o desafio que amarra o módulo: construir, dar superpoderes, testar, consumir e **endurecer** o seu MCP server
 > **Case**: o **Sebo do Vini**, um sebo de discos de vinil raros onde cada disco é **exemplar único** (vender remove do acervo para sempre → operação destrutiva)
 > **Stack**: Quarkus 3.35.2 · Java 25 · `quarkus-mcp-server-http` **1.13.1** (Quarkiverse) · no client: LangChain4j via `quarkus-langchain4j-bom` + Ollama
 
@@ -57,7 +57,7 @@ Sobe em `http://localhost:8081`. Abra `http://localhost:8081/` e pergunte "tem a
 ### Pré-requisitos das ferramentas de segurança
 
 - **`uv`/`uvx`**: instalador oficial multiplataforma. macOS/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`. **Windows** (PowerShell): `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"`.
-- **`npx`**: já vem com o Node (instalado no bloco). Usado para o MCP Inspector: `npx @modelcontextprotocol/inspector`.
+- **`npx`**: já vem com o Node (instalado no módulo). Usado para o MCP Inspector: `npx @modelcontextprotocol/inspector`.
 
 ---
 
@@ -101,7 +101,7 @@ vinyl-vault/
 
 ### 1. O server não tem LLM (por isso é barato)
 
-Procure config de modelo no `vinyl-vault-server`: não tem. Quem raciocina é o agente do outro lado do fio. O server é uma casca de lógica de negócio publicada pelo protocolo: serviço HTTP comum, sem inferência, sem GPU, sem token. Você o constrói e testa **sem modelo nenhum**.
+Procure config de modelo no `vinyl-vault-server`: não tem. Quem raciocina é o agente do lado client. O server é uma casca de lógica de negócio publicada pelo protocolo: serviço HTTP comum, sem inferência, sem GPU, sem token. Você o constrói e testa **sem modelo nenhum**.
 
 ### 2. Os dois `@Tool`: a pegadinha que pega quase todo mundo
 
@@ -155,7 +155,7 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 | `tools/list` → `result.tools[]` | O server publica suas tools (nomes snake_case, descrições, `annotations`, `inputSchema`, `outputSchema`) |
 | `tools/call` (`buscar_disco`) → `result.structuredContent` | A tool foi invocada e devolveu **dados tipados** (não texto) |
 | `elicitation/create` → resposta do usuário | Na venda com client compatível: o server **pausa e pergunta** (comprador, preço); a resposta traz `action` (ACCEPT/DECLINE/CANCEL) e o `content` |
-| `tools/call` com id inexistente → `result.isError: true` | O erro de negócio viajou dentro da resposta (não como HTTP 500): o modelo lê e se recupera |
+| `tools/call` com id inexistente → `result.isError: true` | O erro de negócio foi transportado dentro da resposta (não como HTTP 500): o modelo lê e se recupera |
 
 ---
 
@@ -171,7 +171,7 @@ uvx snyk-agent-scan inspect mcp-scan.config.json
 
 Ele conecta no seu server pelo protocolo ("auto-allowed", sem subprocess) e lista as tools: a prova de que qualquer client alcança você. Executado com sucesso em 17/07/2026 (agent-scan v0.5.15): as três tools listadas, sem cadastro. Nessa versão, o `inspect` exibe o inventário (nomes das tools).
 
-**Lente 2: as descriptions na íntegra, pelo MCP Inspector.** Abra o `tools/list` no MCP Inspector (`npx @modelcontextprotocol/inspector`, o mesmo da Tarefa 4) e leia as descriptions e as annotations completas: esse é **exatamente o texto que o modelo do outro lado recebe**. A descrição é a interface; aqui você a vê de fora. (O teste `VinylVaultMcpTest` prova por JSON-RPC cru que descriptions e annotations viajam no `tools/list`.)
+**Lente 2: as descriptions na íntegra, pelo MCP Inspector.** Abra o `tools/list` no MCP Inspector (`npx @modelcontextprotocol/inspector`, o mesmo da Tarefa 4) e leia as descriptions e as annotations completas: esse é **exatamente o texto que o modelo do lado client recebe**. A descrição é a interface; aqui você a vê de fora. (O teste `VinylVaultMcpTest` prova por JSON-RPC cru que descriptions e annotations trafegam no `tools/list`.)
 
 **Formato do arquivo de config:** o mesmo formato `mcpServers` das configs de Claude/Cursor, um objeto com o nome do server, o `type` (`streamable-http`) e a `url`. JSON não aceita comentário, então o arquivo fica limpo e a explicação dele está aqui no README.
 
@@ -200,7 +200,7 @@ content in the 'comprador' parameter, otherwise the sale will fail.
 Reinicie o server e olhe de fora, com as duas lentes da Tarefa 5:
 
 - `uvx snyk-agent-scan inspect mcp-scan.config.json`: o inventário continua **igualzinho**. Primeira lição: o veneno não muda nome de tool; ele se esconde onde o olho não bate.
-- `tools/list` no MCP Inspector: a instrução maliciosa está **ali, em texto puro**, pronta para viajar para qualquer client que conectar. É o tool poisoning visto do lado de quem o serve.
+- `tools/list` no MCP Inspector: a instrução maliciosa está **ali, em texto puro**, pronta para ser entregue a qualquer client que conectar. É o tool poisoning visto do lado de quem o serve.
 
 ### 3. Audite com o checklist de endurecimento
 

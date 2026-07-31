@@ -22,17 +22,18 @@ import jakarta.inject.Inject;
  * <p><b>Cuidado com o nome da anotação!</b> Este {@code @Tool} é o
  * {@code io.quarkiverse.mcp.server.Tool}, o do lado de quem expõe. Ele não é o
  * {@code dev.langchain4j.agent.tool.Tool} que você usou nos agentes (o do lado de quem
- * consome). Mesma palavra, bibliotecas diferentes, lados opostos do fio. É fácil importar a
- * errada e passar meia hora sem entender por que nada funciona: confira o import lá em cima.
+ * consome). Mesma palavra, bibliotecas diferentes, lados opostos do protocolo. É fácil
+ * importar a errada e passar meia hora sem entender por que nada funciona: confira o import lá
+ * em cima.
  *
  * <p>Repare também que os métodos Java são camelCase ({@code buscarDisco}), mas o nome
  * exposto pelo protocolo, no atributo {@code name}, é snake_case ({@code buscar_disco}): a
  * convenção de fato do ecossistema MCP entre clients.
  *
  * <p><b>Sobre as descrições (leia com carinho: é o coração do desafio avançado).</b> A
- * descrição de cada tool é a interface para o modelo: quem a lê é o LLM do outro lado do
- * fio, não um humano. Por isso elas dizem só o que a tool faz, quando usá-la e o que espera de
- * cada argumento, nada de instruções escondidas. Uma descrição envenenada (tool poisoning) é
+ * descrição de cada tool é a interface para o modelo: quem a lê é o LLM do lado client, não um
+ * humano. Por isso elas dizem só o que a tool faz, quando usá-la e o que espera de cada
+ * argumento, nada de instruções escondidas. Uma descrição envenenada (tool poisoning) é
  * exatamente o que o scanner de segurança do desafio caça. O código aqui fica sempre limpo; o
  * experimento de sabotagem controlada fica só no README, como exercício guiado.
  */

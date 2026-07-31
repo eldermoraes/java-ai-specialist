@@ -19,7 +19,7 @@ import jakarta.inject.Inject;
  *
  * <p>A ideia da aula é tornar a falha 1 (tool-definition overload) tangível: para cada
  * servidor, quantas tools ele expõe, quantos caracteres as definições dessas tools ocupam
- * e uma estimativa grosseira de tokens. Esses caracteres viajam em todo request ao modelo,
+ * e uma estimativa grosseira de tokens. Esses caracteres trafegam em todo request ao modelo,
  * usando ou não as tools: é a "letra miúda" da conta N+M.
  *
  * <p><b>Estimativa, não medição exata.</b> Tokens aqui são caracteres÷4: serve para ver a
@@ -63,8 +63,8 @@ public class MedidorDeContexto {
 
         log.info("");
         log.info("╔════════════════════════════════════════════════════════════════════════╗");
-        log.info("║  MEDIDOR DE CONTEXTO — custo das definições de tools por servidor MCP    ║");
-        log.info("║  (estas definições viajam em TODO request ao modelo — falha 1)          ║");
+        log.info("║  MEDIDOR DE CONTEXTO — custo das definições de tools por servidor MCP  ║");
+        log.info("║  (estas definições trafegam em TODO request ao modelo — falha 1)       ║");
         log.info("╚════════════════════════════════════════════════════════════════════════╝");
         log.info("servidor        | nº tools | chars defs | ~tokens (chars/4)");
         log.info("----------------+----------+------------+------------------");

@@ -123,8 +123,9 @@ class VinylVaultMcpTest {
     @Test
     void discoInexistenteVemComoIsErrorNaoComoErroHttp() {
         String sessionId = abrirSessao();
-        // Status HTTP continua 200 (é o chamar() que exige 200): o erro de negócio viaja dentro
-        // da resposta da tool, com isError=true, não como falha de transporte.
+        // Status HTTP continua 200 (é o chamar() que exige 200): o erro de negócio é
+        // transportado dentro da resposta da tool, com isError=true, não como falha de
+        // transporte.
         String body = chamar(sessionId, """
                 {"jsonrpc":"2.0","id":4,"method":"tools/call","params":{
                   "name":"buscar_disco","arguments":{"id":"LP-9999"}}}

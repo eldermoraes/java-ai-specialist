@@ -8,7 +8,7 @@
 
     <!-- ═══════════════════════════════════════════════════════════════════════
          order-hub-live: a Central de Pedidos da Cloud For You no mundo (aula 7 do
-         bloco MCP)
+         módulo MCP)
 
          Este projeto é o estado final da jornada do server MCP: ele parte de onde a
          aula 6 (order-hub) terminou (mesmo domínio, mesmas três tools) e o prepara
@@ -22,7 +22,7 @@
          módulos do projeto num único build (`./mvnw package` na raiz constrói os
          dois). Cada módulo é um projeto Quarkus autossuficiente, com seu próprio
          pom e suas próprias extensões, de propósito, porque eles estão em lados
-         opostos do fio MCP:
+         opostos do protocolo MCP:
 
          - order-hub-live-server → o MCP server (quem expõe as tools; sem LLM nenhum)
          - order-hub-live-client → o client declarativo de teste (quem consome o

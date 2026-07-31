@@ -1,8 +1,8 @@
 # Aula 6 (MCP): order-hub · expondo e testando o seu MCP server
 
-> **Bloco**: MCP · **Foco**: MCP *server* no Quarkus (você troca de lado: sai de quem consome, vira quem expõe)
-> **Case**: a **Central de Pedidos da Cloud For You** (uma empresa B2B fictícia de serviços de nuvem) exposta como MCP server: buscar, listar e cancelar pedidos
-> **Stack**: Quarkus 3.35.2 · Java 25 · `quarkus-mcp-server-http` **1.13.1** (Quarkiverse) · no client: LangChain4j via `quarkus-langchain4j-bom` + Ollama
+> - **Bloco**: MCP · **Foco**: MCP *server* no Quarkus (você troca de lado: sai de quem consome, vira quem expõe)
+> - **Case**: a **Central de Pedidos da Cloud For You** (uma empresa B2B fictícia de serviços de nuvem) exposta como MCP server: buscar, listar e cancelar pedidos
+> - **Stack**: Quarkus 3.35.2 · Java 25 · `quarkus-mcp-server-http` **1.13.1** (Quarkiverse) · no client: LangChain4j via `quarkus-langchain4j-bom` + Ollama
 
 Este é **um único projeto Maven multi-módulo** que constrói o server, dá a ele os superpoderes (structured output + elicitation) e o testa de verdade:
 
@@ -12,21 +12,19 @@ order-hub/                    ← POM pai agregador (sem código)
 └── order-hub-client/         ← o client declarativo (quem consome o server; com LLM)
 ```
 
-A aula 7 parte do estado final deste projeto, para proteger (OIDC), publicar (registry) e olhar a virada stateless do protocolo, numa cópia própria, em [`../../aula07/order-hub-live`](../../aula07/order-hub-live).
-
 ---
 
 ## O que você vai aprender
 
-Todo o bloco até aqui te colocou de um lado só do fio: o de quem **consome** tools MCP. Aqui a mesa vira: você passa a ser quem **expõe**. E quem expõe uma capacidade para o mundo tem responsabilidades que quem só consome não tem: dar forma ao resultado e confirmar antes do destrutivo.
+Todo o módulo até aqui te colocou de um lado só do história: o de quem **consome** tools MCP. Aqui você passa a ser quem **expõe**. E quem expõe uma capacidade para o mundo tem responsabilidades que quem só consome não tem: dar forma ao resultado e confirmar antes executar algo destrutivo.
 
-- **Os dois `@Tool` de mesmo nome, em bibliotecas opostas.** `io.quarkiverse.mcp.server.Tool` (aqui, quem **expõe**) não é `dev.langchain4j.agent.tool.Tool` (nos agentes, quem **consome**). Mesma palavra, lados opostos do fio: é fácil importar a errada.
+- **Os dois `@Tool` de mesmo nome, em bibliotecas opostas.** `io.quarkiverse.mcp.server.Tool` (aqui, quem **expõe**) não é `dev.langchain4j.agent.tool.Tool` (nos agentes, quem **consome**). É fácil importar a classe errada.
 - **snake_case exposto × camelCase Java.** O método é `buscarPedido`; o nome de protocolo, no atributo `name`, é `buscar_pedido` (a convenção de fato do ecossistema MCP).
 - **O server não tem LLM.** Procure config de modelo no `order-hub-server`: não tem. Quem raciocina é o agente do outro lado. Consequência: server barato (sem inferência, sem GPU, sem token), e você o constrói e testa **sem modelo nenhum**.
 - **A descrição é a interface para o modelo.** Quem lê a descrição da tool é o LLM, não um humano. Capriche como na assinatura de um método público.
-- **structuredContent + record.** A tool devolve um `record` tipado (`Pedido`), não texto solto, e a extensão o serializa como `structuredContent`.
+- **structuredContent + record.** A tool devolve um `record` tipado (`Pedido`), não texto aleatório, e a extensão o serializa como `structuredContent`.
 - **Elicitation + tool annotations = "operações destrutivas nunca autônomas".** A annotation `destructiveHint` **avisa**; a elicitation **confirma** no momento da chamada. As duas metades do human-in-the-loop, agora dentro do protocolo.
-- **`ToolCallException` → `isError`, não HTTP 500.** O erro de negócio viaja dentro da resposta da tool; o modelo lê esse erro e se recupera.
+- **`ToolCallException` → `isError`, não HTTP 500.** O erro de negócio é transportado dentro da resposta da tool; o modelo lê esse erro e se recupera.
 
 ---
 
@@ -70,7 +68,7 @@ order-hub/
 │       │   ├── dominio/
 │       │   │   └── PedidoRepository.java# fake em memória (ConcurrentHashMap = thread-safe)
 │       │   └── mcp/
-│       │       └── OrderHubMcp.java      # ⭐ as 3 tools: buscar/listar/cancelar
+│       │       └── OrderHubMcp.java      # as 3 tools: buscar/listar/cancelar
 │       ├── main/resources/
 │       │   └── application.properties   # traffic-logging ligado; sem modelo
 │       └── test/java/com/eldermoraes/mcp/
@@ -92,7 +90,7 @@ order-hub/
 
 ## Pontos-chave
 
-### 1. Os dois `@Tool`: a pegadinha que pega quase todo mundo
+### 1. Os dois `@Tool`: cuidado pra não confundir
 
 `OrderHubMcp.java` importa `io.quarkiverse.mcp.server.Tool`, o do lado de quem **expõe**. Nos agentes você usou `dev.langchain4j.agent.tool.Tool`, o do lado de quem **consome**. Mesma palavra, bibliotecas diferentes, trabalhos opostos. Confira sempre o import.
 
@@ -119,10 +117,10 @@ As descrições das três tools são caprichadas de propósito: dizem **o que** 
 
 `cancelar_pedido` carrega `destructiveHint = true` (o **aviso** declarativo) e usa **elicitation** (a **confirmação** no ato). Fluxo real do código:
 
-1. Pedido não existe? → `ToolCallException` (vira `isError`).
-2. Client **não** suporta elicitation? → **recusa clara, sem cancelar**. (Para clients stateless existe o padrão MRTR, de confirmação em duas fases, fora do escopo.)
-3. Suporta? → `requestBuilder().setMessage("Confirma o cancelamento do pedido X (cliente Y, valor Z)?").addSchemaProperty("motivo", ...).build().sendAndAwait()`.
-4. `actionAccepted()` → cancela e devolve "Pedido X cancelado. Motivo: ...". Senão → "Cancelamento abortado pelo usuário."
+1. Pedido não existe? -> `ToolCallException` (vira `isError`).
+2. Client **não** suporta elicitation? -> **recusa clara, sem cancelar**. (Para clients stateless existe o padrão MRTR, de confirmação em duas fases, fora do escopo.)
+3. Suporta? -> `requestBuilder().setMessage("Confirma o cancelamento do pedido X (cliente Y, valor Z)?").addSchemaProperty("motivo", ...).build().sendAndAwait()`.
+4. `actionAccepted()` → cancela e devolve "Pedido X cancelado. Motivo: ...". Senão -> "Cancelamento abortado pelo usuário."
 
 Guardrail da spec: elicitation é para **confirmação e contexto**, **nunca** para credencial (senha, token, cartão).
 
@@ -136,13 +134,13 @@ Chame `buscar_pedido` com um id que não existe: o server **não** devolve HTTP 
 
 Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled=true`) e leia o JSON-RPC do lado de quem **responde**:
 
-| Mensagem JSON-RPC | O que significa |
-|---|---|
-| `initialize` → resposta com `capabilities` e `Mcp-Session-Id` | O handshake: o client abre a sessão e negocia capabilities (inclusive se suporta **elicitation**) |
-| `notifications/initialized` | O client avisa que terminou de inicializar (o server responde `202`) |
-| `tools/list` → `result.tools[]` | O server publica suas tools (nomes snake_case, descrições, `annotations`, `inputSchema`, `outputSchema`) |
-| `tools/call` (`buscar_pedido`) → `result.structuredContent` | A tool foi invocada e devolveu **dados tipados** (não texto) |
-| `tools/call` com id inexistente → `result.isError: true` | O erro de negócio viajou dentro da resposta (não como HTTP 500): o modelo lê e se recupera |
+| Mensagem JSON-RPC | O que significa                                                                                                                                 |
+|---|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `initialize` → resposta com `capabilities` e `Mcp-Session-Id` | O handshake: o client abre a sessão e negocia capabilities (inclusive se suporta **elicitation**)                                               |
+| `notifications/initialized` | O client avisa que terminou de inicializar (o server responde `202`)                                                                            |
+| `tools/list` → `result.tools[]` | O server publica suas tools (nomes snake_case, descrições, `annotations`, `inputSchema`, `outputSchema`)                                        |
+| `tools/call` (`buscar_pedido`) → `result.structuredContent` | A tool foi invocada e devolveu **dados tipados** (não texto)                                                                                    |
+| `tools/call` com id inexistente → `result.isError: true` | O erro de negócio foi transportado dentro da resposta (não como HTTP 500): o modelo lê e se recupera                                            |
 | `elicitation/create` → resposta do usuário | No cancelamento com client compatível: o server **pausa e pergunta**; a resposta traz `action` (ACCEPT/DECLINE/CANCEL) e o `content` (o motivo) |
 
 ---
@@ -161,14 +159,12 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
    ```bash
    claude mcp add --transport http central-pedidos http://localhost:8080/mcp
    ```
-   De dentro do Claude Code: "qual o status do pedido PED-1001?", "cancele o pedido PED-1003" (dispara a elicitation pedindo sua confirmação). O server que você escreveu do zero respondendo a uma ferramenta comercial, sem uma linha de integração dedicada.
+   De dentro do Claude Code/Codex/Copilot/etc: "qual o status do pedido PED-1001?", "cancele o pedido PED-1003" (dispara a elicitation pedindo sua confirmação). O server que você escreveu do zero respondendo a uma ferramenta comercial, sem uma linha de integração dedicada.
 
 ---
 
 ## Para experimentar
 
-**Troque a Central de Pedidos pelo seu domínio.** A estrutura é a mesma para qualquer negócio: troque `Pedido`/`PedidoRepository` pelo **estoque da sua loja**, pela **sua coleção**, pelo **seu sistema de chamados**. As tools viram `buscar_produto`/`listar_por_categoria`/`baixar_estoque`, a elicitation confirma a operação destrutiva do seu domínio, e o mesmo client (e o mesmo Claude Code) passa a conversar com ele. O protocolo é aberto: qualquer agente compatível fala com o seu server.
+**Troque a Central de Pedidos pelo seu domínio.** A estrutura é a mesma para qualquer negócio: troque `Pedido`/`PedidoRepository` pelo **estoque da sua loja**, pela **sua coleção**, pelo **seu sistema de chamados**. As tools viram `buscar_produto`/`listar_por_categoria`/`baixar_estoque`, a elicitation confirma a operação destrutiva do seu domínio, e o mesmo client passa a conversar com ele. O protocolo é aberto: qualquer agente compatível fala com o seu server.
 
 ---
-
-A aula 7 parte exatamente do estado final deste projeto (mesmo domínio, mesmas tools) e o prepara para o mundo, protegendo, publicando e olhando a virada stateless do protocolo, em [`../../aula07/order-hub-live`](../../aula07/order-hub-live).

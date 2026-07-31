@@ -22,9 +22,9 @@ import jakarta.inject.Inject;
  * <p><b>Cuidado com o nome da anotação!</b> Este {@code @Tool} é o
  * {@code io.quarkiverse.mcp.server.Tool}, o do lado de quem expõe. Ele não é o
  * {@code dev.langchain4j.agent.tool.Tool} que você usou nos agentes (o do lado de quem
- * consome). Mesma palavra, bibliotecas diferentes, lados opostos do fio. É fácil importar
- * a errada e passar meia hora sem entender por que nada funciona: confira o import lá em
- * cima.
+ * consome). Mesma palavra, bibliotecas diferentes, lados opostos do protocolo. É fácil
+ * importar a errada e passar meia hora sem entender por que nada funciona: confira o
+ * import lá em cima.
  *
  * <p>Repare também que os métodos Java são camelCase ({@code buscarPedido}), mas o nome
  * exposto pelo protocolo, no atributo {@code name}, é snake_case ({@code buscar_pedido}):
@@ -38,8 +38,8 @@ public class OrderHubMcp {
     PedidoRepository repositorio;
 
     /**
-     * A descrição da tool é a interface para o modelo: quem a lê é o LLM do outro lado do
-     * fio, não um humano. Uma descrição vaga produz chamadas erradas; uma precisa produz
+     * A descrição da tool é a interface para o modelo: quem a lê é o LLM do lado client,
+     * não um humano. Uma descrição vaga produz chamadas erradas; uma precisa produz
      * chamadas certas. Capriche nela como na assinatura de um método público.
      *
      * <p>{@code structuredContent=true} + retorno de um record = a extensão serializa o

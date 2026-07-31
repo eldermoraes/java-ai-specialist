@@ -1,6 +1,6 @@
 # Aula 08 (MCP): Context Cost · vendo a conta de contexto no log
 
-> **Bloco**: MCP · **Foco**: o custo de contexto de plugar muitos servidores MCP
+> **Módulo**: MCP · **Foco**: o custo de contexto de plugar muitos servidores MCP
 > **Case**: um agente **propositalmente superequipado** com 3 servidores MCP, montado
 > para tornar duas falhas de custo **visíveis em log e número**
 > **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j via `quarkus-langchain4j-bom` (nunca fixe versão) · Ollama (`deepseek-v4-pro:cloud`)
@@ -11,7 +11,7 @@ Este projeto demonstra o **problema**, não a solução. Ele existe para você *
 
 ## O que você vai aprender
 
-Nas aulas anteriores deste bloco você aprendeu a **conectar** servidores MCP: à mão, em
+Nas aulas anteriores deste módulo você aprendeu a **conectar** servidores MCP: à mão, em
 código (aula 03), e de forma **declarativa** pelo `application.properties` (aula 04). A
 pergunta era sempre "como eu conecto?". Aqui a pergunta muda: **"quanto custa estar
 conectado?"**.
@@ -159,7 +159,7 @@ Rode em `quarkus:dev` e acompanhe:
 | Observação no log | Explica… |
 |---|---|
 | No boot, a **tabela do MedidorDeContexto** com tools/chars/tokens por servidor | O custo fixo da falha 1, tornado número antes mesmo da 1ª pergunta |
-| Numa pergunta **sem tool** ("quanto é 2 + 2?"), o request ao modelo já traz **todas** as definições dos 3 servidores | Falha 1: as definições viajam em todo request, use-se ou não uma tool |
+| Numa pergunta **sem tool** ("quanto é 2 + 2?"), o request ao modelo já traz **todas** as definições dos 3 servidores | Falha 1: as definições trafegam em todo request, use-se ou não uma tool |
 | Numa cópia de arquivo, o conteúdo aparece **duas vezes** no log: no retorno do `read_file` e no argumento do `write_file` | Falha 2: o resultado intermediário passa pelo modelo na ida e na volta |
 | Se um servidor remoto cair, a linha da tabela vira `indisponível` e a app sobe assim mesmo | `try/catch` por servidor + health dos clientes MCP desligado |
 

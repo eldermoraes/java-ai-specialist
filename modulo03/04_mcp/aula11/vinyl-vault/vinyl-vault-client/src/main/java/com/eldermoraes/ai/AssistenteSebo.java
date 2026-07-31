@@ -6,7 +6,7 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * O agente que consome o Sebo do Vini: o outro lado do fio do vinyl-vault-server.
+ * O agente que consome o Sebo do Vini: o lado client do vinyl-vault-server.
  *
  * <p>Repare no que este código não tem: nenhum método {@code @Tool} local, nenhuma lógica de
  * acervo. As capacidades chegam de fora, do MCP server, via {@link McpToolBox}. É o arco do

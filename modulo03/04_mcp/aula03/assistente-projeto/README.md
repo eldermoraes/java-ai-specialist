@@ -8,7 +8,7 @@
 
 ## O que você vai aprender
 
-Nas aulas anteriores deste bloco vimos **por que** o MCP existe (conectividade padronizada, o "USB-C para IA") e **como** o protocolo se organiza (client–host–server, as primitivas Tools/Resources/Prompts, os transportes STDIO e Streamable HTTP). Agora é o **primeiro hands-on**: vamos ser o **lado client** e consumir servidores MCP prontos a partir de um agente LangChain4j.
+Nas aulas anteriores deste módulo vimos **por que** o MCP existe (conectividade padronizada, o "USB-C para IA") e **como** o protocolo se organiza (client–host–server, as primitivas Tools/Resources/Prompts, os transportes STDIO e Streamable HTTP). Agora é o **primeiro hands-on**: vamos ser o **lado client** e consumir servidores MCP prontos a partir de um agente LangChain4j.
 
 O case é um **assistente de projeto**: um `@AiService` que responde perguntas sobre arquivos. A sacada é que ele **não sabe ler arquivos**: não há nenhum método `@Tool` no código dele. As capacidades chegam de fora, de dois servidores MCP:
 

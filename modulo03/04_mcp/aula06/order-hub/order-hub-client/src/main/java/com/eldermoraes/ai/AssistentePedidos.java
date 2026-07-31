@@ -6,11 +6,11 @@ import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * O agente que consome a Central de Pedidos: o outro lado do fio do order-hub-server.
+ * O agente que consome a Central de Pedidos: o lado client do order-hub-server.
  *
  * <p>Repare no que este código não tem: nenhum método {@code @Tool} local, nenhuma lógica
  * de pedido. As capacidades chegam de fora, do MCP server, via {@link McpToolBox}. É o
- * arco do bloco se fechando: você construiu o server e agora consome o seu próprio server,
+ * arco do módulo se fechando: você construiu o server e agora consome o seu próprio server,
  * pelo mesmo caminho declarativo com que consumiria o de qualquer um.
  *
  * <p>{@code @McpToolBox("central-pedidos")} liga este método ao client MCP declarativo

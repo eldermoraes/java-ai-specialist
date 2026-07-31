@@ -7,13 +7,13 @@
     <packaging>pom</packaging>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         vinyl-vault: o Sebo do Vini (aula 11, desafio do bloco MCP)
+         vinyl-vault: o Sebo do Vini (aula 11, desafio do módulo MCP)
 
          Este é o pom pai agregador: ele não tem código nenhum, só reúne os dois
          módulos do projeto num único build (`./mvnw package` na raiz constrói os
          dois). Cada módulo é um projeto Quarkus autossuficiente, com seu próprio
          pom e suas próprias extensões, de propósito, porque cada um fica de um
-         lado do fio MCP:
+         lado do protocolo MCP:
 
          - vinyl-vault-server → o MCP server (quem expõe as tools; sem LLM nenhum)
          - vinyl-vault-client → o client declarativo de teste (quem consome o

@@ -1,4 +1,4 @@
-# Aula 05 (bloco MCP): Decision Desk · um toolbox MCP por agente
+# Aula 05 (módulo MCP): Decision Desk · um toolbox MCP por agente
 
 > - **Padrão**: workflow agêntico sequencial + human-in-the-loop binário, com um toolbox MCP por agente
 > - **Case**: pergunta de engenharia entra → Agente Repo lê o repositório local → Agente Ecossistema confronta com a doc externa → gate humano (sim/não) → se "sim", grava um mini-ADR em `decisions/`
@@ -8,7 +8,7 @@
 
 ## O que você vai aprender
 
-Você já sabe montar equipes de agentes (módulo de Agentes) e já sabe plugar ferramentas externas via MCP (partes anteriores deste bloco). Esta aula é o encontro dos dois mundos.
+Você já sabe montar equipes de agentes (módulo de Agentes) e já sabe plugar ferramentas externas via MCP (aulas anteriores deste módulo). Esta aula é o encontro dos dois mundos.
 
 O desenho do time de agentes (usando `@SequenceAgent`) é o mesmo de sempre. A novidade da aula inteira cabe no `@McpToolBox` de cada sub-agente: cada membro recebe o seu toolbox, e nada além: **menor privilégio por agente**. E repare: **não existe um único `@Tool` local neste projeto**; todas as capacidades dos agentes vêm de fora, via MCP.
 

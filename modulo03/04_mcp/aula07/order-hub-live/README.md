@@ -1,6 +1,6 @@
 # Aula 7 (MCP): order-hub-live · seu MCP server no mundo: proteger, publicar e o que vem aí
 
-> **Bloco**: MCP · **Foco**: levar o MCP *server* para o mundo (proteger, publicar, futuro do protocolo)
+> **Módulo**: MCP · **Foco**: levar o MCP *server* para o mundo (proteger, publicar, futuro do protocolo)
 > **Case**: a mesma **Central de Pedidos da Cloud For You** da aula 6 (buscar, listar e cancelar pedidos), agora preparada para produção
 > **Stack**: Quarkus 3.35.2 · Java 25 · `quarkus-mcp-server-http` **1.13.1** (Quarkiverse) · `quarkus-oidc` (a fechadura) · no client: LangChain4j via `quarkus-langchain4j-bom` + Ollama
 
@@ -112,7 +112,7 @@ No Quarkus isso é `quarkus-oidc` + a política de path padrão do HTTP (não h�
 %seguro.quarkus.http.auth.permission.mcp-endpoints.policy=authenticated
 ```
 
-**Onde esta aula termina:** a fechadura é a autorização **essencial**, indispensável, mas não é a história completa de segurança de MCP. Tool poisoning, rug pull, o OWASP MCP Top 10, o `mcp-scan`, CVEs específicos são assunto de uma parte dedicada, mais adiante no bloco. Aqui é a fechadura; lá, o estudo das ameaças e defesas, partindo do que você trancou aqui.
+**Onde esta aula termina:** a fechadura é a autorização **essencial**, indispensável, mas não é a história completa de segurança de MCP. Tool poisoning, rug pull, o OWASP MCP Top 10, o `mcp-scan`, CVEs específicos são assunto de uma aula dedicada, mais adiante no módulo. Aqui é a fechadura; lá, o estudo das ameaças e defesas, partindo do que você trancou aqui.
 
 ### 2. RFC 9728 "cartaz na porta" + RFC 8707 "token com destinatário"
 
@@ -177,7 +177,7 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 | `notifications/initialized` | O client avisa que terminou de inicializar (o server responde `202`) |
 | `tools/list` → `result.tools[]` | O server publica suas tools (nomes snake_case, descrições, `annotations`, `inputSchema`, `outputSchema`) |
 | `tools/call` (`buscar_pedido`) → `result.structuredContent` | A tool foi invocada e devolveu **dados tipados** (não texto) |
-| `tools/call` com id inexistente → `result.isError: true` | O erro de negócio viajou dentro da resposta (não como HTTP 500): o modelo lê e se recupera |
+| `tools/call` com id inexistente → `result.isError: true` | O erro de negócio foi transportado dentro da resposta (não como HTTP 500): o modelo lê e se recupera |
 | `elicitation/create` → resposta do usuário | No cancelamento com client compatível: o server **pausa e pergunta**; a resposta traz `action` e o `content` |
 | **`401 Unauthorized` no `/mcp` (perfil `seguro`, sem token)** | A **fechadura OIDC funcionando**: sem Bearer válido, a chamada nem chega à tool |
 

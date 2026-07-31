@@ -55,7 +55,7 @@
          Repare no que NÃO está aqui: nenhuma dependência de LLM, de Ollama, de
          OpenAI, de LangChain4j. Este projeto de IA não configura modelo nenhum:
          "o server não tem LLM". Quem raciocina e decide chamar a tool é o agente
-         do outro lado do fio; o server é só uma casca de lógica de negócio
+         do lado client; o server é só uma casca de lógica de negócio
          publicada pelo protocolo. Consequência prática: é um serviço HTTP comum,
          barato, sem inferência/GPU/token, e você consegue construí-lo e testá-lo
          sem nenhum modelo por perto.
