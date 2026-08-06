@@ -1,10 +1,10 @@
 # Aula 7 (MCP): order-hub-live · seu MCP server no mundo: proteger, publicar e o que vem aí
 
-> **Módulo**: MCP · **Foco**: levar o MCP *server* para o mundo (proteger, publicar, futuro do protocolo)
-> **Case**: a mesma **Central de Pedidos da Cloud For You** da aula 6 (buscar, listar e cancelar pedidos), agora preparada para produção
-> **Stack**: Quarkus 3.35.2 · Java 25 · `quarkus-mcp-server-http` **1.13.1** (Quarkiverse) · `quarkus-oidc` (a fechadura) · no client: LangChain4j via `quarkus-langchain4j-bom` + Ollama
+> - **Módulo**: MCP · **Foco**: levar o MCP *server* para o mundo (proteger, publicar, futuro do protocolo)
+> - **Case**: a mesma **Central de Pedidos da Cloud For You** da aula 6 (buscar, listar e cancelar pedidos), agora preparada para produção
+> - **Stack**: Quarkus 3.35.2 · Java 25 · `quarkus-mcp-server-http` **1.13.1** (Quarkiverse) · `quarkus-oidc` (a autorização) · no client: LangChain4j via `quarkus-langchain4j-bom` + Ollama
 
-Este projeto **parte do estado final da aula 6** ([`order-hub`](../../aula06/order-hub)), com **mesmo domínio e mesmas três tools** (`buscar_pedido`, `listar_pedidos_por_cliente`, `cancelar_pedido`), e o **prepara para o mundo**. É o padrão de aulas sequenciais do curso: cada aula parte do estado final da anterior. O shell original nasceu do `quarkus_create` na aula 6, então este projeto é uma **cópia derivada** daquele (não um projeto novo do zero), preservando essa base e acrescentando a ela a fechadura, o manifesto de publicação e o olhar sobre a virada stateless do protocolo.
+Este projeto **parte do estado final da aula 6** ([`order-hub`](../../aula06/order-hub)), com **mesmo domínio e mesmas três tools** (`buscar_pedido`, `listar_pedidos_por_cliente`, `cancelar_pedido`), e o **prepara para o mundo**. É o padrão de aulas sequenciais do curso: cada aula parte do estado final da anterior. O shell original nasceu do `quarkus_create` na aula 6, então este projeto é uma **cópia derivada** daquele (não um projeto novo do zero), preservando essa base e acrescentando a ela a autorização OAuth, o manifesto de publicação e o olhar sobre a virada stateless do protocolo.
 
 ```
 order-hub-live/                   ← POM pai agregador (sem código)
@@ -19,7 +19,7 @@ order-hub-live/                   ← POM pai agregador (sem código)
 
 Na aula 6 você saiu de consumidor e virou provedor: construiu o server, deu a ele resultado tipado e confirmação antes do destrutivo, e o testou até vê-lo funcionar de ponta a ponta, tudo no conforto do seu localhost. Esta aula trata do que separa **"funciona na minha máquina"** de **"está pronto para o mundo"**.
 
-- **Proteger**, trancando a porta: o server vira um **OAuth 2.1 Resource Server** que valida o Bearer token que chega no `/mcp`. É o espelho exato da autenticação que você configurou do lado client.
+- **Proteger** com autorização: o server vira um **OAuth 2.1 Resource Server** que valida o Bearer token que chega no `/mcp`. É o espelho exato da autenticação que você configurou do lado client.
 - **Publicar**, entrando no **registry oficial** do protocolo: escrever o `server.json`, entender a verificação de namespace e a CLI `mcp-publisher`. O walkthrough completo, **sem publicar** um exercício de localhost.
 - **A virada stateless**: o **RC da spec (28/07/2026)** remove sessões e o handshake `initialize`; entender o que muda (a mecânica da conexão) e o que não muda (o modelo mental), e por que suas tools já estão prontas.
 - **Estudo de caso**: o **Quarkus Agent MCP**, um MCP server real, open source, feito por quem faz o Quarkus, que amarra na prática tudo o que você aprendeu (e um contraste de transporte que ensina).
@@ -39,13 +39,13 @@ Pré-requisitos: **Java 25**, **Maven 3.9+** (ou o wrapper `./mvnw`), **Docker/P
 
 Sobe em `http://localhost:8080`, com o endpoint MCP em `http://localhost:8080/mcp`. No default, OIDC e os Keycloak Dev Services ficam **desligados**: nenhum container sobe sem você pedir.
 
-### O server, perfil seguro (a fechadura)
+### O server, perfil seguro (com OIDC)
 
 ```bash
 ./mvnw -pl order-hub-live-server quarkus:dev -Dquarkus.profile=seguro
 ```
 
-Agora o `/mcp` exige um **Bearer token**: sem token, **`401`**. O Quarkus sobe um **Keycloak em container** (Dev Services) com realm e client prontos: você vê a fechadura funcionando sem montar infraestrutura à mão.
+Agora o `/mcp` exige um **Bearer token**: sem token, **`401`**. O Quarkus sobe um **Keycloak em container** (Dev Services) com realm e client prontos: você vê a proteção funcionando sem montar infraestrutura à mão.
 
 ### O client, fechando o loop (perfil default)
 
@@ -57,7 +57,7 @@ Em **outro terminal**, com o server default de pé:
 
 Sobe em `http://localhost:8081`. Abra `http://localhost:8081/` e pergunte "qual o status do pedido PED-1001?". O agente descobre as tools do **seu** server e as chama.
 
-> **No perfil `seguro`, o client declarativo sem token não passa**, e isso é o comportamento **esperado**: é a fechadura funcionando. O circuito completo de autenticação do lado client (apresentar um token OAuth ao consumir o server) fica para a aula de autenticação do lado client. Aqui o client fecha o loop no perfil default, e o perfil `seguro` demonstra o `401`.
+> **No perfil `seguro`, o client declarativo sem token não passa**, e isso é o comportamento **esperado**: é a proteção OIDC funcionando. O circuito completo de autenticação do lado client (apresentar um token OAuth ao consumir o server) fica para a aula de autenticação do lado client. Aqui o client fecha o loop no perfil default, e o perfil `seguro` demonstra o `401`.
 
 ---
 
@@ -112,20 +112,20 @@ No Quarkus isso é `quarkus-oidc` + a política de path padrão do HTTP (não h�
 %seguro.quarkus.http.auth.permission.mcp-endpoints.policy=authenticated
 ```
 
-**Onde esta aula termina:** a fechadura é a autorização **essencial**, indispensável, mas não é a história completa de segurança de MCP. Tool poisoning, rug pull, o OWASP MCP Top 10, o `mcp-scan`, CVEs específicos são assunto de uma aula dedicada, mais adiante no módulo. Aqui é a fechadura; lá, o estudo das ameaças e defesas, partindo do que você trancou aqui.
+**Onde esta aula termina:** essa é a autorização **essencial**, indispensável, mas não é a história completa de segurança de MCP. Tool poisoning, rug pull, o OWASP MCP Top 10, o `mcp-scan`, CVEs específicos são assunto de uma aula dedicada, mais adiante no módulo. Aqui é a autorização; lá, o estudo das ameaças e defesas, partindo do que você protegeu aqui.
 
-### 2. RFC 9728 "cartaz na porta" + RFC 8707 "token com destinatário"
+### 2. RFC 9728 (discovery de metadados) + RFC 8707 (audience do token)
 
 Dois RFCs sustentam o desenho de confiança:
 
-- **RFC 9728** (Protected Resource Metadata) = o **"cartaz na porta"**: o server publica metadados dizendo "quem me protege é tal authorization server", para o client saber onde ir buscar um token. Materializado por `%seguro.quarkus.oidc.resource-metadata.enabled=true`.
-- **RFC 8707** (Resource Indicators) = o **"token com destinatário"**: amarra o token ao server de destino, para que um token emitido para o seu server não seja reusado em outro. É a linha `%seguro.quarkus.oidc.token.audience=order-hub-live-server`, deixada **comentada**: com os Keycloak Dev Services, o audience padrão emitido pode não bater e derrubar toda chamada com `401`. Ative e ajuste com seu authorization server real.
+- **RFC 9728** (Protected Resource Metadata) = **discovery**: o server publica metadados dizendo "quem me protege é tal authorization server", para o client saber onde ir buscar um token. Materializado por `%seguro.quarkus.oidc.resource-metadata.enabled=true`.
+- **RFC 8707** (Resource Indicators) = **audience**: amarra o token ao server de destino, para que um token emitido para o seu server não seja reusado em outro. É a linha `%seguro.quarkus.oidc.token.audience=order-hub-live-server`, deixada **comentada**: com os Keycloak Dev Services, o audience padrão emitido pode não bater e derrubar toda chamada com `401`. Ative e ajuste com seu authorization server real.
 
-Cartaz na porta e destinatário no envelope: duas peças pequenas que fecham o modelo de confiança.
+Discovery e audience: duas peças pequenas que fecham o modelo de confiança.
 
 ### 3. Keycloak Dev Services: a infra que sobe sozinha
 
-Para o hands-on rodar sem você subir um Keycloak à mão, o perfil `seguro` se apoia nos **Keycloak Dev Services**: o Quarkus sobe um Keycloak **em container automaticamente** no dev/test, já com realm e client provisionados. Você vê a fechadura funcionando sem montar infraestrutura. No perfil default os Dev Services ficam **desligados** (`quarkus.keycloak.devservices.enabled=false`), então nada de container sobe no dia a dia.
+Para o hands-on rodar sem você subir um Keycloak à mão, o perfil `seguro` se apoia nos **Keycloak Dev Services**: o Quarkus sobe um Keycloak **em container automaticamente** no dev/test, já com realm e client provisionados. Você vê a proteção funcionando sem montar infraestrutura. No perfil default os Dev Services ficam **desligados** (`quarkus.keycloak.devservices.enabled=false`), então nada de container sobe no dia a dia.
 
 ### 4. `server.json` campo a campo, e "o registry indexa, não hospeda"
 
@@ -179,17 +179,17 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 | `tools/call` (`buscar_pedido`) → `result.structuredContent` | A tool foi invocada e devolveu **dados tipados** (não texto) |
 | `tools/call` com id inexistente → `result.isError: true` | O erro de negócio foi transportado dentro da resposta (não como HTTP 500): o modelo lê e se recupera |
 | `elicitation/create` → resposta do usuário | No cancelamento com client compatível: o server **pausa e pergunta**; a resposta traz `action` e o `content` |
-| **`401 Unauthorized` no `/mcp` (perfil `seguro`, sem token)** | A **fechadura OIDC funcionando**: sem Bearer válido, a chamada nem chega à tool |
+| **`401 Unauthorized` no `/mcp` (perfil `seguro`, sem token)** | A **proteção OIDC funcionando**: sem Bearer válido, a chamada nem chega à tool |
 
 ---
 
 ## Roteiro de teste manual
 
-1. **Ative o perfil seguro e veja o `401`.** Suba o server com `-Dquarkus.profile=seguro` (o Quarkus sobe o Keycloak em container). Chame `http://localhost:8080/mcp` **sem token** e veja o `401 Unauthorized` no log: a fechadura funcionando (sem Bearer válido, a chamada nem chega à tool).
+1. **Ative o perfil seguro e veja o `401`.** Suba o server com `-Dquarkus.profile=seguro` (o Quarkus sobe o Keycloak em container). Chame `http://localhost:8080/mcp` **sem token** e veja o `401 Unauthorized` no log: a proteção OIDC funcionando (sem Bearer válido, a chamada nem chega à tool).
 2. **Walkthrough do `server.json` + `mcp-publisher`, sem publicar.** Percorra o manifesto campo a campo, entenda a verificação de namespace (`io.github.<usuário>` via GitHub) e conheça a CLI `mcp-publisher`. **Não publique**: a Central de Pedidos é um exercício em localhost, e o registry indexa, não hospeda.
 3. **Derrube e reinicie o server, observando chamadas autossuficientes.** Suba, faça uma chamada, derrube o server, suba de novo e chame outra vez: cada chamada carrega tudo o que precisa nos argumentos, o comportamento stateless que a virada do dia 28 vai generalizar.
 
-> O fluxo completo **401 → token → 200** (obter um token do Keycloak provisionado e passá-lo como Bearer) exige o container de fato no ar e o ajuste fino do `token.audience` com o **seu** authorization server. O que este projeto demonstra é a política de path e o `resource-metadata`: a fechadura configurada, com o `401` como prova de que ela funciona.
+> O fluxo completo **401 → token → 200** (obter um token do Keycloak provisionado e passá-lo como Bearer) exige o container de fato no ar e o ajuste fino do `token.audience` com o **seu** authorization server. O que este projeto demonstra é a política de path e o `resource-metadata`: a autorização configurada, com o `401` como prova de que ela funciona.
 
 > **Sobre os testes automatizados:** o `OrderHubMcpTest` roda no **perfil de teste**, que mantém o OIDC **desligado** (o default de teste NÃO ativa `%seguro`), então os 4 testes de JSON-RPC contra o `/mcp` passam **sem Keycloak**. O teste do fluxo seguro (`401 → token → 200`) exigiria o container de Keycloak no ar; por isso não faz parte da suíte.
 
@@ -197,4 +197,4 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 
 ## Para experimentar
 
-**Troque a Central de Pedidos pelo seu domínio.** A estrutura é a mesma para qualquer negócio: troque `Pedido`/`PedidoRepository` pelo **estoque da sua loja**, pela **sua coleção**, pelo **seu sistema de chamados**. Proteja o **seu** `/mcp` com o mesmo perfil OIDC, escreva o `server.json` do **seu** domínio e, quando ele for real e hospedado, publique-o no registry. O protocolo é aberto: qualquer agente compatível fala com o seu server, agora com a porta trancada.
+**Troque a Central de Pedidos pelo seu domínio.** A estrutura é a mesma para qualquer negócio: troque `Pedido`/`PedidoRepository` pelo **estoque da sua loja**, pela **sua coleção**, pelo **seu sistema de chamados**. Proteja o **seu** `/mcp` com o mesmo perfil OIDC, escreva o `server.json` do **seu** domínio e, quando ele for real e hospedado, publique-o no registry. O protocolo é aberto: qualquer agente compatível fala com o seu server, agora com o endpoint protegido.

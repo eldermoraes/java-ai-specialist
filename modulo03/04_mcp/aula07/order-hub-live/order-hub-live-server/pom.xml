@@ -65,7 +65,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
-        <!-- A fechadura da aula 7: quarkus-oidc torna o server um OAuth 2.1
+        <!-- A autorização da aula 7: quarkus-oidc torna o server um OAuth 2.1
              Resource Server, que VALIDA o Bearer token que chega no /mcp (não
              emite token nenhum). Ativada só no perfil %seguro (ver
              application.properties). -->
