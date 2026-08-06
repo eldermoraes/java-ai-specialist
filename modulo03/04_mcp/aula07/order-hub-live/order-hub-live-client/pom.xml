@@ -54,6 +54,12 @@
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-ollama</artifactId>
         </dependency>
+        <!-- Obtém o token OAuth que o client apresenta ao server no perfil seguro
+             (client_credentials contra o Keycloak; ver AutorizacaoCentralPedidos). -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-oidc-client</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
