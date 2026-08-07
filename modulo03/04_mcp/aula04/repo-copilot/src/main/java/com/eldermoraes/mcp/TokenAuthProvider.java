@@ -27,7 +27,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  * {@code auto-health-check=false} (o ping de fundo iria sem credencial). Aqui o client
  * "protegido" está {@code enabled=false}, então nada é enviado; a classe existe para
  * mostrar o par (client protegido + provider) e fechará o circuito quando construirmos
- * nosso próprio server MCP mais adiante no bloco.
+ * nosso próprio server MCP mais adiante no módulo.
  *
  * <p><b>Configuração do token:</b> o token é opcional na configuração (a propriedade
  * {@code assistente.mcp.token} tem default vazio, pois {@code MCP_TOKEN} normalmente não

@@ -25,7 +25,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  *
  * <p>Assim como na aula03: nenhum método {@code @Tool}, nenhuma lógica de leitura de
  * arquivos. A diferença é que agora nem a montagem é sua: é da extensão. Sobra só a
- * assinatura e a caixa de ferramentas nomeada.
+ * assinatura e o toolbox nomeado.
  */
 @ApplicationScoped
 @RegisterAiService
