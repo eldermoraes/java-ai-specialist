@@ -1,0 +1,11 @@
+{
+  "name": "io.github.eldermoraes/order-hub",
+  "description": "Expõe o sistema de pedidos da Cloud For You: buscar, listar e cancelar pedidos.",
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "transport": "streamable-http",
+      "url": "https://mcp.cloudforyou.example/mcp"
+    }
+  ]
+}
