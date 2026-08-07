@@ -106,8 +106,6 @@ order-hub-live/
             └── AssistentePedidosTest.java     # smoke de montagem (passa sem Ollama/server) + IT @Disabled
 ```
 
-> **Nota de versão: o BOM 1.13.1 (herdado da aula 6).** A plataforma Quarkus 3.35.2 alinha o `quarkus-mcp-server` na 1.12.0; o pom do server sobrepõe isso importando o BOM `io.quarkiverse.mcp:quarkus-mcp-server-bom:1.13.1`, um override deliberado (a regra "nunca fixar versão" vale para o LangChain4j, não para este BOM). A 1.13.0 (04/06/2026) foi o marco em que o server Java passou a falar Streamable HTTP e ganhou o suporte inicial ao protocolo stateless do RC: exatamente os temas desta aula.
-
 ---
 
 ## Pontos-chave
@@ -125,14 +123,12 @@ No Quarkus isso é `quarkus-oidc` + a política de path padrão do HTTP (não h�
 
 E o lado de quem chama, no perfil `seguro` do client: um `OidcClient` busca o token no Keycloak (grant `client_credentials`) e a SPI `McpClientAuthProvider` o apresenta em cada chamada ao `/mcp` (a classe `AutorizacaoCentralPedidos`, um bean de dez linhas). Emissor, portador e validador: o circuito OAuth inteiro rodando na sua máquina.
 
-**Onde esta aula termina:** essa é a autorização **essencial**, indispensável, mas não é a história completa de segurança de MCP. Tool poisoning, rug pull, o OWASP MCP Top 10, o `mcp-scan`, CVEs específicos são assunto de uma aula dedicada, mais adiante no módulo. Aqui é a autorização; lá, o estudo das ameaças e defesas, partindo do que você protegeu aqui.
-
 ### 2. RFC 9728 (discovery de metadados) + RFC 8707 (audience do token)
 
 Dois RFCs sustentam o desenho de confiança:
 
 - **RFC 9728** (Protected Resource Metadata) = **discovery**: o server publica metadados dizendo "quem me protege é tal authorization server", para o client saber onde ir buscar um token. Materializado por `%seguro.quarkus.oidc.resource-metadata.enabled=true`.
-- **RFC 8707** (Resource Indicators) = **audience**: amarra o token ao server de destino, para que um token emitido para o seu server não seja reusado em outro. No Quarkus é uma linha (`quarkus.oidc.token.audience=order-hub-live-server`), que este exercício **não ativa** de propósito: o token que o Keycloak dos Dev Services emite não carrega audience nenhum, e exigir a validação derrubaria todo o fluxo com `401`, mesmo com token válido. Ative e ajuste com seu authorization server real.
+- **RFC 8707** (Resource Indicators) = **audience**: amarra o token ao server de destino, para que um token emitido para o seu server não seja reusado em outro. No Quarkus é uma linha (`quarkus.oidc.token.audience=order-hub-live-server`), que este exercício **não usa** de propósito: o token que o Keycloak dos Dev Services emite não carrega audience nenhum, e exigir a validação derrubaria todo o fluxo com `401`, mesmo com token válido. Ative e ajuste com seu authorization server real.
 
 Discovery e audience: duas peças pequenas que fecham o modelo de confiança.
 
@@ -160,18 +156,6 @@ O manifesto de publicação, versionado na raiz como referência:
 
 **Walkthrough sem publicar.** A Central de Pedidos é um exercício em `localhost`; subir um brinquedo ao catálogo público só poluiria o índice para todo mundo. Fazemos o fluxo completo como demonstração (escrever o `server.json`, entender a verificação de namespace, conhecer a `mcp-publisher`), mas **não publicamos**. CTA honesto: publique quando tiver um server **real, hospedado, do seu domínio**, não um exercício. (O registry está em **preview** desde setembro/2025; trate o fluxo como o retrato de hoje, sujeito a evoluir.)
 
-### 5. Estudo de caso: Quarkus Agent MCP, um server real (e o contraste de transporte)
-
-O **Quarkus Agent MCP** (github.com/quarkusio/quarkus-agent-mcp, Apache 2.0; blog de 07/mai/2026) resolve um problema elegante. Agentes de código (Claude Code, Copilot, Cursor) precisam criar e manter apps Quarkus. O Quarkus já tem um Dev MCP **embutido** no dev mode (`/q/dev-mcp`), mas ele **morre junto com o app**. E o agente mais precisa de ajuda justamente quando o app quebrou. A solução é o princípio **survive-the-crash**: o Agent MCP é um server **standalone**, que roda fora do processo observado: envolve o `quarkus dev` como processo filho e continua vivo quando o app quebra, deixando o agente ler a exceção estruturada e corrigir o código.
-
-Três lições transferíveis direto para o **seu** server:
-
-1. **Rodar fora do processo observado é um padrão de resiliência** (o survive-the-crash).
-2. **A descrição de uma tool é a interface para o modelo**: o mesmo ponto da aula 6, aqui provado num projeto real.
-3. **Respostas concisas importam**: a janela de contexto do agente é cara; cada token que a tool devolve compete por espaço.
-
-E o **contraste de transporte** que fecha a ideia: a nossa Central de Pedidos é **HTTP remoto e stateless**; o Agent MCP é **STDIO local e stateful**, e precisa ser assim, porque gerencia um processo filho (e gerenciar processo é estado). Um não está mais certo que o outro: **transporte e desenho seguem o caso de uso, não a moda.** Você já tem o repertório para ler o código dele: é o mesmo protocolo que você domina.
-
 ---
 
 ## O que observar no log
@@ -193,12 +177,7 @@ Ligue o traffic logging (já ligado: `quarkus.mcp.server.traffic-logging.enabled
 ## Roteiro de teste manual
 
 1. **Ative o perfil seguro e veja o `401`.** Suba o server com `-Dquarkus.profile=seguro` (o Quarkus sobe o Keycloak em container). Chame `http://localhost:8080/mcp` **sem token** e veja o `401 Unauthorized` no log: a proteção OIDC funcionando (sem Bearer válido, a chamada nem chega à tool). Com o client de pé, abra o front (`http://localhost:8081/`) e pergunte por um pedido: a resposta no chat explica a recusa, a mesma proteção vista do lado de quem consome. Então feche o ciclo: suba o client com `-Dquarkus.profile=seguro` e repita a pergunta; agora ele apresenta o token e a resposta volta com os dados do pedido, o `401 → token → 200` completo.
-2. **Walkthrough do `server.json` + `mcp-publisher`, sem publicar.** Percorra o manifesto campo a campo, entenda a verificação de namespace (`io.github.<usuário>` via GitHub) e conheça a CLI `mcp-publisher`. **Não publique**: a Central de Pedidos é um exercício em localhost, e o registry indexa, não hospeda.
-3. **Derrube e reinicie o server, observando chamadas autossuficientes.** Suba, faça uma chamada, derrube o server, suba de novo e chame outra vez: cada chamada carrega tudo o que precisa nos argumentos, o comportamento stateless que a virada do dia 28 vai generalizar.
-
-> A validação de audience (RFC 8707, `quarkus.oidc.token.audience`) fica **de fora** do perfil `seguro`: o token que o Keycloak dos Dev Services emite via `client_credentials` não carrega o audience deste server, e exigi-la derrubaria todo o fluxo com `401`, mesmo com token válido. Ative-a quando estiver diante do **seu** authorization server real.
-
-> **Sobre os testes automatizados:** o `OrderHubMcpTest` roda no **perfil de teste**, que mantém o OIDC **desligado** (o default de teste NÃO ativa `%seguro`), então os 4 testes de JSON-RPC contra o `/mcp` passam **sem Keycloak**. O teste do fluxo seguro (`401 → token → 200`) exigiria o container de Keycloak no ar; por isso não faz parte da suíte.
+2. **Derrube e reinicie o server, observando chamadas autossuficientes.** Suba, faça uma chamada, derrube o server, suba de novo e chame outra vez: cada chamada carrega tudo o que precisa nos argumentos, o comportamento stateless que a virada do dia 28 vai generalizar.
 
 ---
 
