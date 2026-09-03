@@ -121,21 +121,30 @@ Compare o log dos guardrails com o log de requests: é a demonstração mais dir
 guardrail de entrada corta o custo antes dele existir.
 
 A diferença entre `FAILURE` e `FATAL` fica visível aqui. Na requisição **3**, o escopo reprova e
-mesmo assim o guardrail seguinte roda:
+mesmo assim os guardrails seguintes rodam (filtrando o log pelas linhas dos guardrails):
 
 ```
 Tamanho: OK, 37 caracteres
 Escopo: FAILURE, termo fora de escopo: 'eleição'
 Dado sensível: OK, nada encontrado
-Requisição recusada na entrada: ... Esta pergunta está fora do escopo do assistente de RH.
+Escopo por sentido: FAILURE, o classificador considerou a pergunta fora de RH
+Requisição recusada na entrada: ... EscopoGuardrail ... está fora do escopo ...,
+                                ... EscopoPorSentidoGuardrail ... está fora do escopo ...
 ```
 
-Já com a pergunta em branco, a fila para no primeiro e os outros dois nem são chamados:
+Duas coisas para reparar. Os dois motivos chegam juntos à aplicação, que é justamente o que o
+`FAILURE` promete. E o classificador rodou mesmo depois do guardrail determinístico já ter
+reprovado: uma chamada ao modelo pequeno foi gasta numa pergunta que já estava recusada. Esse é
+o preço de a fila continuar, e é uma decisão que vale rever caso a caso.
+
+Já com a pergunta em branco, a fila para no primeiro e os outros três nem são chamados:
 
 ```
 Tamanho: FATAL, pergunta vazia. A fila de guardrails para aqui
 Requisição recusada na entrada: ... Pergunta vazia.
 ```
+
+O `FATAL` existe para isso: quando não há o que avaliar, pagar pelo resto da fila é desperdício.
 
 > No nome da classe dentro da mensagem de erro aparece um sufixo `_ClientProxy`. É o proxy que o
 > CDI cria para o bean; o guardrail é a sua classe mesmo.
