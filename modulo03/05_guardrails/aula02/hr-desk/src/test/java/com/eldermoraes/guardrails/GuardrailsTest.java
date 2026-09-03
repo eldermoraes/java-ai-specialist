@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.eldermoraes.ai.ClassificadorDeEscopo;
+import com.eldermoraes.ai.ClassificadorDeEscopo.Veredito;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.guardrail.GuardrailResult.Result;
 import dev.langchain4j.guardrail.InputGuardrailResult;
@@ -23,6 +25,15 @@ class GuardrailsTest {
 
     private static UserMessage pergunta(String texto) {
         return UserMessage.from(texto);
+    }
+
+    /**
+     * Dublê do classificador: devolve o veredito combinado, sem chamar modelo nenhum.
+     * O guardrail recebe o classificador pelo construtor justamente para permitir isto —
+     * testar a decisão dele sem depender de uma resposta não determinística.
+     */
+    private static ClassificadorDeEscopo classificadorQueResponde(Veredito veredito) {
+        return pergunta -> veredito;
     }
 
     @Test
@@ -81,5 +92,25 @@ class GuardrailsTest {
         assertTrue(resultado.isSuccess());
         assertTrue(resultado.successfulText().contains("[CPF]"));
         assertFalse(resultado.successfulText().contains("123.456.789-00"));
+    }
+
+    @Test
+    @DisplayName("classificador diz FORA: a pergunta é recusada mesmo sem termo na lista")
+    void classificadorReprovaForaDeEscopo() {
+        var guardrail = new EscopoPorSentidoGuardrail(classificadorQueResponde(Veredito.FORA));
+        UserMessage p = pergunta("Me ensina a fazer um bolo de cenoura?");
+
+        // A regra de código deixa passar: nenhum termo da lista aparece na pergunta.
+        assertTrue(escopo.validate(p).isSuccess());
+        // O classificador entende o assunto e recusa.
+        assertEquals(Result.FAILURE, guardrail.validate(p).result());
+    }
+
+    @Test
+    @DisplayName("classificador diz DENTRO: a pergunta segue para o modelo")
+    void classificadorAprovaPerguntaDeRh() {
+        var guardrail = new EscopoPorSentidoGuardrail(classificadorQueResponde(Veredito.DENTRO));
+
+        assertTrue(guardrail.validate(pergunta("Como peço meu adiantamento de férias?")).isSuccess());
     }
 }

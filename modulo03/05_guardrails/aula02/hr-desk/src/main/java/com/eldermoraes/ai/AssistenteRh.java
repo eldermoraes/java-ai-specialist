@@ -2,6 +2,7 @@ package com.eldermoraes.ai;
 
 import com.eldermoraes.guardrails.DadoSensivelGuardrail;
 import com.eldermoraes.guardrails.EscopoGuardrail;
+import com.eldermoraes.guardrails.EscopoPorSentidoGuardrail;
 import com.eldermoraes.guardrails.TamanhoGuardrail;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.guardrail.InputGuardrails;
@@ -25,7 +26,8 @@ public interface AssistenteRh {
     @InputGuardrails({
             TamanhoGuardrail.class,
             EscopoGuardrail.class,
-            DadoSensivelGuardrail.class
+            DadoSensivelGuardrail.class,
+            EscopoPorSentidoGuardrail.class
     })
     String responder(String pergunta);
 }
