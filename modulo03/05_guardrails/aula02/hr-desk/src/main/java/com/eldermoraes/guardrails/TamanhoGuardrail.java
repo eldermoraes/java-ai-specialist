@@ -30,18 +30,18 @@ public class TamanhoGuardrail implements InputGuardrail {
         String texto = mensagemDoUsuario.singleText();
 
         if (texto == null || texto.isBlank()) {
-            LOG.warn("Tamanho: FATAL — pergunta vazia, a fila de guardrails para aqui");
+            LOG.warn("Tamanho: FATAL, pergunta vazia. A fila de guardrails para aqui");
             return fatal("Pergunta vazia.");
         }
 
         if (texto.length() > MAXIMO_DE_CARACTERES) {
-            LOG.warnf("Tamanho: FAILURE — %d caracteres, acima do limite de %d",
+            LOG.warnf("Tamanho: FAILURE, %d caracteres, acima do limite de %d",
                     texto.length(), MAXIMO_DE_CARACTERES);
             return failure("Pergunta longa demais: " + texto.length()
                     + " caracteres, o limite é " + MAXIMO_DE_CARACTERES + ".");
         }
 
-        LOG.infof("Tamanho: OK — %d caracteres", texto.length());
+        LOG.infof("Tamanho: OK, %d caracteres", texto.length());
         return success();
     }
 }

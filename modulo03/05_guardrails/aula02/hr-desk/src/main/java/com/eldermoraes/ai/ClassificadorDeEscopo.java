@@ -10,13 +10,13 @@ import io.quarkiverse.langchain4j.RegisterAiService;
  * Três escolhas explicam por que um modelo cabe aqui dentro de um guardrail:
  *
  * - a tarefa é estreita: ele não responde nada, só decide se a pergunta é de RH;
- * - o veredito é um enum, não texto livre — o código consegue ler a resposta sem
+ * - o veredito é um enum, não texto livre: o código consegue ler a resposta sem
  *   interpretar frase;
  * - roda no modelo "smaller", configurado em application.properties, e não no modelo
  *   grande que responde ao usuário.
  *
  * Temperatura zero: a mesma pergunta deve receber o mesmo veredito. "Deve" é o mais
- * longe que dá para ir — este é o componente não determinístico do projeto.
+ * longe que dá para ir. Este é o componente não determinístico do projeto.
  */
 @RegisterAiService(modelName = "smaller")
 public interface ClassificadorDeEscopo {

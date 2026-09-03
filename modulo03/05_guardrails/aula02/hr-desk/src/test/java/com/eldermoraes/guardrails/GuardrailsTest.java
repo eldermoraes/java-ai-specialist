@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Os guardrails são classes comuns: dá para testar a decisão de cada um sem subir o Quarkus
- * e sem Ollama rodando. É a vantagem prática de uma validação determinística — o teste é
+ * e sem Ollama rodando. É a vantagem prática de uma validação determinística: o teste é
  * rápido e o resultado é sempre o mesmo.
  */
 class GuardrailsTest {
@@ -29,7 +29,7 @@ class GuardrailsTest {
 
     /**
      * Dublê do classificador: devolve o veredito combinado, sem chamar modelo nenhum.
-     * O guardrail recebe o classificador pelo construtor justamente para permitir isto —
+     * O guardrail recebe o classificador pelo construtor justamente para permitir isto:
      * testar a decisão dele sem depender de uma resposta não determinística.
      */
     private static ClassificadorDeEscopo classificadorQueResponde(Veredito veredito) {

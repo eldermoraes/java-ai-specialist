@@ -14,7 +14,7 @@ import org.jboss.logging.Logger;
  * elas é de negócio, não de framework:
  *
  * - chave de API é bloqueada: esse dado não pode sair em nenhuma hipótese, e a pergunta
- *   não faz sentido sem ele — então a requisição para aqui;
+ *   não faz sentido sem ele, então a requisição para aqui;
  * - CPF é mascarado: o modelo não precisa do número para responder sobre férias ou folha,
  *   então a mensagem segue reescrita, sem o dado.
  *
@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
  * reescrita. Nesta aula ele é o último da fila, mas vale lembrar disso ao mudar a ordem.
  *
  * Os dois casos são detectados por expressão regular, que resolve bem o que tem formato
- * fixo. Dado sensível sem formato — um endereço escrito por extenso, por exemplo — não é
+ * fixo. Dado sensível sem formato (um endereço escrito por extenso, por exemplo) não é
  * alcançado assim.
  */
 @ApplicationScoped
@@ -43,17 +43,17 @@ public class DadoSensivelGuardrail implements InputGuardrail {
         String texto = mensagemDoUsuario.singleText();
 
         if (CHAVE_DE_API.matcher(texto).find()) {
-            LOG.warn("Dado sensível: FAILURE — chave de API na pergunta, requisição bloqueada");
+            LOG.warn("Dado sensível: FAILURE, chave de API na pergunta. Requisição bloqueada");
             return failure("A pergunta contém uma chave de API e não foi enviada ao modelo.");
         }
 
         if (CPF.matcher(texto).find()) {
             String mascarado = CPF.matcher(texto).replaceAll("[CPF]");
-            LOG.info("Dado sensível: SUCCESS_WITH_RESULT — CPF mascarado, a pergunta segue");
+            LOG.info("Dado sensível: SUCCESS_WITH_RESULT, CPF mascarado. A pergunta segue");
             return successWith(mascarado);
         }
 
-        LOG.info("Dado sensível: OK — nenhum dado sensível encontrado");
+        LOG.info("Dado sensível: OK, nada encontrado");
         return success();
     }
 }

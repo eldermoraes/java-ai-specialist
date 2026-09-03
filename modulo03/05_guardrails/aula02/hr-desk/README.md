@@ -9,10 +9,10 @@
 ## O que você vai aprender
 
 Um guardrail de entrada é uma classe Java que roda **antes** da pergunta chegar ao modelo. Ele
-recebe a mensagem do usuário, decide se ela passa, e essa decisão é dele — o modelo não é
+recebe a mensagem do usuário, decide se ela passa, e essa decisão é dele: o modelo não é
 consultado, e nenhum token é gasto até aqui.
 
-Este projeto tem quatro, e a fila roda na ordem em que eles aparecem na anotação — do mais
+Este projeto tem quatro, e a fila roda na ordem em que eles aparecem na anotação, do mais
 barato ao mais caro:
 
 ```
@@ -48,19 +48,19 @@ bolo de cenoura?"* não tem nenhum termo listado e passa direto por ele. O class
 pergunta e recusa.
 
 Essa diferença tem preço, e o preço é o assunto: o quarto guardrail gasta token, soma a latência
-de uma chamada a mais e **erra** — pode barrar quem tinha o direito de perguntar. Os três
+de uma chamada a mais e **erra**: pode barrar quem tinha o direito de perguntar. Os três
 primeiros nunca fazem isso. Por isso ele vem por último: o que a regra de código já resolveu não
-chega até ele. E repare que a pergunta chega ao classificador **já mascarada** — o CPF não vai
+chega até ele. E repare que a pergunta chega ao classificador **já mascarada**: o CPF não vai
 nem para o modelo pequeno.
 
 Repare em duas coisas no desenho.
 
 **A ordem não é decoração.** O primeiro da fila é o mais barato: contar caracteres. O último é o
 mais caro: uma chamada a um modelo. Se a pergunta vai ser recusada de qualquer jeito, é melhor
-que seja recusada logo — e de graça.
+que seja recusada logo, e de graça.
 
 **Reprovar tem dois graus.** `FAILURE` reprova e deixa os guardrails seguintes rodarem, para que
-todos os motivos cheguem juntos à aplicação. `FATAL` interrompe a fila na hora — é o caso da
+todos os motivos cheguem juntos à aplicação. `FATAL` interrompe a fila na hora: é o caso da
 pergunta vazia, em que continuar avaliando não tem utilidade.
 
 E há um terceiro caminho, que não é passar nem reprovar: **mascarar**. O CPF é apagado da
@@ -115,7 +115,7 @@ dá para acompanhar a fila rodando:
 - Na **3**, tamanho passa, escopo reprova. De novo, nenhum request ao modelo.
 - Na **4**, o dado sensível mascara, e no request ao modelo o CPF aparece como `[CPF]`.
 - Na **5**, os três primeiros dizem OK e o classificador reprova. Aqui existe um request ao
-  modelo pequeno — o token do guardrail — mas nenhum ao modelo grande.
+  modelo pequeno (o token do guardrail), mas nenhum ao modelo grande.
 
 Compare o log dos guardrails com o log de requests: é a demonstração mais direta de que o
 guardrail de entrada corta o custo antes dele existir.
@@ -124,16 +124,16 @@ A diferença entre `FAILURE` e `FATAL` fica visível aqui. Na requisição **3**
 mesmo assim o guardrail seguinte roda:
 
 ```
-Tamanho: OK — 37 caracteres
-Escopo: FAILURE — termo fora de escopo encontrado: 'eleição'
-Dado sensível: OK — nenhum dado sensível encontrado
+Tamanho: OK, 37 caracteres
+Escopo: FAILURE, termo fora de escopo: 'eleição'
+Dado sensível: OK, nada encontrado
 Requisição recusada na entrada: ... Esta pergunta está fora do escopo do assistente de RH.
 ```
 
 Já com a pergunta em branco, a fila para no primeiro e os outros dois nem são chamados:
 
 ```
-Tamanho: FATAL — pergunta vazia, a fila de guardrails para aqui
+Tamanho: FATAL, pergunta vazia. A fila de guardrails para aqui
 Requisição recusada na entrada: ... Pergunta vazia.
 ```
 
@@ -166,13 +166,13 @@ Os guardrails ① a ③ são o extremo determinístico: **regra de código, sem 
 Mesma pergunta, mesma decisão, sempre. É por causa disso que os testes deles rodam sem Ollama.
 
 O guardrail ④ é o outro extremo: quem decide é um modelo. Ele alcança o que a regra de código
-não alcança, e paga por isso em token, em latência e em confiabilidade — o classificador erra.
+não alcança, e paga por isso em token, em latência e em confiabilidade: o classificador erra.
 Note que nem o teste dele escapa disso: `GuardrailsTest` testa esse guardrail com um dublê do
 classificador, porque testar contra o modelo de verdade daria um teste que às vezes passa e às
 vezes não.
 
-A conclusão prática não é escolher um dos dois. É empilhar: o determinístico na frente, porque é
-barato e não erra; o modelo atrás, para o que sobrou.
+Na prática os dois se empilham: o determinístico na frente, porque é barato e não erra; o modelo
+atrás, para o que sobrou.
 
 ## Custo × risco
 
@@ -185,7 +185,7 @@ barato e não erra; o modelo atrás, para o que sobrou.
 
 Os três primeiros somados custam menos que uma única chamada ao modelo, e as três decisões
 acontecem antes dela. O quarto já é outra conversa: ele custa uma chamada, e essa chamada
-acontece em toda pergunta que chegou até ele — inclusive nas que iam ser respondidas normalmente.
+acontece em toda pergunta que chegou até ele, inclusive nas que iam ser respondidas normalmente.
 
 Guardrail é decisão de negócio, caso a caso. Nenhum dos quatro acima é obrigatório. Bloquear ou
 mascarar CPF depende do que a sua empresa considera aceitável mandar para um provedor externo. E
@@ -204,5 +204,5 @@ e às vezes recusa quem não devia.
 - **Modelos**: o assistente responde no modelo grande; o classificador do guardrail ④ usa o
   modelo `smaller`, selecionado com `@RegisterAiService(modelName = "smaller")`.
 - **Testes**: `GuardrailsTest` cobre as decisões dos quatro guardrails sem subir o Quarkus e sem
-  Ollama — o classificador entra como dublê, injetado pelo construtor do guardrail;
+  Ollama: o classificador entra como dublê, injetado pelo construtor do guardrail;
   `AssistenteRhTest` sobe o Quarkus só para provar que a fila está montada no AI Service.
