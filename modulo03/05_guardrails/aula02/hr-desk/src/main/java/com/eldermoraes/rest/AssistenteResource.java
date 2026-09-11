@@ -31,6 +31,7 @@ public class AssistenteResource {
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
     public String perguntar(String pergunta) {
+
         return assistente.responder(pergunta);
     }
 
