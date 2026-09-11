@@ -13,7 +13,7 @@ import io.quarkiverse.langchain4j.RegisterAiService;
  *
  * O que interessa nesta aula é a anotação abaixo. Ela declara os guardrails de entrada
  * que rodam ANTES desta chamada chegar ao modelo. A ordem da lista é a ordem de execução:
- * primeiro o mais barato (tamanho), por último o mais caro (varredura por padrão).
+ * primeiro o mais barato (tamanho), por último o mais caro (chamada ao classificador).
  */
 @RegisterAiService
 public interface AssistenteRh {

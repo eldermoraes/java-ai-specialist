@@ -2,15 +2,15 @@
 
 > - **Padrão**: quatro guardrails de entrada encadeados na frente de um AI Service, do mais determinístico ao menos
 > - **Case**: pergunta para o assistente de RH entra → tamanho → escopo → dado sensível → classificador → só então o modelo
-> - **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j · Ollama (`deepseek-v4-pro:cloud` + `gpt-oss:20b-cloud`)
+> - **Stack**: Quarkus 3.35.2 · Java 25 · LangChain4j · Ollama (`deepseek-v4-pro:cloud` + `gemma4:31b-cloud`)
 
 ---
 
 ## O que você vai aprender
 
 Um guardrail de entrada é uma classe Java que roda **antes** da pergunta chegar ao modelo. Ele
-recebe a mensagem do usuário, decide se ela passa, e essa decisão é dele: o modelo não é
-consultado, e nenhum token é gasto até aqui.
+recebe a mensagem do usuário e decide se ela passa. Os guardrails determinísticos fazem isso
+sem consultar um modelo; o guardrail por sentido consulta o classificador antes do assistente.
 
 Este projeto tem quatro, e a fila roda na ordem em que eles aparecem na anotação, do mais
 barato ao mais caro:
@@ -21,21 +21,21 @@ barato ao mais caro:
       ▼
  ┌──────────────────────────────┐
  │ ① TamanhoGuardrail           │  vazia → FATAL (a fila para aqui)
- │    conta caracteres          │  longa demais → FAILURE
+ │    conta caracteres          │  longa demais → FATAL
  └──────────────┬───────────────┘
                 ▼
  ┌──────────────────────────────┐
- │ ② EscopoGuardrail            │  assunto que não é de RH → FAILURE
+ │ ② EscopoGuardrail            │  assunto que não é de RH → FATAL
  │    lista de temas            │
  └──────────────┬───────────────┘
                 ▼
  ┌──────────────────────────────┐
- │ ③ DadoSensivelGuardrail      │  chave de API → FAILURE (bloqueia)
+ │ ③ DadoSensivelGuardrail      │  chave de API → FATAL (bloqueia)
  │    expressão regular         │  CPF → SUCCESS_WITH_RESULT (mascara e segue)
  └──────────────┬───────────────┘
                 ▼
  ┌──────────────────────────────┐
- │ ④ EscopoPorSentidoGuardrail  │  classificador diz FORA → FAILURE
+ │ ④ EscopoPorSentidoGuardrail  │  classificador diz FORA → FATAL
  │    pergunta a um modelo      │  ← o único não determinístico da fila
  └──────────────┬───────────────┘
                 ▼
@@ -59,9 +59,13 @@ Repare em duas coisas no desenho.
 mais caro: uma chamada a um modelo. Se a pergunta vai ser recusada de qualquer jeito, é melhor
 que seja recusada logo, e de graça.
 
-**Reprovar tem dois graus.** `FAILURE` reprova e deixa os guardrails seguintes rodarem, para que
-todos os motivos cheguem juntos à aplicação. `FATAL` interrompe a fila na hora: é o caso da
-pergunta vazia, em que continuar avaliando não tem utilidade.
+**Toda reprovação interrompe a fila.** Neste projeto, todos os guardrails usam `fatal()`
+quando recusam uma pergunta. Assim, uma rejeição determinística impede a chamada ao
+classificador e ao modelo principal. A aplicação recebe o motivo da primeira rejeição.
+
+O framework também oferece `failure()`, que continua a fila para acumular motivos de
+rejeição. Não usamos essa opção aqui, porque continuar até o classificador gastaria uma
+chamada ao modelo numa pergunta já recusada.
 
 E há um terceiro caminho, que não é passar nem reprovar: **mascarar**. O CPF é apagado da
 mensagem e a pergunta segue reescrita. O modelo não precisa do número para responder sobre
@@ -120,22 +124,16 @@ dá para acompanhar a fila rodando:
 Compare o log dos guardrails com o log de requests: é a demonstração mais direta de que o
 guardrail de entrada corta o custo antes dele existir.
 
-A diferença entre `FAILURE` e `FATAL` fica visível aqui. Na requisição **3**, o escopo reprova e
-mesmo assim os guardrails seguintes rodam (filtrando o log pelas linhas dos guardrails):
+Na requisição **2**, somente o guardrail de tamanho roda. Na **3**, o tamanho passa e o
+escopo interrompe a fila; os guardrails de dado sensível e de classificação nem são chamados:
 
 ```
 Tamanho: OK, 37 caracteres
-Escopo: FAILURE, termo fora de escopo: 'eleição'
-Dado sensível: OK, nada encontrado
-Escopo por sentido: FAILURE, o classificador considerou a pergunta fora de RH
-Requisição recusada na entrada: ... EscopoGuardrail ... está fora do escopo ...,
-                                ... EscopoPorSentidoGuardrail ... está fora do escopo ...
+Escopo: FATAL, termo fora de escopo: 'eleição'
+Requisição recusada na entrada: ... EscopoGuardrail ... está fora do escopo ...
 ```
 
-Duas coisas para reparar. Os dois motivos chegam juntos à aplicação, que é justamente o que o
-`FAILURE` promete. E o classificador rodou mesmo depois do guardrail determinístico já ter
-reprovado: uma chamada ao modelo pequeno foi gasta numa pergunta que já estava recusada. Esse é
-o preço de a fila continuar, e é uma decisão que vale rever caso a caso.
+Não há chamada ao Gemma nem ao modelo principal nesses dois casos.
 
 Já com a pergunta em branco, a fila para no primeiro e os outros três nem são chamados:
 
@@ -144,7 +142,8 @@ Tamanho: FATAL, pergunta vazia. A fila de guardrails para aqui
 Requisição recusada na entrada: ... Pergunta vazia.
 ```
 
-O `FATAL` existe para isso: quando não há o que avaliar, pagar pelo resto da fila é desperdício.
+Usamos `FATAL` em toda rejeição: quando a pergunta já foi recusada, pagar pelo resto da fila
+é desperdício.
 
 > No nome da classe dentro da mensagem de erro aparece um sufixo `_ClientProxy`. É o proxy que o
 > CDI cria para o bean; o guardrail é a sua classe mesmo.
@@ -155,14 +154,14 @@ O `FATAL` existe para isso: quando não há o que avaliar, pagar pelo resto da f
 src/main/java/com/eldermoraes/
   ai/AssistenteRh.java              # o AI Service e a anotação que declara a fila
   ai/ClassificadorDeEscopo.java     # o modelo pequeno que o guardrail ④ consulta
-  guardrails/TamanhoGuardrail.java  # ① vazia (fatal) e longa demais (failure)
+  guardrails/TamanhoGuardrail.java  # ① vazia (fatal) e longa demais (fatal)
   guardrails/EscopoGuardrail.java   # ② lista de temas fora de RH
   guardrails/DadoSensivelGuardrail.java     # ③ chave de API bloqueia, CPF mascara
   guardrails/EscopoPorSentidoGuardrail.java # ④ pergunta ao classificador
   rest/AssistenteResource.java      # endpoint + a mensagem de recusa que o usuário lê
 ```
 
-Quando um guardrail reprova, o framework lança uma exceção e a chamada não acontece. Quem
+Quando um guardrail reprova, o framework lança uma exceção e a chamada ao modelo principal não acontece. Quem
 transforma isso na frase que o usuário lê é a aplicação, no `AssistenteResource`: o framework
 decide se passa, você decide o que a pessoa vê.
 

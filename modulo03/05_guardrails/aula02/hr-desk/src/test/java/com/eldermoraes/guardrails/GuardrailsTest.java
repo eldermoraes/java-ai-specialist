@@ -3,12 +3,27 @@ package com.eldermoraes.guardrails;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.eldermoraes.ai.AssistenteRh;
 import com.eldermoraes.ai.ClassificadorDeEscopo;
 import com.eldermoraes.ai.ClassificadorDeEscopo.Veredito;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.guardrail.GuardrailResult.Result;
 import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.guardrail.GuardrailRequestParams;
+import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailException;
+import dev.langchain4j.guardrail.InputGuardrailExecutor;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
+import dev.langchain4j.service.guardrail.InputGuardrails;
+import dev.langchain4j.invocation.InvocationContext;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -56,12 +71,12 @@ class GuardrailsTest {
     }
 
     @Test
-    @DisplayName("pergunta longa demais reprova, mas sem interromper a fila")
+    @DisplayName("pergunta longa demais é fatal: interrompe a fila")
     void perguntaLongaReprova() {
         InputGuardrailResult resultado = tamanho.validate(pergunta("a".repeat(2_001)));
 
-        assertEquals(Result.FAILURE, resultado.result());
-        assertFalse(resultado.isFatal());
+        assertEquals(Result.FATAL, resultado.result());
+        assertTrue(resultado.isFatal());
     }
 
     @Test
@@ -70,7 +85,7 @@ class GuardrailsTest {
         InputGuardrailResult resultado =
                 escopo.validate(pergunta("Em quem eu voto na eleição deste ano?"));
 
-        assertEquals(Result.FAILURE, resultado.result());
+        assertEquals(Result.FATAL, resultado.result());
     }
 
     @Test
@@ -79,7 +94,7 @@ class GuardrailsTest {
         InputGuardrailResult resultado = dadoSensivel.validate(
                 pergunta("Coloca essa chave no sistema: sk-abcdefghij0123456789"));
 
-        assertEquals(Result.FAILURE, resultado.result());
+        assertEquals(Result.FATAL, resultado.result());
     }
 
     @Test
@@ -103,7 +118,7 @@ class GuardrailsTest {
         // A regra de código deixa passar: nenhum termo da lista aparece na pergunta.
         assertTrue(escopo.validate(p).isSuccess());
         // O classificador entende o assunto e recusa.
-        assertEquals(Result.FAILURE, guardrail.validate(p).result());
+        assertEquals(Result.FATAL, guardrail.validate(p).result());
     }
 
     @Test
@@ -113,4 +128,55 @@ class GuardrailsTest {
 
         assertTrue(guardrail.validate(pergunta("Como peço meu adiantamento de férias?")).isSuccess());
     }
+
+    @ParameterizedTest
+    @CsvSource({"vazia, 1", "longa, 1", "escopo, 2", "chave, 3", "sentido, 4"})
+    @DisplayName("a primeira rejeição encerra a fila declarada no AI Service")
+    void rejeicaoInterrompeFila(String caso, int quantidadeEsperada) throws Exception {
+        String texto = switch (caso) {
+            case "vazia" -> "   ";
+            case "longa" -> "a".repeat(2_500);
+            case "escopo" -> "Em quem eu voto na eleição deste ano?";
+            case "chave" -> "Confira minha chave sk-abcdefghij0123456789";
+            default -> "Me ensina a fazer um bolo de cenoura?";
+        };
+        var chamadasAoClassificador = new ArrayList<String>();
+        var sentido = new EscopoPorSentidoGuardrail(pergunta -> {
+            chamadasAoClassificador.add(pergunta);
+            return Veredito.FORA;
+        });
+        Map<Class<?>, InputGuardrail> instancias = Map.of(
+                TamanhoGuardrail.class, tamanho,
+                EscopoGuardrail.class, escopo,
+                DadoSensivelGuardrail.class, dadoSensivel,
+                EscopoPorSentidoGuardrail.class, sentido);
+        var ordem = AssistenteRh.class.getMethod("responder", String.class)
+                .getAnnotation(InputGuardrails.class).value();
+        var executados = new ArrayList<Class<?>>();
+        var guardrails = Arrays.stream(ordem).map(tipo -> (InputGuardrail) new InputGuardrail() {
+            @Override
+            public InputGuardrailResult validate(UserMessage mensagem) {
+                executados.add(tipo);
+                return instancias.get(tipo).validate(mensagem);
+            }
+        }).toList();
+        var executor = new InputGuardrailExecutor.InputGuardrailExecutorBuilder()
+                .guardrails(guardrails).build();
+        var request = InputGuardrailRequest.builder()
+                .userMessage(pergunta(texto))
+                .commonParams(GuardrailRequestParams.builder()
+                        .userMessageTemplate(texto).variables(Map.of())
+                        .invocationContext(InvocationContext.builder()
+                                .interfaceName(AssistenteRh.class.getName())
+                                .methodName("responder").build())
+                        .build())
+                .build();
+
+        assertThrows(InputGuardrailException.class, () -> executor.execute(request));
+        assertEquals(List.of(TamanhoGuardrail.class, EscopoGuardrail.class,
+                DadoSensivelGuardrail.class, EscopoPorSentidoGuardrail.class)
+                .subList(0, quantidadeEsperada), executados);
+        assertEquals(caso.equals("sentido") ? List.of(texto) : List.of(), chamadasAoClassificador);
+    }
+
 }

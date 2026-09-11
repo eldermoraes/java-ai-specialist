@@ -46,8 +46,8 @@ public class EscopoPorSentidoGuardrail implements InputGuardrail {
         Veredito veredito = classificador.classificar(texto);
 
         if (veredito == Veredito.FORA) {
-            LOG.warn("Escopo por sentido: FAILURE, o classificador considerou a pergunta fora de RH");
-            return failure("Esta pergunta está fora do escopo do assistente de RH.");
+            LOG.warn("Escopo por sentido: FATAL, o classificador considerou a pergunta fora de RH");
+            return fatal("Esta pergunta está fora do escopo do assistente de RH.");
         }
 
         LOG.info("Escopo por sentido: OK, o classificador considerou a pergunta dentro de RH");

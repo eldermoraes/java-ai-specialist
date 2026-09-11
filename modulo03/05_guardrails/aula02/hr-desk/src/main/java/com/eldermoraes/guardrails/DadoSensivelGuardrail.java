@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  *   então a mensagem segue reescrita, sem o dado.
  *
  * Quando um guardrail reescreve a mensagem, quem roda depois dele já recebe a versão
- * reescrita. Nesta aula ele é o último da fila, mas vale lembrar disso ao mudar a ordem.
+ * reescrita. O classificador de escopo recebe, portanto, o CPF já mascarado.
  *
  * Os dois casos são detectados por expressão regular, que resolve bem o que tem formato
  * fixo. Dado sensível sem formato (um endereço escrito por extenso, por exemplo) não é
@@ -43,8 +43,8 @@ public class DadoSensivelGuardrail implements InputGuardrail {
         String texto = mensagemDoUsuario.singleText();
 
         if (CHAVE_DE_API.matcher(texto).find()) {
-            LOG.warn("Dado sensível: FAILURE, chave de API na pergunta. Requisição bloqueada");
-            return failure("A pergunta contém uma chave de API e não foi enviada ao modelo.");
+            LOG.warn("Dado sensível: FATAL, chave de API na pergunta. Requisição bloqueada");
+            return fatal("A pergunta contém uma chave de API e não foi enviada ao modelo.");
         }
 
         if (CPF.matcher(texto).find()) {

@@ -38,7 +38,7 @@ public class AssistenteResource {
      * Quando um guardrail de entrada reprova, o framework interrompe a chamada e lança esta
      * exceção. Ou seja: o framework decide se passa, a aplicação decide o que o usuário lê.
      *
-     * A mensagem da exceção traz o motivo de cada guardrail que reprovou. Útil no log, mas
+     * A mensagem da exceção traz o motivo do primeiro guardrail que reprovou. Útil no log, mas
      * detalhe interno. Para o usuário vai uma recusa curta, com 400.
      */
     @ServerExceptionMapper

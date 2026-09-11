@@ -36,8 +36,8 @@ public class EscopoGuardrail implements InputGuardrail {
 
         for (String tema : TEMAS_FORA_DE_ESCOPO) {
             if (texto.contains(tema)) {
-                LOG.warnf("Escopo: FAILURE, termo fora de escopo: '%s'", tema);
-                return failure("Esta pergunta está fora do escopo do assistente de RH.");
+                LOG.warnf("Escopo: FATAL, termo fora de escopo: '%s'", tema);
+                return fatal("Esta pergunta está fora do escopo do assistente de RH.");
             }
         }
 

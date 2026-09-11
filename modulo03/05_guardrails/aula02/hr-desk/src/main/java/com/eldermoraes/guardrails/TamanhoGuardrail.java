@@ -9,13 +9,8 @@ import org.jboss.logging.Logger;
 /**
  * Primeiro guardrail da fila: o mais barato de todos, uma contagem de caracteres.
  *
- * Repare que ele usa os dois tipos de reprovação, e a diferença entre elas é o assunto
- * da aula:
- *
- * - mensagem vazia devolve fatal: não há o que avaliar, então a fila para aqui e os
- *   guardrails seguintes nem chegam a rodar;
- * - mensagem longa demais devolve failure: reprova e registra o motivo, mas deixa os
- *   seguintes rodarem, para que todas as reprovações cheguem juntas à aplicação.
+ * Mensagens vazias ou longas demais devolvem fatal: a fila para aqui, sem chamar
+ * os guardrails seguintes nem gastar uma chamada ao classificador.
  */
 @ApplicationScoped
 public class TamanhoGuardrail implements InputGuardrail {
@@ -35,9 +30,9 @@ public class TamanhoGuardrail implements InputGuardrail {
         }
 
         if (texto.length() > MAXIMO_DE_CARACTERES) {
-            LOG.warnf("Tamanho: FAILURE, %d caracteres, acima do limite de %d",
+            LOG.warnf("Tamanho: FATAL, %d caracteres, acima do limite de %d",
                     texto.length(), MAXIMO_DE_CARACTERES);
-            return failure("Pergunta longa demais: " + texto.length()
+            return fatal("Pergunta longa demais: " + texto.length()
                     + " caracteres, o limite é " + MAXIMO_DE_CARACTERES + ".");
         }
 
