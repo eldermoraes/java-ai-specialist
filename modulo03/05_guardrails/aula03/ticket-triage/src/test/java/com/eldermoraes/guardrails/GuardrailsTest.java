@@ -62,8 +62,8 @@ class GuardrailsTest {
     }
 
     @Test
-    @DisplayName("JSON dentro de cerca de código segue reescrito, sem a cerca")
-    void cercaDeCodigoEhRemovida() {
+    @DisplayName("JSON dentro de bloco de código segue reescrito, sem o bloco")
+    void blocoDeCodigoEhRemovido() {
         OutputGuardrailResult resultado = formato.validate(
                 resposta("```json\n" + TRIAGEM_VALIDA + "\n```"));
 

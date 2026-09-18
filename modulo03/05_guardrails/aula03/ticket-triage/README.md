@@ -26,7 +26,7 @@ Este projeto tem três guardrails, e a fila roda na ordem em que eles aparecem n
  │ ① FormatoGuardrail           │  vazia → RETRY (refaz a mesma chamada)
  │    desserializa a resposta   │  não é JSON → REPROMPT (refaz com o motivo)
  │                              │  campo ausente → REPROMPT
- │                              │  dentro de cerca de código → reescreve
+ │                              │  dentro de bloco de código → reescreve
  └──────────────┬───────────────┘
                 ▼
  ┌──────────────────────────────┐
@@ -44,7 +44,7 @@ Este projeto tem três guardrails, e a fila roda na ordem em que eles aparecem n
 
 O formato vem primeiro porque os outros dois precisam da resposta já lida: não dá para
 validar o campo `prioridade` antes de saber que existe um campo `prioridade`. E um guardrail
-que reescreve muda o que o próximo enxerga: o segundo recebe o JSON já sem a cerca de código,
+que reescreve muda o que o próximo enxerga: o segundo recebe o JSON já sem o bloco de código,
 o terceiro recebe a prioridade já normalizada.
 
 São quatro reações possíveis a uma reprovação, e a diferença entre elas é o que você precisa
@@ -152,12 +152,12 @@ HTTP request:
   } ],
 ```
 
-A segunda resposta vem em JSON, dentro de uma cerca de código e com a prioridade em
+A segunda resposta vem em JSON, dentro de um bloco de código e com a prioridade em
 maiúscula. Nenhuma das duas coisas precisa de uma terceira chamada: o código resolve as duas
 e a fila termina aprovando.
 
 ```
-Formato: SUCCESS_WITH_RESULT, JSON extraído da cerca de código
+Formato: SUCCESS_WITH_RESULT, JSON extraído do bloco de código
 Regra: SUCCESS_WITH_RESULT, prioridade normalizada de 'Alta' para 'alta'
 Dado sensível: SUCCESS_WITH_RESULT, nada encontrado. A resposta segue inteira
 ```
@@ -169,7 +169,7 @@ Na requisição **3**, o CPF que veio no chamado volta dentro do resumo. O terce
 apaga o número e a resposta segue, sem nova chamada:
 
 ```
-Formato: SUCCESS_WITH_RESULT, JSON extraído da cerca de código
+Formato: SUCCESS_WITH_RESULT, JSON extraído do bloco de código
 Regra: OK, prioridade dentro do conjunto
 Dado sensível: SUCCESS_WITH_RESULT, CPF mascarado. A resposta segue
 ```
@@ -206,7 +206,7 @@ src/main/java/com/eldermoraes/
 O AI Service tem dois métodos com a mesma fila e system messages diferentes: `triar` pede o
 formato, `triarSemFormato` não pede. É a diferença entre a requisição 1 e a 2, e ela mostra
 uma coisa que vale anotar: pedir o formato no prompt reduz o erro de formato, e não elimina.
-Na requisição 3 o modelo devolveu o JSON dentro de uma cerca de código mesmo tendo recebido a
+Na requisição 3 o modelo devolveu o JSON dentro de um bloco de código mesmo tendo recebido a
 instrução de responder só com o JSON.
 
 O endpoint recebe e devolve `String` em `text/plain`. O `record Triagem` não é o corpo da

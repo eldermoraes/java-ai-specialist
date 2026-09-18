@@ -23,7 +23,7 @@ import org.jboss.logging.Logger;
  * - campo obrigatório ausente também devolve reprompt, nomeando o campo que faltou.
  *
  * Há ainda uma quarta saída, que não é aprovar nem reprovar: quando o modelo embrulha o
- * JSON numa cerca de código, o guardrail extrai o JSON e devolve a resposta reescrita.
+ * JSON num bloco de código, o guardrail extrai o JSON e devolve a resposta reescrita.
  * Quem roda depois já recebe a versão limpa.
  */
 @ApplicationScoped
@@ -36,8 +36,8 @@ public class FormatoGuardrail implements OutputGuardrail {
             "Responda apenas com um JSON com os campos categoria, prioridade e resumo, "
                     + "sem texto fora do JSON.";
 
-    /** Cerca de código em volta do JSON, com ou sem a marca da linguagem. */
-    private static final Pattern CERCA_DE_CODIGO = Pattern.compile("(?s)```(?:json)?\\s*(.*?)```");
+    /** Bloco de código em volta do JSON, com ou sem a marca da linguagem. */
+    private static final Pattern BLOCO_DE_CODIGO = Pattern.compile("(?s)```(?:json)?\\s*(.*?)```");
 
     @Override
     public OutputGuardrailResult validate(AiMessage resposta) {
@@ -48,7 +48,7 @@ public class FormatoGuardrail implements OutputGuardrail {
             return retry("Resposta vazia.");
         }
 
-        String json = semCercaDeCodigo(texto);
+        String json = semBlocoDeCodigo(texto);
 
         Triagem triagem;
         try {
@@ -65,7 +65,7 @@ public class FormatoGuardrail implements OutputGuardrail {
         }
 
         if (!json.equals(texto)) {
-            LOG.info("Formato: SUCCESS_WITH_RESULT, JSON extraído da cerca de código");
+            LOG.info("Formato: SUCCESS_WITH_RESULT, JSON extraído do bloco de código");
             return successWith(json);
         }
 
@@ -73,10 +73,10 @@ public class FormatoGuardrail implements OutputGuardrail {
         return success();
     }
 
-    /** Devolve só o JSON quando ele vem dentro de uma cerca de código, ou o texto original. */
-    private static String semCercaDeCodigo(String texto) {
-        var cerca = CERCA_DE_CODIGO.matcher(texto);
-        return cerca.find() ? cerca.group(1).trim() : texto;
+    /** Devolve só o JSON quando ele vem dentro de um bloco de código, ou o texto original. */
+    private static String semBlocoDeCodigo(String texto) {
+        var bloco = BLOCO_DE_CODIGO.matcher(texto);
+        return bloco.find() ? bloco.group(1).trim() : texto;
     }
 
     /** Nome do primeiro campo obrigatório que veio nulo ou em branco, ou null se todos vieram. */
