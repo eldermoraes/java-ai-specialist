@@ -26,16 +26,16 @@ import org.jboss.logging.Logger;
  * classificador barra e você confirma como ataque vira padrão novo aqui, sem recompilar.
  */
 @ApplicationScoped
-public class FiltroPorPadraoGuardrail implements InputGuardrail {
+public class FiltroPorPadroesConhecidosGuardrail implements InputGuardrail {
 
-    private static final Logger LOG = Logger.getLogger(FiltroPorPadraoGuardrail.class);
+    private static final Logger LOG = Logger.getLogger(FiltroPorPadroesConhecidosGuardrail.class);
 
     private final List<String> padroes;
 
     @Inject
-    public FiltroPorPadraoGuardrail(
+    public FiltroPorPadroesConhecidosGuardrail(
             @ConfigProperty(name = "support-inbox.filtro.padroes") List<String> padroes) {
-        this.padroes = padroes.stream().map(FiltroPorPadraoGuardrail::normalizar).toList();
+        this.padroes = padroes.stream().map(FiltroPorPadroesConhecidosGuardrail::normalizar).toList();
     }
 
     @Override

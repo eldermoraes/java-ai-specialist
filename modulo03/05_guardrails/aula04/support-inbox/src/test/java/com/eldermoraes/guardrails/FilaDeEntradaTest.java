@@ -53,7 +53,7 @@ class FilaDeEntradaTest {
             return ATAQUES.contains(t) ? Veredito.INJECTION : Veredito.NORMAL;
         });
         Map<Class<?>, InputGuardrail> instancias = Map.of(
-                FiltroPorPadraoGuardrail.class, new FiltroPorPadraoGuardrail(PADROES),
+                FiltroPorPadroesConhecidosGuardrail.class, new FiltroPorPadroesConhecidosGuardrail(PADROES),
                 ClassificadorDeInjectionGuardrail.class, classificador);
 
         var declarada = AssistenteDeSuporte.class.getMethod(metodo, String.class)
@@ -81,7 +81,7 @@ class FilaDeEntradaTest {
     @Test
     @DisplayName("as duas portas declaram a mesma fila, filtro antes do classificador")
     void mesmaFilaNasDuasPortas() throws Exception {
-        var esperada = List.of(FiltroPorPadraoGuardrail.class, ClassificadorDeInjectionGuardrail.class);
+        var esperada = List.of(FiltroPorPadroesConhecidosGuardrail.class, ClassificadorDeInjectionGuardrail.class);
         for (String metodo : List.of("responder", "resumirEmail")) {
             var declarada = AssistenteDeSuporte.class.getMethod(metodo, String.class)
                     .getAnnotation(InputGuardrails.class).value();

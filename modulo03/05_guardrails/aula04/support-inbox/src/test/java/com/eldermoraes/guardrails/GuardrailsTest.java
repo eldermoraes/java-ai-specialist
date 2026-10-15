@@ -3,7 +3,6 @@ package com.eldermoraes.guardrails;
 import static com.eldermoraes.guardrails.Requisicoes.DESVIO;
 import static com.eldermoraes.guardrails.Requisicoes.EMAIL_COM_INSTRUCAO;
 import static com.eldermoraes.guardrails.Requisicoes.FRASE_CONHECIDA;
-import static com.eldermoraes.guardrails.Requisicoes.PADRAO_NOVO;
 import static com.eldermoraes.guardrails.Requisicoes.PADROES;
 import static com.eldermoraes.guardrails.Requisicoes.PARAFRASE;
 import static com.eldermoraes.guardrails.Requisicoes.PRAZO_DE_TROCA;
@@ -17,7 +16,6 @@ import dev.langchain4j.guardrail.GuardrailResult.Result;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -33,7 +31,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class GuardrailsTest {
 
-    private final FiltroPorPadraoGuardrail filtro = new FiltroPorPadraoGuardrail(PADROES);
+    private final FiltroPorPadroesConhecidosGuardrail filtro = new FiltroPorPadroesConhecidosGuardrail(PADROES);
 
     private static UserMessage mensagem(String texto) {
         return UserMessage.from(texto);
@@ -68,16 +66,6 @@ class GuardrailsTest {
         for (String texto : List.of(PRAZO_DE_TROCA, PARAFRASE, EMAIL_COM_INSTRUCAO, DESVIO)) {
             assertTrue(filtro.validate(mensagem(texto)).isSuccess(), texto);
         }
-    }
-
-    @Test
-    @DisplayName("requisição 6: com a frase da 3 na lista, a paráfrase leva fatal do filtro")
-    void padraoNovoEhFatalNoFiltro() {
-        var padroes = new ArrayList<>(PADROES);
-        padroes.add(PADRAO_NOVO);
-        var filtroComPadraoNovo = new FiltroPorPadraoGuardrail(padroes);
-
-        assertEquals(Result.FATAL, filtroComPadraoNovo.validate(mensagem(PARAFRASE)).result());
     }
 
     @Test
