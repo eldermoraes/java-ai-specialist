@@ -1,8 +1,10 @@
 package com.eldermoraes.guardrails;
 
 import static com.eldermoraes.guardrails.Requisicoes.DOMINIO_DA_LOJA;
+import static com.eldermoraes.guardrails.Requisicoes.FRETE_DA_DEVOLUCAO;
 import static com.eldermoraes.guardrails.Requisicoes.PRAZO_DE_TROCA;
 import static com.eldermoraes.guardrails.Requisicoes.PRESSAO_POR_EXCECAO;
+import static com.eldermoraes.guardrails.Requisicoes.PRODUTO_PERSONALIZADO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,6 +20,8 @@ import dev.langchain4j.model.chat.response.ChatResponse;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -145,6 +149,16 @@ class GuardrailsTest {
 
         assertEquals(Result.SUCCESS_WITH_RESULT, resultado.result());
         assertEquals(RESPOSTA_DENTRO_DA_POLITICA, resultado.successfulText());
+    }
+
+    @Test
+    @DisplayName("os textos das requisições dos testes são os do README")
+    void textosDasRequisicoesEstaoNoReadme() throws Exception {
+        String readme = Files.readString(Path.of("README.md"), StandardCharsets.UTF_8);
+
+        for (String texto : List.of(PRAZO_DE_TROCA, PRODUTO_PERSONALIZADO, PRESSAO_POR_EXCECAO, FRETE_DA_DEVOLUCAO)) {
+            assertTrue(readme.contains(texto), texto);
+        }
     }
 
     @Test

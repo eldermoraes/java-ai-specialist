@@ -107,6 +107,9 @@ Depois da requisição 5, volte `max-retries` para `2`.
 Em dev, o Swagger UI fica em <http://localhost:8080/q/swagger-ui> se você preferir disparar as
 requisições pelo navegador.
 
+Os testes rodam sem Ollama (`./mvnw test`). Os que sobem o Quarkus usam a porta 8081; se ela estiver
+ocupada, rode com `./mvnw test -Dquarkus.http.test-port=0` para o Quarkus escolher uma porta livre.
+
 ## O que observar no log
 
 Parte do seu estudo é ler o log. O juiz registra o veredito e o motivo em cada tentativa, e
@@ -258,6 +261,11 @@ juiz julga a resposta, e o motivo dele guia o reprompt.
 elimina: na execução acima o assistente leu a política e, mesmo assim, abriu a exceção na primeira
 tentativa das requisições 3 e 4. O juiz confere o que o pedido não garante.
 
+A instrução de autonomia que está no system message é o tipo de linha que um prompt de produção
+acumula: o comercial pede de um lado, a política responde do outro, e o prompt fica contraditório. Em
+produção, reprovação frequente do juiz é sinal, e a primeira correção é tirar essa linha do prompt do
+modelo avaliado. O juiz fica para o que sobra depois disso.
+
 **Modelo pequeno julgando o grande? O pequeno erra mais.** Por isso o critério é estreito, a referência
 vai no prompt e o veredito é binário. É a mesma tarefa que o modelo pequeno já cumpriu como
 classificador. Se a validação mostrasse erro de nuance, o juiz passaria para o grande trocando uma
@@ -346,7 +354,8 @@ nome da loja, uma promessa errada custa mais que meio segundo por resposta.
   devolve sempre `successWith(texto)`, reescrito ou não.
 - **Saída estruturada do juiz**: o AI Service devolve `record Veredito(boolean aprovada, String
   motivo)`. A extensão manda o schema do record no campo `format` do Ollama; o modelo responde o
-  JSON (às vezes dentro de um bloco de código, que a extensão limpa) e o record é preenchido.
+  JSON (às vezes dentro de um bloco de código, que o LangChain4j extrai antes de preencher o record,
+  em `JsonParsingUtils.extractAndParseJson`) e o record é preenchido.
 - **Guardrail pronto**: não existe juiz pronto no LangChain4j nem na extensão. O único guardrail
   pronto do framework é o `JsonExtractorOutputGuardrail`, de saída.
 - **Sem streaming**: o endpoint é síncrono, como em todo o módulo. O juiz só avalia a resposta

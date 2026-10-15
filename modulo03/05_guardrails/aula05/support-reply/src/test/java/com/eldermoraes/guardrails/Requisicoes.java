@@ -1,8 +1,9 @@
 package com.eldermoraes.guardrails;
 
 /**
- * Os textos das cinco requisições do README, na mesma ordem. Os testes usam exatamente
- * estes textos: se alguém mudar o README e esquecer daqui, o teste deixa de provar a demo.
+ * Os textos das cinco requisições do README, na mesma ordem. A 1 e a 3 entram nos testes da
+ * decisão e da fila; GuardrailsTest confere que os quatro textos estão no README, para
+ * ninguém mudar um lado e esquecer o outro.
  */
 final class Requisicoes {
 
