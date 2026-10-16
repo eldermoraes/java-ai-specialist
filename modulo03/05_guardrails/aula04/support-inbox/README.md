@@ -330,3 +330,5 @@ custa zero.
   classificador que conta chamadas: prova que, quando o filtro dá fatal, o classificador é chamado
   zero vezes, e que, quando o classificador dá fatal, o modelo principal é chamado zero vezes.
   `AssistenteDeSuporteTest` sobe o Quarkus só para provar que os dois AI Services estão montados.
+  `SuporteResourceTest` manda a requisição 2 por HTTP, nas duas portas, e confere o `400` com a
+  recusa curta; como o filtro barra antes de qualquer modelo, também passa sem Ollama.
