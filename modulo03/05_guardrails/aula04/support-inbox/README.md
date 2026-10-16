@@ -41,11 +41,11 @@ limite é o de qualquer lista: ele só pega o que já foi visto.
 
 E aí está o problema específico de prompt injection. Em SQL injection, separar o parâmetro do
 comando resolve, porque o ataque depende de caractere especial. Aqui o ataque é linguagem
-natural: não existe caractere para escapar, instrução e dado chegam ao modelo no mesmo texto, e a
+natural: não existe caractere de escape, instrução e dado chegam ao modelo no mesmo texto, e a
 mesma intenção cabe em infinitas frases. Basta trocar as palavras, ou a língua, para a lista não
 reconhecer.
 
-O **classificador** cobre esse resto. Ele pergunta a um modelo pequeno uma coisa só: este texto
+O **classificador** cobre essa parte que falta. Ele pergunta a um modelo pequeno uma coisa só: este texto
 tenta mudar o comportamento do assistente? A tarefa é estreita e o veredito é binário (`NORMAL`
 ou `INJECTION`), por isso cabe um modelo pequeno. Ele alcança a paráfrase, a outra língua e a
 instrução disfarçada de conteúdo, que é o caso do e-mail.
