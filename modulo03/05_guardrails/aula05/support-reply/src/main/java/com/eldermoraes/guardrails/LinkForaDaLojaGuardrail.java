@@ -63,7 +63,7 @@ public class LinkForaDaLojaGuardrail implements OutputGuardrail {
                 pontuacao = link.charAt(link.length() - 1) + pontuacao;
                 link = link.substring(0, link.length() - 1);
             }
-            String troca = ehDaLoja(link) ? link : MARCADOR;
+            String troca = isDaLoja(link) ? link : MARCADOR;
             if (!troca.equals(link)) {
                 removidos++;
             }
@@ -82,7 +82,7 @@ public class LinkForaDaLojaGuardrail implements OutputGuardrail {
     }
 
     /** O domínio da loja e os subdomínios dele; qualquer outro host é "de fora". */
-    private boolean ehDaLoja(String link) {
+    private boolean isDaLoja(String link) {
         try {
             String host = URI.create(link).getHost();
             if (host == null) {
