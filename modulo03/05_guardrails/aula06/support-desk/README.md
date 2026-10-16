@@ -320,7 +320,7 @@ juiz entram como dublê, porque contra o modelo de verdade o teste às vezes pas
 
 ## Por que este desenho
 
-Nove perguntas que este projeto costuma levantar.
+Dez perguntas que este projeto costuma levantar, e mais quatro curtas.
 
 **É só copiar os quatro projetos para um só?** O código de cada camada, sim: nenhuma classe daqui é
 nova para quem fez as quatro aulas. O que o desafio pede é a decisão que nenhum dos quatro projetos
@@ -378,6 +378,13 @@ de mentira na divisão antiga, ao lado do teste que prova que a divisão nova re
 julgam a resposta inteira; com streaming o cliente leria o texto antes do veredito. Por isso os dois
 endpoints são síncronos, como em todo o submódulo.
 
+**Por que o system message manda abrir exceções, se o juiz existe para barrar isso?** Porque é
+assim que a requisição 5 mostra o juiz trabalhando, e porque a linha é real. A instrução de autonomia
+que está no system message é o tipo de linha que um prompt de produção acumula: o comercial pede de um
+lado, a política responde do outro, e o prompt fica contraditório. Em produção, reprovação frequente
+do juiz é sinal, e a primeira correção é tirar essa linha do prompt do modelo avaliado. O juiz fica
+para o que sobra depois disso.
+
 ### Posso entregar sem nenhuma camada com modelo?
 
 Pode, se o domínio justificar no README. Um assistente que só responde perguntas sobre um catálogo
@@ -390,6 +397,21 @@ O dado sensível mascara na entrada, e o modelo grande recebe `[CPF]`. O juiz re
 variáveis do template, que guardam o texto como o cliente digitou; por isso o guardrail do juiz passa
 a pergunta pela mesma máscara antes de enviá-la. O que a entrada escondeu do modelo grande não chega
 ao modelo pequeno por outra porta. `GuardrailsTest` fixa isso.
+
+### Por que a triagem não tem guardrail de dado sensível na saída
+
+No projeto de guardrails de saída o CPF ia ao modelo e era mascarado na resposta, para isolar a
+mecânica da saída. Aqui o CPF é mascarado na entrada, antes de qualquer modelo, e a triagem nunca o
+vê. Um guardrail de saída para um dado que não chega lá seria peça só didática, e peça só didática
+não entra num desenho que você levaria para produção.
+
+### Por que o fallback é tratado no endpoint, e não num mapper de exceção
+
+No projeto de LLM as judge o fallback era um `@ServerExceptionMapper`, porque havia uma porta e uma
+mensagem. Aqui são duas portas com duas mensagens (o cliente vai para um atendente; o e-mail vai para
+triagem manual) e uma linha de resumo que precisa sair em todo desfecho. Um `try/catch` por porta, no
+mesmo método, deixa os três desfechos (passou, recusada, fallback) lado a lado, onde quem lê o código
+procura.
 
 ## Custo × risco
 
@@ -458,7 +480,9 @@ Guardrail é decisão de negócio, caso a caso.
   requisição levaria junto o primeiro veredito, e o juiz julgaria a tentativa nova olhando para a
   antiga.
 - **Guardrail pronto**: não existe filtro de injection, classificador nem juiz prontos no LangChain4j
-  nem na extensão. O único guardrail pronto do framework é o `JsonExtractorOutputGuardrail`, de saída.
+  nem na extensão. Na versão da nossa stack (LangChain4j 1.13.0, quarkus-langchain4j 1.9.2), o único
+  guardrail pronto que o core traz é o `JsonExtractorOutputGuardrail`, de saída; o módulo
+  `langchain4j-guardrails`, ainda em beta, pode trazer outros em versões seguintes.
 - **Sem streaming**: os endpoints são síncronos, como em todo o módulo. O juiz e o guardrail de
   formato só avaliam a resposta inteira.
 - **Modelos**: o assistente responde e faz a triagem no modelo grande; o classificador e o juiz usam o

@@ -46,7 +46,7 @@ final class Requisicoes {
 
     /** A lista de escopo de application.properties, como o projeto é entregue. */
     static final List<String> PALAVRAS_DE_FORA = List.of(
-            "receita", "bolo", "eleição", "candidato", "presidente", "remédio", "sintoma",
+            "loteria", "bolo", "eleição", "candidato", "vacina", "remédio", "sintoma",
             "diagnóstico", "bitcoin", "criptomoeda", "investimento", "futebol", "horóscopo");
 
     /** A lista do filtro de application.properties, como o projeto é entregue. */
