@@ -362,6 +362,11 @@ nome da loja, uma promessa errada custa mais que meio segundo por resposta.
   inteira; com streaming o cliente leria o texto antes do veredito.
 - **Modelos**: o assistente responde no modelo grande; o juiz usa o modelo `juiz`, selecionado com
   `@RegisterAiService(modelName = "juiz")`, com temperatura zero.
+- **Juiz sem memória**: o AI Service do juiz é declarado com `chatMemoryProviderSupplier =
+  NoChatMemoryProviderSupplier.class`. A memória padrão da extensão é uma por requisição e por
+  método do AI Service, e o juiz é chamado de novo na mesma requisição a cada reprompt: com ela, a
+  segunda chamada levaria a primeira resposta e o primeiro veredito. O juiz não guarda memória entre
+  tentativas: cada julgamento recebe só a pergunta e a resposta daquela tentativa.
 - **Testes**: `GuardrailsTest` cobre uma decisão por teste, sem subir o Quarkus e sem Ollama, com um
   dublê do juiz: aprovou, a resposta segue; reprovou, reprompt com o motivo; a regra de link reescreve
   link de fora e deixa o da loja. `FilaDeSaidaTest` monta a fila a partir da anotação do AI Service,
@@ -371,3 +376,5 @@ nome da loja, uma promessa errada custa mais que meio segundo por resposta.
   a regra de link roda sobre a resposta aprovada e o juiz vê o texto original; e que, na ordem
   inversa, a reescrita bloqueia o reprompt. `SuporteResourceTest` cobre o fallback.
   `AssistenteDeSuporteTest` sobe o Quarkus só para provar que os dois AI Services estão montados.
+  `JuizSemMemoriaTest` troca o modelo `juiz` por um dublê que anota as mensagens recebidas e prova
+  que, na mesma requisição, a segunda chamada ao juiz não leva o veredito anterior.

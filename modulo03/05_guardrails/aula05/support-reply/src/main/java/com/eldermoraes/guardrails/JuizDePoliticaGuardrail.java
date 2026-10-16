@@ -18,7 +18,9 @@ import org.jboss.logging.Logger;
  * novo sabendo o que errou, e a resposta nova passa pela fila inteira outra vez.
  *
  * A pergunta vem das variáveis do template do AI Service ({pergunta}); a resposta, do
- * próprio request. Nada de memória: cada requisição é uma conversa nova.
+ * próprio request. O juiz não guarda memória entre tentativas: na segunda chamada da
+ * mesma requisição ele recebe só a pergunta e a resposta nova, nunca o veredito anterior
+ * (o AI Service dele é declarado sem memória de chat).
  *
  * O preço está no log: uma chamada ao modelo pequeno em toda resposta, e mais uma em
  * cada tentativa de reprompt. E o veredito pode errar para os dois lados.
