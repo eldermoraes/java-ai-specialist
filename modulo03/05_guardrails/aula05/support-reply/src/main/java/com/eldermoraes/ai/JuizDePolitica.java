@@ -22,8 +22,15 @@ import io.quarkiverse.langchain4j.RegisterAiService;
  *
  * Modelo "juiz", temperatura zero. Mesmo assim este é um componente não determinístico:
  * ele pode reprovar resposta certa e aprovar resposta errada.
+ *
+ * Sem memória de chat: cada julgamento é uma conversa nova. Com a memória padrão da
+ * extensão (uma por requisição e por método do AI Service), o segundo julgamento de uma
+ * mesma requisição (depois de um reprompt) levaria junto a primeira resposta e o primeiro
+ * veredito, e o juiz julgaria a tentativa nova olhando para a antiga.
+ * JuizSemMemoriaTest prova que isso não acontece.
  */
-@RegisterAiService(modelName = "juiz")
+@RegisterAiService(modelName = "juiz",
+        chatMemoryProviderSupplier = RegisterAiService.NoChatMemoryProviderSupplier.class)
 public interface JuizDePolitica {
 
     @SystemMessage("""
