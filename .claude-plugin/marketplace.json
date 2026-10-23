@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "arch",
-      "source": "./modulo04/aula01/arch",
+      "source": "./modulo04/arch",
       "description": "Agentic architecture skills: set up the architecture dossier and grill a design into a brief and its first ADR."
     }
   ]
