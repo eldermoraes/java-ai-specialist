@@ -1,0 +1,37 @@
+# Architecture skills
+
+Configuration read by every architecture skill. Written by `setup-architecture`; edit it by hand
+or run the setup again to change a choice.
+
+## Tracker
+
+<!-- github | local -->
+Tracker: {{tracker}}
+
+- `github`: tasks are GitHub Issues in `{{owner/repo}}`, created with `gh issue create`.
+- `local`: tasks are Markdown files in `.scratch/architecture/issues/NN-slug.md`, each with a
+  `Labels:` line.
+
+## Labels
+
+| Label | Meaning |
+|---|---|
+| `decision` | An open decision that still needs an ADR |
+| `high-risk` | A risk scored 6 or 9 without mitigation |
+| `gap` | Something the architecture requires that is not in place yet |
+
+## Layout
+
+<!-- single | per-quantum -->
+Layout: {{layout}}
+
+{{quanta: one line per quantum, with its folder under docs/architecture/, only for per-quantum}}
+
+## Artifact locations
+
+| Artifact | Location |
+|---|---|
+| Dossier index | `docs/architecture/README.md` |
+| Brief | `docs/architecture/brief.md` |
+| ADRs | `docs/adr/NNNN-slug.md` |
+| Local tasks | `.scratch/architecture/issues/` (only with the `local` tracker) |

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Grill Architecture"
+  short_description: "Interview a design into a brief and ADR 0001"
+policy:
+  allow_implicit_invocation: false

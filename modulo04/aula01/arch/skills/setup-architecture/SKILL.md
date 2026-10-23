@@ -1,0 +1,107 @@
+---
+name: setup-architecture
+description: Prepare a repository for the architecture skills. Chooses the task tracker, the labels and the dossier layout, then creates docs/architecture/, docs/adr/ and docs/agents/architecture.md.
+disable-model-invocation: true
+---
+
+# Setup architecture
+
+Prepare this repository so the architecture skills have a shared place to read and write: the
+dossier in `docs/architecture/`, the ADRs in `docs/adr/`, and the choices every skill follows in
+`docs/agents/architecture.md`. Run once per repository; running it again updates the choices.
+
+Read [references/vocabulary.md](references/vocabulary.md) before you start: use its terms with its
+meanings. Do not mention the source book in generated files.
+
+Templates for the files you write:
+- [references/dossier-readme.md](references/dossier-readme.md) for `docs/architecture/README.md`;
+- [references/agents-architecture.md](references/agents-architecture.md) for
+  `docs/agents/architecture.md`.
+
+## 1. Explore
+
+Look before you ask. Check each item and keep a note of what you found:
+
+- `git remote -v`: is the remote on GitHub? Is `gh` installed and authenticated (`gh auth status`)?
+- `CLAUDE.md` and `AGENTS.md` at the repository root: which exist?
+- `docs/adr/`, `docs/architecture/` and `.scratch/`: which exist, and what is inside?
+- `docs/agents/architecture.md`: if it exists, this is a re-run; its current values are the
+  defaults for every question.
+- `docs/agents/issue-tracker.md`: if it exists, another skill set already chose the tracker. Reuse
+  that choice and skip question A.
+- Deployables: count the independently deployable units (one `pom.xml` with packaging per service,
+  one `Dockerfile` per service, separate apps in a monorepo). More than one is a sign of more than
+  one architecture quantum.
+
+Done when every item above has an answer.
+
+## 2. Show what you found
+
+Show the user a short summary of the exploration, one line per item, before the first question.
+
+## 3. Ask, one question at a time
+
+Ask each question on its own, with your recommendation and the reason in one line. Wait for the
+answer before the next question. Skip a question whose answer the exploration already settled, and
+say why you skipped it.
+
+- **A. Tracker.** Where do architecture tasks live: GitHub Issues or local files in
+  `.scratch/architecture/issues/`? Recommend GitHub Issues when the remote is GitHub and `gh` is
+  authenticated; otherwise recommend local files.
+- **B. Labels** (GitHub only). Create the labels `decision`, `high-risk` and `gap`? Recommend yes:
+  the other architecture skills open tasks with these labels.
+- **C. Layout.** Ask only when the exploration found more than one deployable: one dossier at
+  `docs/architecture/` for the whole repository, or one dossier per quantum at
+  `docs/architecture/<quantum>/`? Recommend one dossier unless the deployables have clearly
+  different characteristics (for example, one public API and one batch job). With a single
+  deployable, use one dossier without asking.
+- **D. Agent instructions file.** Ask only when neither `CLAUDE.md` nor `AGENTS.md` exists: create
+  one to hold the architecture block? Recommend the file your host reads (`CLAUDE.md` for Claude
+  Code, `AGENTS.md` for Codex).
+
+Done when every question was answered or skipped with a reason.
+
+## 4. Show the draft, then write
+
+Show the user the full list of files and labels you will create or change, with the content of
+`docs/agents/architecture.md` and of the architecture block. Write only after the user confirms.
+
+Create:
+
+1. `docs/architecture/README.md` from the dossier template (one per quantum with the per-quantum
+   layout). If it exists, keep its rows and add the missing ones.
+2. `docs/adr/`, if it does not exist, with a `.gitkeep` file so git keeps the empty folder. Keep
+   any ADR already there: the architecture skills continue its numbering.
+3. `docs/agents/architecture.md` from its template, with the answers filled in.
+4. In the existing `CLAUDE.md` or `AGENTS.md` (or both, when both exist), this block, added once:
+
+   ```markdown
+   ## Agent skills
+
+   ### Architecture
+
+   Architecture skills read and write `docs/architecture/` and `docs/adr/`, and follow the
+   tracker, labels and layout in `docs/agents/architecture.md`.
+   ```
+
+   If a `## Agent skills` heading already exists, add only the `### Architecture` part under it.
+5. With the GitHub tracker and labels confirmed, run for each label:
+
+   ```
+   gh label create decision --color 1D76DB --description "Open architecture decision that needs an ADR" --force
+   gh label create high-risk --color B60205 --description "Architecture risk scored 6 or 9 without mitigation" --force
+   gh label create gap --color FBCA04 --description "Architecture requirement not in place yet" --force
+   ```
+
+6. With the local tracker, create `.scratch/architecture/issues/` with a `.gitkeep` file. Each
+   task the skills open later is a file `NN-slug.md` in that folder, numbered from `01`, whose
+   first lines are a `# Title` and a `Labels: <label>` line.
+
+Done when every file in the draft exists with the confirmed content, and, with the GitHub tracker,
+`gh label list` shows the three labels.
+
+## 5. Report and next step
+
+List what was created and what was left as it was. End with this line:
+
+`Next: /arch:grill-architecture (Claude Code) · $arch:grill-architecture (Codex)`

@@ -1,0 +1,12 @@
+{
+  "name": "arch",
+  "displayName": "Agentic Architecture",
+  "description": "Architecture skills for agentic systems: your agent writes the architecture dossier, you make the decisions.",
+  "author": {
+    "name": "Elder Moraes",
+    "url": "https://github.com/eldermoraes"
+  },
+  "repository": "https://github.com/eldermoraes/java-ai-specialist",
+  "license": "Apache-2.0",
+  "keywords": ["architecture", "adr", "agents", "java-ai-specialist"]
+}

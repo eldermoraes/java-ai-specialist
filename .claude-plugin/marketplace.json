@@ -1,0 +1,14 @@
+{
+  "name": "java-ai-specialist",
+  "description": "Plugins from the Java AI Specialist course by Elder Moraes",
+  "owner": {
+    "name": "Elder Moraes"
+  },
+  "plugins": [
+    {
+      "name": "arch",
+      "source": "./modulo04/aula01/arch",
+      "description": "Agentic architecture skills: set up the architecture dossier and grill a design into a brief and its first ADR."
+    }
+  ]
+}

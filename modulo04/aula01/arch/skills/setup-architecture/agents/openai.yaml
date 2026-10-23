@@ -1,0 +1,5 @@
+interface:
+  display_name: "Setup Architecture"
+  short_description: "Prepare the repository for the architecture skills"
+policy:
+  allow_implicit_invocation: false
