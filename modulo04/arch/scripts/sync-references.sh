@@ -14,12 +14,15 @@ PLUGIN_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 MODE=${1:-sync}
 STATUS=0
 
-# skill:file pairs. vocabulary.md comes from reference/, the others from reference/templates/.
+# skill:file pairs. vocabulary.md and language.md come from reference/, the others from
+# reference/templates/.
 PAIRS="
 setup-architecture:vocabulary.md
+setup-architecture:language.md
 setup-architecture:dossier-readme.md
 setup-architecture:agents-architecture.md
 grill-architecture:vocabulary.md
+grill-architecture:language.md
 grill-architecture:brief.md
 grill-architecture:adr.md
 "
@@ -27,7 +30,7 @@ grill-architecture:adr.md
 for pair in $PAIRS; do
   skill=${pair%%:*}
   file=${pair#*:}
-  if [ "$file" = "vocabulary.md" ]; then
+  if [ "$file" = "vocabulary.md" ] || [ "$file" = "language.md" ]; then
     source="$PLUGIN_ROOT/reference/$file"
   else
     source="$PLUGIN_ROOT/reference/templates/$file"

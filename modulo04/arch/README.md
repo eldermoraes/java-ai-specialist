@@ -72,6 +72,9 @@ Both skills run only when you call them: the agent never starts them on its own
 Each skill works on its own. `grill-architecture` without the setup writes to the default
 locations and keeps its tasks as local files in `.scratch/architecture/issues/`.
 
+The skills write in your language: the files, tasks and questions follow the language you use in
+the conversation, unless you ask for another one (rule in `reference/language.md`).
+
 ## Typical run
 
 1. `/arch:setup-architecture`: choose the tracker (GitHub Issues or local files) and the layout.
@@ -84,16 +87,19 @@ locations and keeps its tasks as local files in `.scratch/architecture/issues/`.
 ```
 .claude-plugin/plugin.json      plugin manifest (name "arch")
 reference/vocabulary.md         single source of the architecture vocabulary
+reference/language.md           single source of the language rule for what the skills write
 reference/templates/            single source of the document templates
 scripts/sync-references.sh      copies reference/ into each skill (maintainer tool)
+scripts/check-language.sh       checks the language rule is in place (maintainer and CI tool)
 skills/<skill>/SKILL.md         instructions to the agent
 skills/<skill>/agents/openai.yaml   Codex policy: explicit invocation only
-skills/<skill>/references/      copies of the vocabulary and templates the skill uses
+skills/<skill>/references/      copies of the vocabulary, language rule and templates the skill uses
 skills/grill-architecture/scripts/NextAdrNumber.java   next free ADR number (java NextAdrNumber.java docs/adr)
 ```
 
 After editing anything in `reference/`, run `scripts/sync-references.sh`, and check with
-`scripts/sync-references.sh --check`.
+`scripts/sync-references.sh --check`. Before a commit, run `scripts/check-language.sh`; the CI
+runs it too.
 
 ## Requirements
 

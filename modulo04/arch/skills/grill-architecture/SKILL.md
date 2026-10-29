@@ -17,6 +17,9 @@ nothing. With nothing, ask for a two-line description of the system and start fr
 Read [references/vocabulary.md](references/vocabulary.md) before you start: use its terms with its
 meanings. Do not mention the source book in generated files.
 
+Write every file, task and question in the user's language, template headings included, following
+[references/language.md](references/language.md).
+
 Templates for the files you write:
 - [references/brief.md](references/brief.md) for the brief;
 - [references/adr.md](references/adr.md) for the ADR.

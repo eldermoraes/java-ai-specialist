@@ -13,6 +13,9 @@ dossier in `docs/architecture/`, the ADRs in `docs/adr/`, and the choices every 
 Read [references/vocabulary.md](references/vocabulary.md) before you start: use its terms with its
 meanings. Do not mention the source book in generated files.
 
+Write every file and every question in the user's language, template headings included, following
+[references/language.md](references/language.md).
+
 Templates for the files you write:
 - [references/dossier-readme.md](references/dossier-readme.md) for `docs/architecture/README.md`;
 - [references/agents-architecture.md](references/agents-architecture.md) for

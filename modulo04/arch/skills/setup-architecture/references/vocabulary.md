@@ -1,7 +1,8 @@
 # Architecture vocabulary
 
 Shared reference for every skill in the `arch` plugin. Use these terms, with these meanings, in
-every question you ask and every file you write.
+every question you ask and every file you write. In the user's language, use the established
+translation of a term, or keep the term as it is when there is none (see `language.md`).
 
 Source of these definitions: *Fundamentals of Software Architecture* (Mark Richards and Neal Ford,
 O'Reilly, 2020). Use the source to reason. Do not mention the source book in generated files: state

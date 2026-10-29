@@ -1,5 +1,9 @@
 # Architecture skills
 
+<!-- Write this file in the user's language, headings included (language.md). Keep the
+     `Tracker:` and `Layout:` lines and their values as they are. Leave this comment out of the
+     file. -->
+
 Configuration read by every architecture skill. Written by `setup-architecture`; edit it by hand
 or run the setup again to change a choice.
 
