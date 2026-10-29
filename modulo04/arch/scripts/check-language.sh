@@ -4,7 +4,10 @@
 #
 # Fails when:
 #   - reference/language.md is missing or lost the rule;
-#   - a SKILL.md does not point to references/language.md, or its skill folder lacks the copy;
+#   - a SKILL.md does not point to references/language.md, or its skill folder lacks the copy, or
+#     the copy differs from reference/language.md (every skill in skills/ is checked, new ones
+#     included, even when missing from the PAIRS list of sync-references.sh);
+#   - a SKILL.md links to a references/ file that its skill folder does not ship;
 #   - a template in reference/templates/ lost its language instruction;
 #   - any skill, reference, template or the README mentions English (for example "in English"),
 #     outside language.md itself, which is the only file allowed to name the plugin's own language;
@@ -42,7 +45,17 @@ for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   fi
   if [ ! -f "$skill_dir/references/language.md" ]; then
     fail "skills/$skill/references/language.md is missing (run scripts/sync-references.sh)"
+  elif ! cmp -s "$PLUGIN_ROOT/reference/language.md" "$skill_dir/references/language.md"; then
+    # Compared here too, not only in sync-references.sh --check: a skill left out of the PAIRS
+    # list there would keep a stale copy of the rule and still pass.
+    fail "skills/$skill/references/language.md differs from reference/language.md (add the skill to PAIRS in scripts/sync-references.sh and run it)"
   fi
+  # Every reference the SKILL.md links to must ship in the skill folder.
+  for ref in $(grep -o 'references/[A-Za-z0-9_.-]*\.md' "$skill_md" | sort -u); do
+    if [ ! -f "$skill_dir/$ref" ]; then
+      fail "skills/$skill/SKILL.md links to $ref, which is missing (run scripts/sync-references.sh)"
+    fi
+  done
 done
 
 for template in "$PLUGIN_ROOT"/reference/templates/*.md; do

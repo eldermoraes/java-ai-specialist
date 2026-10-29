@@ -38,4 +38,5 @@ Layout: {{layout}}
 | Dossier index | `docs/architecture/README.md` |
 | Brief | `docs/architecture/brief.md` |
 | ADRs | `docs/adr/NNNN-slug.md` |
+| Architecture characteristics | `docs/architecture/characteristics.md` |
 | Local tasks | `.scratch/architecture/issues/` (only with the `local` tracker) |

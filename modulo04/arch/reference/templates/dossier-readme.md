@@ -13,3 +13,4 @@ Status values: `pending` (not written yet), `generated` (written by the agent, n
 |---|---|---|
 | [Brief](brief.md) | pending | |
 | [Architecture Decision Records](../adr/) | pending | |
+| [Architecture Characteristics](characteristics.md) | pending | |
