@@ -84,8 +84,9 @@ the conversation, unless you ask for another one (rule in `reference/language.md
 2. `/arch:grill-architecture "an agent that answers the customers of a telecom and can open a ticket in the support system"`:
    answer the rounds of questions; each comes with a recommendation.
 3. Read `docs/architecture/brief.md` and `docs/adr/0001-agent-workflow-or-multi-agent.md`.
-4. `/arch:to-characteristics`: confirm the quanta, the characteristics that meet the three
-   criteria and the Target of each; each question comes with a recommendation, and "ok" accepts it.
+4. `/arch:to-characteristics`: confirm the quanta and, in one round, the characteristics kept and
+   dropped; then the Targets, up to three per round. Each question comes with a recommendation:
+   "ok" accepts it, and "ok to all" accepts the whole round.
 5. Read `docs/architecture/characteristics.md` and the `gap` tasks for the characteristics that
    have no fitness function yet.
 
@@ -100,7 +101,8 @@ reference/vocabulary.md         single source of the architecture vocabulary
 reference/language.md           single source of the language rule for what the skills write
 reference/templates/            single source of the document templates
 scripts/sync-references.sh      copies reference/ into each skill (maintainer tool)
-scripts/check-language.sh       checks the language rule is in place (maintainer and CI tool)
+scripts/check-language.sh       checks the language rule and the skill contracts (maintainer and CI tool)
+scripts/test-check-language.sh  mutation test: each break must make check-language.sh fail (CI tool)
 skills/<skill>/SKILL.md         instructions to the agent
 skills/<skill>/agents/openai.yaml   Codex policy: explicit invocation only
 skills/<skill>/references/      copies of the vocabulary, language rule and templates the skill uses
@@ -108,8 +110,8 @@ skills/grill-architecture/scripts/NextAdrNumber.java   next free ADR number (jav
 ```
 
 After editing anything in `reference/`, run `scripts/sync-references.sh`, and check with
-`scripts/sync-references.sh --check`. Before a commit, run `scripts/check-language.sh`; the CI
-runs it too.
+`scripts/sync-references.sh --check`. Before a commit, run `scripts/check-language.sh`, and
+`scripts/test-check-language.sh` after changing it; the CI runs both.
 
 ## Requirements
 

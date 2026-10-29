@@ -23,3 +23,5 @@ jobs:
         run: modulo04/arch/scripts/sync-references.sh --check
       - name: Language rule in place
         run: modulo04/arch/scripts/check-language.sh
+      - name: Every known break is caught
+        run: modulo04/arch/scripts/test-check-language.sh

@@ -22,7 +22,14 @@ meanings. Do not mention the source book in generated files.
 Write every file, task and question in the user's language, template headings and table headers
 included, following [references/language.md](references/language.md).
 
-Template for the file you write: [references/characteristics.md](references/characteristics.md).
+Templates for the files you write:
+- [references/characteristics.md](references/characteristics.md) for the characteristics;
+- [references/dossier-readme.md](references/dossier-readme.md) for the dossier index, when it does
+  not exist yet.
+
+Fixed sentences in this skill (the `Next:` lines, "none" in the Fitness Function column) are
+written here in the plugin's language: translate each into the user's language, and keep commands
+and file names as they are.
 
 ## 1. Read the setup and what already exists
 
@@ -52,6 +59,9 @@ each file goes and what is already answered.
   `Dockerfile.jvm` and `Dockerfile.native`) are image variants of one deployable, not more
   deployables. Several endpoints in the same deployable are still one quantum.
 - One deployable: one quantum, named after the system. Say so in one line and do not ask.
+- The name of the system is the title of the README; without a title, the `artifactId` (or the
+  project name in the build file) or, without either, the name of the directory. Say where the
+  name came from.
 - More than one deployable is a sign of more than one quantum. Each quantum gets its own section in
   the file, with its own characteristics.
   - With the `per-quantum` layout in the setup, write one `characteristics.md` per quantum folder
@@ -72,12 +82,12 @@ Done when every quantum has a name and you know which file holds its section.
 - Recommend keeping the smallest number of characteristics: each one costs complexity in the
   design, and wanting all of them leads to an architecture that meets none. For each candidate you
   recommend dropping, name the criterion it fails.
-- Ask in rounds: at most three questions per round, numbered, each with your recommendation and
-  its reason in one line. The user may answer "ok" to accept a recommendation, or "ok to all" to
-  accept every recommendation of the round.
-- After the answers, say in one line what they settled.
+- Confirm the list in one round: show, for each quantum, the characteristics you recommend
+  keeping and the ones you recommend dropping, and ask the user to confirm both lists or correct
+  them. The user may answer "ok to all" to accept the round as it is.
+- After the answer, say in one line what it settled.
 
-Done when the user has confirmed the list of characteristics for each quantum.
+Done when the user has confirmed, for each quantum, the list kept and the list dropped.
 
 ## 4. Set the Target and the Measure
 
@@ -89,28 +99,41 @@ For each characteristic:
   - Recommend the Target from what the project shows (numbers in the README, limits in the
     configuration, timings in the tests or logs) and say where you saw it.
   - With no evidence, recommend a value and mark it as an estimate in the file.
+  - Partial evidence is an estimate too: a percentile taken from a few samples or from a single
+    run is an estimate, and you mark it as one.
   - For latency in an agent, say which one the user feels: TTFT with streaming, the whole response
     without it (an output guardrail can only judge the whole response).
   - For cost in an agent, set a ceiling per request: model calls per request, and tokens when the
     project measures them.
 - **Measure**: the family that observes it: Operational (at runtime), Structural (in the code) or
-  Process (in how the team works).
+  Process (in how the team works). The Measure is the family of what the Target observes, not of
+  where the fitness function runs: a test in the build that checks the number of model calls per
+  request still makes cost an Operational Measure.
 
-Ask in the same rounds as step 3, with a recommendation for each Target. Done when every
-characteristic has a Target and a Measure.
+Ask for the Targets in the rounds after the one that confirmed the list: at most three Targets
+per round, numbered, each with your recommendation and its reason in one line. The user may
+answer "ok" to accept one recommendation, or "ok to all" to accept the whole round. After the
+answers, say in one line what they settled.
+
+Done when every characteristic has a Target and a Measure.
 
 ## 5. Find the fitness function
 
 For each characteristic, look in the repository for a mechanism that already checks it
-objectively: a test, a metric with an alert, a limit in the configuration, a log line that counts
-what the Target counts, an architecture rule in the build, a rule in the CI pipeline. Point to the
-path (and the test or rule name).
+objectively: a test, a metric with an alert, a limit in the configuration, an architecture rule
+in the build, a rule in the CI pipeline. Point to the path (and the test or rule name).
+
+A log line is not a fitness function by itself: it counts only when a test or an alert reads it
+and fails when the Target is missed. Point to that test or alert. A log line that nothing reads
+leaves the characteristic without a fitness function, and it gets a `gap` task.
 
 - Found: write the path in the Fitness Function column.
-- None found: the characteristic is still only an intention. Write "none" and open a `gap` task
-  for it (step 7), with the title "Fitness function for <characteristic>" in the user's language.
-  In the task body, say what the check must confirm and the Target. If the plugin you are running
-  from has the `to-adr` skill, end the body with
+- None found: the characteristic is still only an intention. Write "none" (translated into the
+  user's language) and open a `gap` task for it (step 7), with the title "Fitness function for
+  <characteristic>" in the user's language. The task body is the same in both trackers: what the
+  check must confirm, the Target, and a link to `characteristics.md`. If the plugin you are
+  running from has the `to-adr` skill, end the body with this line, translated into the user's
+  language, with commands and file names as they are:
   `Next: /arch:to-adr "<decision the check needs>" (Claude Code) · $arch:to-adr "<decision the check needs>" (Codex)`.
 
 Done when every characteristic has a path or a `gap` task to open.
@@ -138,15 +161,24 @@ only after the user confirms or corrects it.
 1. **characteristics.md**: fill the template, one section per quantum. Write only what the user
    confirmed or what the repository shows.
 2. **Tasks**: one `gap` task per characteristic without a fitness function. Before creating, look
-   for an open task with the same title and reuse it.
-   - GitHub tracker: `gh issue create --title "<title>" --label gap --body "<what the check must confirm, the Target, and a link to characteristics.md>"`.
-   - Local tracker: a file `.scratch/architecture/issues/NN-slug.md` (next free `NN`, from `01`)
-     with a `# <title>` line, a `Labels: gap` line, and the body.
+   for an open `gap` task that names the characteristic and reuse it. Match by the `gap` label
+   and the name of the characteristic, not by the exact title: an earlier run may have translated
+   the title differently.
+   - GitHub tracker: find with `gh issue list --label gap --state open --search "<characteristic>"`;
+     create with `gh issue create --title "<title>" --label gap --body "<what the check must confirm, the Target, and a link to characteristics.md>"`.
+   - Local tracker: find a file in `.scratch/architecture/issues/` with a `Labels: gap` line, a
+     `Status: open` line and the characteristic in its `#` title. Create a file
+     `.scratch/architecture/issues/NN-slug.md` (next free `NN`, from `01`; `slug` is the title
+     already translated, in kebab-case) with a `# <title>` line, a `Labels: gap` line, a
+     `Status: open` line, and the same body as on GitHub: what the check must confirm, the
+     Target, and a link to `characteristics.md`.
    Put the link or file name of each task in the Fitness Function column.
 3. **Dossier index**: in `docs/architecture/README.md` (one per quantum folder with the
-   `per-quantum` layout), set the Architecture Characteristics row, linking to `characteristics.md`,
-   to `generated` with today's date. If the row is missing, add it. If the file does not exist,
-   create it with that row.
+   `per-quantum` layout), set the row that links to `characteristics.md` to `generated` with
+   today's date. Find the row by that link, never by its label, which is translated into the
+   user's language. If the row is missing, add it. If the file does not exist, create it from
+   [references/dossier-readme.md](references/dossier-readme.md), translated, with that row as
+   `generated` and the other rows as `pending`.
 
 Done when every characteristic has a Target, a Measure and a fitness function or a `gap` task,
 every dropped candidate is in Out of Scope, and the dossier index shows Architecture
@@ -155,7 +187,8 @@ Characteristics as `generated`.
 ## 8. Report and next step
 
 List the files written and the tasks opened. Name each characteristic in one line with its Target.
-Then:
+Then end with one of these lines, translated into the user's language, with commands and file
+names as they are:
 
 - If the plugin you are running from has the `to-adr` skill, end with
   `Next: /arch:to-adr (Claude Code) · $arch:to-adr (Codex)`.

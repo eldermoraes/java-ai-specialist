@@ -22,8 +22,8 @@ This covers everything a skill writes for the user:
 
 - Values that a skill or a tool reads back, written in backticks in the templates and skills:
   status values (`proposed`, `accepted`, `pending`, `generated`, `reviewed`), label names
-  (`decision`, `high-risk`, `gap`), the `Tracker:`, `Layout:` and `Labels:` lines with their
-  values, file and folder names, commands.
+  (`decision`, `high-risk`, `gap`), the `Tracker:`, `Layout:`, `Labels:` and `Status:` lines
+  with their values (`open` and `closed` in a local task), file and folder names, commands.
 - The headings `## Agent skills` and `### Architecture` of the architecture block, which other
   skill sets look for.
 - Established technical terms, inside the translated text, when the user's language has no
