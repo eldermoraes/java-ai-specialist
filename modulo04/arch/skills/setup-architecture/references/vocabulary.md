@@ -29,8 +29,14 @@ the concepts directly.
   1. it specifies a non-domain design consideration;
   2. it influences some structural aspect of the design;
   3. it is critical or important to the success of the system.
+- Choose the **smallest number** of characteristics: each one costs complexity in the design, and
+  an architecture that tries to meet all of them meets none.
 - **Target**: the measurable value the characteristic must reach (for example, p95 latency under
   2 s, cost per request under a set amount).
+- **Latency in an agent** is measured by **TTFT** (time to first token of the response) and
+  **TPOT** (time per output token after the first). With streaming, the user feels the TTFT;
+  without it, the user waits for the whole response (an output guardrail can only judge the whole
+  response).
 - **Measures**: **Operational** (observed at runtime: latency, availability, cost),
   **Structural** (observed in the code: dependencies, layering, where an SDK is used), and
   **Process** (observed in how the team works: test coverage, deploy frequency).
@@ -38,6 +44,10 @@ the concepts directly.
   still holds (a test, a metric with an alert, an architecture rule in the build).
 - **Architecture quantum**: an independently deployable part of the system with its own
   architecture characteristics. More than one deployable is a sign of more than one quantum.
+- **Not architecture characteristics**: the **autonomy of the agent** (what it may do on its own)
+  is a design principle; the **quality of the response** is checked by a guardrail on every
+  request and stays out of the dossier; a **domain requirement** lives in the specification of the
+  system.
 
 ## Architecture decisions
 

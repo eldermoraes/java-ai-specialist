@@ -25,6 +25,9 @@ grill-architecture:vocabulary.md
 grill-architecture:language.md
 grill-architecture:brief.md
 grill-architecture:adr.md
+to-characteristics:vocabulary.md
+to-characteristics:language.md
+to-characteristics:characteristics.md
 "
 
 for pair in $PAIRS; do
