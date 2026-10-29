@@ -41,7 +41,9 @@ the concepts directly.
   **Structural** (observed in the code: dependencies, layering, where an SDK is used), and
   **Process** (observed in how the team works: test coverage, deploy frequency).
 - **Fitness function**: any mechanism that objectively checks that a characteristic or a decision
-  still holds (a test, a metric with an alert, an architecture rule in the build).
+  still holds (a test, a metric with an alert, an architecture rule in the build). A log line is
+  not one by itself: it counts only when a test or an alert reads it and fails when the Target is
+  missed.
 - **Architecture quantum**: an independently deployable part of the system with its own
   architecture characteristics. More than one deployable is a sign of more than one quantum.
 - **Not architecture characteristics**: the **autonomy of the agent** (what it may do on its own)
