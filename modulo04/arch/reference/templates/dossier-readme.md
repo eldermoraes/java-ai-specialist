@@ -1,5 +1,8 @@
 # Architecture Dossier
 
+<!-- Write this file in the user's language, headings included (language.md). Keep the status
+     values as they are. Leave this comment out of the file. -->
+
 Architecture documentation of this system. Each deliverable is written by an architecture skill
 and reviewed by the team.
 
