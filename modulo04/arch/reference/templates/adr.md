@@ -1,5 +1,8 @@
 # ADR {{NNNN}}: {{Title}}
 
+<!-- Write this file in the user's language, headings included (language.md). Leave this
+     comment out of the file. -->
+
 ## Status
 
 {{proposed | accepted | superseded by ADR-NNNN}}

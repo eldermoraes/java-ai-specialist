@@ -1,0 +1,27 @@
+name: arch plugin
+
+on:
+  pull_request:
+    paths:
+      - "modulo04/arch/**"
+      - ".github/workflows/arch-plugin.yml"
+  push:
+    branches: [main]
+    paths:
+      - "modulo04/arch/**"
+      - ".github/workflows/arch-plugin.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: References in sync
+        run: modulo04/arch/scripts/sync-references.sh --check
+      - name: Language rule in place
+        run: modulo04/arch/scripts/check-language.sh
+      - name: Every known break is caught
+        run: modulo04/arch/scripts/test-check-language.sh

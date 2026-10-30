@@ -17,9 +17,17 @@ nothing. With nothing, ask for a two-line description of the system and start fr
 Read [references/vocabulary.md](references/vocabulary.md) before you start: use its terms with its
 meanings. Do not mention the source book in generated files.
 
+Write every file, task and question in the user's language, template headings included, following
+[references/language.md](references/language.md).
+
 Templates for the files you write:
 - [references/brief.md](references/brief.md) for the brief;
-- [references/adr.md](references/adr.md) for the ADR.
+- [references/adr.md](references/adr.md) for the ADR;
+- [references/dossier-readme.md](references/dossier-readme.md) for the dossier index, when it does
+  not exist yet.
+
+Fixed sentences in this skill (the `Next:` lines) are written here in the plugin's language:
+translate each into the user's language, and keep commands and file names as they are.
 
 ## 1. Read the setup and what already exists
 
@@ -104,21 +112,31 @@ Show the user the brief and the ADR as drafts. Write only after the user confirm
    write that a `gap` task tracks it. Status is `accepted` when the user confirmed node 5, otherwise
    `proposed`.
 3. **Tasks**: one `decision` task per Open Decision, plus one `gap` task when Compliance points to
-   a check that does not exist. Before creating, look for an open task with the same title and
-   reuse it.
-   - GitHub tracker: `gh issue create --title "<title>" --label <label> --body "<what is missing to decide, and a link to the brief>"`.
-   - Local tracker: a file `.scratch/architecture/issues/NN-slug.md` (next free `NN`, from `01`)
-     with a `# <title>` line, a `Labels: <label>` line, and the body.
+   a check that does not exist. Before creating, look for an open task with the same label that
+   names the same decision or check, and reuse it. Match by the label and the subject, not by the
+   exact title: an earlier run may have translated the title differently.
+   - GitHub tracker: find with `gh issue list --label <label> --state open --search "<subject>"`;
+     create with `gh issue create --title "<title>" --label <label> --body "<what is missing to decide, and a link to the brief>"`.
+   - Local tracker: find a file in `.scratch/architecture/issues/` with the `Labels: <label>`
+     line, a `Status: open` line and the subject in its `#` title. Create a file
+     `.scratch/architecture/issues/NN-slug.md` (next free `NN`, from `01`; `slug` is the title
+     already translated, in kebab-case) with a `# <title>` line, a `Labels: <label>` line, a
+     `Status: open` line, and the same body as on GitHub.
    Put the link or file name of each task in the Open Decisions table of the brief.
-4. **Dossier index**: in `docs/architecture/README.md`, set Brief and Architecture Decision Records
-   to `generated` with today's date. If the file does not exist, create it with those two rows.
+4. **Dossier index**: in `docs/architecture/README.md`, set the rows that link to `brief.md` and to
+   `../adr/` to `generated` with today's date. Find each row by its link, never by its label,
+   which is translated into the user's language. If a row is missing, add it. If the file does not
+   exist, create it from [references/dossier-readme.md](references/dossier-readme.md), translated,
+   with those two rows as `generated` and the other rows as `pending`.
 
 Done when the brief has every section filled, the ADR has all seven sections, every Open Decision
 has a task, and the dossier index shows both as `generated`.
 
 ## 5. Report and next step
 
-List the files written and the tasks opened. Name the Open Decisions in one line each. Then:
+List the files written and the tasks opened. Name the Open Decisions in one line each. Then end
+with one of these lines, translated into the user's language, with commands and file names as
+they are:
 
 - If the plugin you are running from has the `to-characteristics` skill, end with
   `Next: /arch:to-characteristics (Claude Code) · $arch:to-characteristics (Codex)`.
