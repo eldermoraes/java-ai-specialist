@@ -59,9 +59,13 @@ each file goes and what is already answered.
   `Dockerfile.jvm` and `Dockerfile.native`) are image variants of one deployable, not more
   deployables. Several endpoints in the same deployable are still one quantum.
 - One deployable: one quantum, named after the system. Say so in one line and do not ask.
-- The name of the system is the title of the README; without a title, the `artifactId` (or the
-  project name in the build file) or, without either, the name of the directory. Say where the
-  name came from.
+- The name of the system is the name the build file declares: in Maven, `<name>` when it exists,
+  otherwise `<artifactId>`; in Gradle, `rootProject.name` in `settings.gradle`; in other builds,
+  the project name field (`name` in `package.json`). Say where the name came from. The README title
+  is not a source for the name.
+- When no build file declares a name (or there is no build file), ask the user which name to use
+  in the round that confirms the list (step 3), not in a round of its own, with your
+  recommendation and where it came from (the name of the directory, or the short description).
 - More than one deployable is a sign of more than one quantum. Each quantum gets its own section in
   the file, with its own characteristics.
   - With the `per-quantum` layout in the setup, write one `characteristics.md` per quantum folder
@@ -84,7 +88,8 @@ Done when every quantum has a name and you know which file holds its section.
   recommend dropping, name the criterion it fails.
 - Confirm the list in one round: show, for each quantum, the characteristics you recommend
   keeping and the ones you recommend dropping, and ask the user to confirm both lists or correct
-  them. The user may answer "ok to all" to accept the round as it is.
+  them. When no build file declares the name of the system (step 2), the same round asks for
+  it. The user may answer "ok to all" to accept the round as it is.
 - After the answer, say in one line what it settled.
 
 Done when the user has confirmed, for each quantum, the list kept and the list dropped.
@@ -120,12 +125,18 @@ Done when every characteristic has a Target and a Measure.
 ## 5. Find the fitness function
 
 For each characteristic, look in the repository for a mechanism that already checks it
-objectively: a test, a metric with an alert, a limit in the configuration, an architecture rule
-in the build, a rule in the CI pipeline. Point to the path (and the test or rule name).
+objectively and fails when the Target is missed: a test, a metric with an alert, an architecture
+rule in the build, a rule in the CI pipeline. Point to the path (and the test or rule name).
 
 A log line is not a fitness function by itself: it counts only when a test or an alert reads it
 and fails when the Target is missed. Point to that test or alert. A log line that nothing reads
 leaves the characteristic without a fitness function, and it gets a `gap` task.
+
+A limit in the configuration is not a fitness function by itself either: it implements the
+characteristic, and nothing fails when someone raises it or removes it. It counts only when a test
+exercises it: the test drives the system to the limit and fails when the limit stops holding.
+Point to that test. A limit that no test exercises leaves the characteristic without a fitness
+function, and it gets a `gap` task; the limit can still be the evidence for the Target (step 4).
 
 - Found: write the path in the Fitness Function column.
 - None found: the characteristic is still only an intention. Write "none" (translated into the
@@ -145,8 +156,8 @@ or where it belongs instead. When they come up, always record these two, with th
 
 - **Autonomy of the agent**: what the agent may do on its own is a design principle, not an
   architecture characteristic.
-- **Quality of the response**: a guardrail checks it on every request; it stays out of the
-  dossier.
+- **Quality of the response**: out of the scope of this dossier: it is measured by evals, not by
+  an architecture fitness function.
 
 A domain requirement that came up as a candidate goes here too: it lives in the specification of
 the system.

@@ -32,9 +32,10 @@ Look before you ask. Check each item and keep a note of what you found:
   defaults for every question.
 - `docs/agents/issue-tracker.md`: if it exists, another skill set already chose the tracker. Reuse
   that choice and skip question A.
-- Deployables: count the independently deployable units (one `pom.xml` with packaging per service,
-  one `Dockerfile` per service, separate apps in a monorepo). More than one is a sign of more than
-  one architecture quantum.
+- Deployables: count the independently deployable units by build unit (one `pom.xml` or
+  `build.gradle` with its own packaging per service, one app per folder in a monorepo). Several
+  images of the same build (for example `Dockerfile.jvm` and `Dockerfile.native`) are one
+  deployable, not more. More than one deployable is a sign of more than one architecture quantum.
 
 Done when every item above has an answer.
 
