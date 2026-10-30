@@ -2,8 +2,9 @@
 
 <!-- Write this file in the user's language, headings and table headers included (language.md).
      Keep `gap` and the paths as they are; translate "none" and "(estimate)" like the rest of the
-     text. The system name is the title of the README; without one, the `artifactId` (or the
-     project name in the build file) or the name of the directory. Repeat the quantum section
+     text. The system name is the name the build file declares (Maven `<name>`, otherwise
+     `<artifactId>`; Gradle `rootProject.name`); without one, the name the user gave in the round
+     that confirmed the list. Never the title of the README. Repeat the quantum section
      once per architecture quantum; with a single quantum, keep one section and name the quantum
      after the system. Leave this comment out of the file. -->
 
@@ -19,7 +20,7 @@ that checks it, or a `gap` task when none exists yet.
 
 | Characteristic | Why (meets the 3 defining criteria) | Target | Measure | Fitness Function |
 |---|---|---|---|---|
-| {{characteristic}} | {{non-domain: ...; structure: what it shapes; critical: why the system fails without it}} | {{number, unit, percentile or window; "(estimate)" when the project shows no evidence, or only a few samples or a single run}} | {{Operational, Structural or Process}} | {{path of the test, metric with alert, configuration limit or CI rule; or "none: `gap` task <link or .scratch file>"}} |
+| {{characteristic}} | {{non-domain: ...; structure: what it shapes; critical: why the system fails without it}} | {{number, unit, percentile or window; "(estimate)" when the project shows no evidence, or only a few samples or a single run}} | {{Operational, Structural or Process}} | {{path of the test, metric with alert, architecture rule or CI rule; a log line counts only through the test or alert that reads it, and a configuration limit only through the test that exercises it; or "none: `gap` task <link or .scratch file>"}} |
 
 ## Out of Scope
 

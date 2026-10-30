@@ -22,7 +22,18 @@
 #   - a template in reference/templates/ lost its language instruction;
 #   - any skill, reference, template or the README mentions English (for example "in English"),
 #     outside language.md itself, which is the only file allowed to name the plugin's own language;
-#   - a copy listed in PAIRS of sync-references.sh is out of sync with reference/.
+#   - a copy listed in PAIRS of sync-references.sh is out of sync with reference/;
+#   - the vocabulary, the characteristics template, a SKILL.md or the README:
+#       - lists a configuration limit as a fitness function on its own, or mentions one without
+#         "only when a test exercises it" (the vocabulary must state the rule);
+#       - drops the quality of the response because a guardrail checks it, or mentions it without
+#         "measured by evals" (the vocabulary must state the scope reason);
+#       - counts one deployable per Dockerfile (the vocabulary must say that several images of the
+#         same build are one deployable);
+#       - takes the name of the system from the title of the README;
+#   - a SKILL.md names the system without the build file as the source and the question in the
+#     round that confirms the list as the fallback, or the characteristics template lost that rule;
+#   - the README asks to confirm the quanta without "only when there is more than one deployable".
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -137,6 +148,86 @@ for file in $(find "$PLUGIN_ROOT/reference" "$PLUGIN_ROOT/skills" "$PLUGIN_ROOT/
     fail "${file#"$PLUGIN_ROOT"/} mentions English: $(grep -ni "english" "$file" | head -1)"
   fi
 done
+
+# Shared rules of the architecture vocabulary that a skill once broke. Text is matched with line
+# breaks folded, so wrapping a sentence does not matter.
+folded() {
+  tr '\n' ' ' < "$1" | tr -s ' '
+}
+VOCABULARY="$PLUGIN_ROOT/reference/vocabulary.md"
+RULE_FILES="$VOCABULARY $PLUGIN_ROOT/reference/templates/characteristics.md $PLUGIN_ROOT/README.md"
+for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
+  RULE_FILES="$RULE_FILES $skill_md"
+done
+
+# A limit in the configuration implements a characteristic; it is a fitness function only when a
+# test exercises it.
+if ! folded "$VOCABULARY" | grep -q 'limit in the configuration is not one by itself'; then
+  fail "reference/vocabulary.md no longer says that a limit in the configuration is not a fitness function by itself"
+fi
+for file in $RULE_FILES; do
+  text=$(folded "$file")
+  if printf '%s\n' "$text" | grep -qiE 'alert, (a )?(limit in the configuration|configuration limit)'; then
+    fail "${file#"$PLUGIN_ROOT"/} lists a configuration limit as a fitness function on its own"
+  fi
+  if printf '%s\n' "$text" | grep -qiE 'limit in the configuration|configuration limit' \
+      && ! printf '%s\n' "$text" | grep -q 'exercises it'; then
+    fail "${file#"$PLUGIN_ROOT"/} mentions a configuration limit without \"only when a test exercises it\""
+  fi
+done
+
+# The quality of the response is out of scope because evals measure it, not because a guardrail
+# checks it (a guardrail also checks characteristics that stay, such as confidentiality).
+if ! folded "$VOCABULARY" | grep -q 'quality of the response\*\* is measured by evals'; then
+  fail "reference/vocabulary.md no longer puts the quality of the response out of scope as measured by evals"
+fi
+for file in $RULE_FILES; do
+  text=$(folded "$file")
+  if printf '%s\n' "$text" | grep -qiE 'guardrail checks it on every request|checked by a guardrail on every request'; then
+    fail "${file#"$PLUGIN_ROOT"/} drops the quality of the response because a guardrail checks it"
+  fi
+  if printf '%s\n' "$text" | grep -qi 'quality of the response' \
+      && ! printf '%s\n' "$text" | grep -q 'measured by evals'; then
+    fail "${file#"$PLUGIN_ROOT"/} mentions the quality of the response without \"measured by evals\""
+  fi
+done
+
+# Deployables are counted by build unit: images of the same build are one deployable.
+if ! folded "$VOCABULARY" | grep -q 'images of the same build .* are one deployable'; then
+  fail "reference/vocabulary.md no longer says that several images of the same build are one deployable"
+fi
+for file in $RULE_FILES; do
+  if folded "$file" | grep -q 'one `Dockerfile` per service'; then
+    fail "${file#"$PLUGIN_ROOT"/} counts one deployable per Dockerfile"
+  fi
+done
+
+# The name of the system comes from the build file; without one, the user is asked in the round
+# that confirms the list. The README title is not a source (it often names something else).
+for file in $RULE_FILES; do
+  if folded "$file" | grep -qiE '(name of the system|system name) is the title of the README'; then
+    fail "${file#"$PLUGIN_ROOT"/} takes the name of the system from the title of the README"
+  fi
+done
+for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
+  text=$(folded "$skill_md")
+  if printf '%s\n' "$text" | grep -q 'The name of the system is' \
+      && ! { printf '%s\n' "$text" | grep -q 'the name the build file declares' \
+             && printf '%s\n' "$text" | grep -q 'ask the user which name to use in the round that confirms the list'; }; then
+    fail "skills/$(basename "$(dirname "$skill_md")")/SKILL.md names the system without \"the name the build file declares\" and the fallback \"ask the user which name to use in the round that confirms the list\""
+  fi
+done
+TEMPLATE_TEXT=$(folded "$PLUGIN_ROOT/reference/templates/characteristics.md")
+if ! { printf '%s\n' "$TEMPLATE_TEXT" | grep -q 'the name the build file declares' \
+       && printf '%s\n' "$TEMPLATE_TEXT" | grep -q 'the name the user gave'; }; then
+  fail "reference/templates/characteristics.md lost the rule for the system name (build file, otherwise the name the user gave)"
+fi
+
+# With a single deployable the quantum is not asked.
+if folded "$PLUGIN_ROOT/README.md" | grep -q 'confirm the quanta' \
+    && ! folded "$PLUGIN_ROOT/README.md" | grep -q 'confirm the quanta (asked only when there is more than one deployable)'; then
+  fail "README.md asks to confirm the quanta without \"only when there is more than one deployable\""
+fi
 
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then
   fail "references out of sync with reference/ (run scripts/sync-references.sh)"

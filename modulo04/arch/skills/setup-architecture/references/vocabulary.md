@@ -43,13 +43,18 @@ the concepts directly.
 - **Fitness function**: any mechanism that objectively checks that a characteristic or a decision
   still holds (a test, a metric with an alert, an architecture rule in the build). A log line is
   not one by itself: it counts only when a test or an alert reads it and fails when the Target is
-  missed.
+  missed. A limit in the configuration is not one by itself either: it implements the
+  characteristic, and it counts only when a test exercises it and fails when the limit stops
+  holding.
 - **Architecture quantum**: an independently deployable part of the system with its own
-  architecture characteristics. More than one deployable is a sign of more than one quantum.
+  architecture characteristics. Count deployables by build unit: one build file with its own
+  packaging per service, one app per folder in a monorepo. Several images of the same build (for
+  example `Dockerfile.jvm` and `Dockerfile.native`) are one deployable, not more. More than one
+  deployable is a sign of more than one quantum.
 - **Not architecture characteristics**: the **autonomy of the agent** (what it may do on its own)
-  is a design principle; the **quality of the response** is checked by a guardrail on every
-  request and stays out of the dossier; a **domain requirement** lives in the specification of the
-  system.
+  is a design principle; a **domain requirement** lives in the specification of the system.
+- **Out of the scope of the dossier**: the **quality of the response** is measured by evals, not
+  by an architecture fitness function.
 
 ## Architecture decisions
 

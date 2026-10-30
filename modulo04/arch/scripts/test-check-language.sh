@@ -114,6 +114,60 @@ fresh_copy next-untranslated
 edit 's/as they are/as written/g; s/as$/as written/' "$COPY/skills/grill-architecture/SKILL.md"
 expect_fail next-untranslated
 
+# 12. A limit in the configuration back in the list of fitness functions, with no test to exercise
+#     it (the skill would accept max-retries=2 alone and skip the gap task).
+fresh_copy config-limit-in-skill
+edit 's/a metric with an alert, an architecture$/a metric with an alert, a limit in the configuration, an architecture/' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail config-limit-in-skill
+
+# 13. The template accepts a configuration limit without the test that exercises it.
+fresh_copy config-limit-in-template
+edit 's/, and a configuration limit only through the test that exercises it//; s/architecture rule or CI rule/configuration limit or CI rule/' \
+  "$COPY/reference/templates/characteristics.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail config-limit-in-template
+
+# 14. The vocabulary lost the rule on configuration limits.
+fresh_copy config-limit-rule-gone
+edit 's/A limit in the configuration is not one by itself either: it implements the/It implements the/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail config-limit-rule-gone
+
+# 15. The quality of the response dropped because a guardrail checks it (that reason would drop
+#     confidentiality too).
+fresh_copy quality-by-guardrail
+edit 's/out of the scope of this dossier: it is measured by evals, not by/a guardrail checks it on every request; it stays out of the dossier, not/' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail quality-by-guardrail
+
+# 16. One deployable per Dockerfile in the setup.
+fresh_copy deployable-per-dockerfile
+edit 's/one app per folder in a monorepo). Several/one `Dockerfile` per service, one app per folder in a monorepo). Several/' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail deployable-per-dockerfile
+
+# 17. The README promises a quantum question with a single deployable.
+fresh_copy readme-quanta-always
+edit 's/confirm the quanta (asked only when there is more than one$/confirm the quanta (more than one/' \
+  "$COPY/README.md"
+expect_fail readme-quanta-always
+
+# 18. No name in the build file and no question: the skill would invent the name or take it from
+#     the README.
+fresh_copy name-without-question
+edit 's/ask the user which name to use$/use the name of the directory/' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail name-without-question
+
+# 19. The README title back as the source of the name.
+fresh_copy name-from-readme
+edit 's/The system name is the name the build file declares (Maven `<name>`, otherwise/The system name is the title of the README; without one, the name the build file declares (Maven `<name>`, otherwise/' \
+  "$COPY/reference/templates/characteristics.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail name-from-readme
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

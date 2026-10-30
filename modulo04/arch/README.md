@@ -84,8 +84,8 @@ the conversation, unless you ask for another one (rule in `reference/language.md
 2. `/arch:grill-architecture "an agent that answers the customers of a telecom and can open a ticket in the support system"`:
    answer the rounds of questions; each comes with a recommendation.
 3. Read `docs/architecture/brief.md` and `docs/adr/0001-agent-workflow-or-multi-agent.md`.
-4. `/arch:to-characteristics`: confirm the quanta and, in one round, the characteristics kept and
-   dropped; then the Targets, up to three per round. Each question comes with a recommendation:
+4. `/arch:to-characteristics`: confirm the quanta (asked only when there is more than one
+   deployable) and, in one round, the characteristics kept and dropped; then the Targets, up to three per round. Each question comes with a recommendation:
    "ok" accepts it, and "ok to all" accepts the whole round.
 5. Read `docs/architecture/characteristics.md` and the `gap` tasks for the characteristics that
    have no fitness function yet.
