@@ -61,6 +61,9 @@
 #     unproven technology checked in every run with one question, no Next: line for a proof of
 #     concept, one block per dimension, the area matched by its subject, or which tasks it closes;
 #   - to-adr closes the high-risk task, or no longer sends the user to the code before to-risk;
+#   - to-risk sends the user back to to-adr for a high-risk task an ADR already answers, or to-adr
+#     no longer sends the user to the first of risk.md, autonomy.md and traces.md still pending,
+#     then to check-architecture;
 #   - the vocabulary lost a limit only in the prompt not being a hard limit, the Permission values
 #     (written the same way in the autonomy template), the rule for `autonomous`, or the condition
 #     of the kill switch through an approval; language.md no longer keeps the autonomy terms and
@@ -506,6 +509,18 @@ if ! printf '%s\n' "$TO_ADR_TEXT" | grep -q 'keep the high-risk task open'; then
 fi
 if ! printf '%s\n' "$TO_ADR_TEXT" | grep -q 'put the mitigation in the code, then /arch:to-risk'; then
   fail "skills/to-adr/SKILL.md no longer ends with \"put the mitigation in the code, then /arch:to-risk\" when the ADR answers a high-risk task"
+fi
+# The chain moves on after an ADR. to-risk does not send the user back to to-adr for a high-risk
+# task that an ADR already answers (the loop between to-risk and to-adr), and to-adr sends the user
+# to the first document still pending, then to check-architecture (a fixed return to to-risk).
+if [ -f "$TO_RISK" ] && ! printf '%s\n' "$TO_RISK_TEXT" | grep -qF 'is answered: its `Next:` line does not count'; then
+  fail "skills/to-risk/SKILL.md lost \"is answered: its \`Next:\` line does not count\" (the loop between to-risk and to-adr comes back)"
+fi
+if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'the first of `risk.md`, `autonomy.md` and `traces.md`, in this order, that is `pending` or missing in the dossier index'; then
+  fail "skills/to-adr/SKILL.md no longer sends the user to the first of risk.md, autonomy.md and traces.md still pending"
+fi
+if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'end with `Next: /arch:check-architecture'; then
+  fail "skills/to-adr/SKILL.md no longer ends with \"Next: /arch:check-architecture\" when the dossier documents are written"
 fi
 
 # Autonomy (to-autonomy). Each rule below is a sentence a reviewer asked for when the skill was

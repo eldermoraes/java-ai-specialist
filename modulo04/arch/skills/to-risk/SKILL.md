@@ -229,7 +229,9 @@ with commands and file names as they are:
 
 - If an open `high-risk` task has a `Next: /arch:to-adr "..."` line, end with that line. The choice
   is always among the tasks that have the line: the one with the highest risk; on a tie, the first
-  in the list.
+  in the list. A `high-risk` task that already links an ADR, or that an `accepted` ADR answers, is
+  answered: its `Next:` line does not count. Say in one line that its mitigation is still missing
+  in the code.
 - Otherwise, if the plugin you are running from has the `to-autonomy` skill, end with
   `Next: /arch:to-autonomy (Claude Code) · $arch:to-autonomy (Codex)`.
 - Otherwise end with: `Next: review docs/architecture/risk.md, and mark it reviewed in docs/architecture/README.md.`

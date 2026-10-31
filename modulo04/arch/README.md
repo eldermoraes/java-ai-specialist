@@ -93,7 +93,9 @@ the conversation, unless you ask for another one (rule in `reference/language.md
 
 1. `/arch:setup-architecture`: choose the tracker (GitHub Issues or local files) and the layout.
 2. `/arch:grill-architecture "an agent that answers the customers of a telecom and can open a ticket in the support system"`:
-   answer the rounds of questions; each comes with a recommendation.
+   answer the rounds of questions; each comes with a recommendation. On a project that already
+   has code, pass its path instead (`/arch:grill-architecture path/to/project`): what the code
+   shows counts as answered.
 3. Read `docs/architecture/brief.md` and `docs/adr/0001-agent-workflow-or-multi-agent.md`.
 4. `/arch:to-characteristics`: confirm the quanta (asked only when there is more than one
    deployable) and, in one round, the characteristics kept and dropped; then the Targets, up to three per round. Each question comes with a recommendation:
@@ -118,9 +120,9 @@ the conversation, unless you ask for another one (rule in `reference/language.md
     and confirm. Read `docs/architecture/check-report.md` and the `gap` tasks, and follow the Next
     Command.
 
-On a project that already has code, `to-characteristics` also runs alone, from the project root
-(`/arch:to-characteristics`) or with a path (`/arch:to-characteristics path/to/project`), and so
-does `to-adr`.
+Every skill also runs alone on a project that already has code, from the project root or with a
+path (`/arch:to-characteristics path/to/project`); following the `Next:` lines runs the whole
+chain.
 
 ## Layout
 

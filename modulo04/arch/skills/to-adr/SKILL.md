@@ -208,6 +208,11 @@ commands and file names as they are:
 
 - If the ADR answers a `high-risk` task, end with
   `Next: put the mitigation in the code, then /arch:to-risk to close the high-risk task (Claude Code) · $arch:to-risk (Codex)`.
-- Otherwise, if the plugin you are running from has the `to-risk` skill, end with
+- Otherwise, take the first of `risk.md`, `autonomy.md` and `traces.md`, in this order, that is
+  `pending` or missing in the dossier index. If the plugin you are running from has the skill that
+  writes it (`to-risk`, `to-autonomy`, `to-traces`), end with that skill, in the form
   `Next: /arch:to-risk (Claude Code) · $arch:to-risk (Codex)`.
+- Otherwise, when the three are `generated` or `reviewed` and the plugin you are running from has
+  the `check-architecture` skill, end with
+  `Next: /arch:check-architecture (Claude Code) · $arch:check-architecture (Codex)`.
 - Otherwise end with: `Next: review ADR <number>, and mark it reviewed in docs/architecture/README.md.`
