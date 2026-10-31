@@ -168,6 +168,34 @@ edit 's/The system name is the name the build file declares (Maven `<name>`, oth
 "$COPY/scripts/sync-references.sh" > /dev/null
 expect_fail name-from-readme
 
+# 20. The template title back in Portuguese (a run in Portuguese once wrote "Características de
+#     arquitetura: support-desk").
+fresh_copy title-in-portuguese
+edit '1s/^# Architecture Characteristics:/# Características de arquitetura:/' \
+  "$COPY/reference/templates/characteristics.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail title-in-portuguese
+
+# 21. language.md lost the rule that keeps the term: the agent translates the title again.
+fresh_copy term-rule-gone
+edit '/^- The term \*\*architecture characteristic\*\*/,/^  language\.$/d' "$COPY/reference/language.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail term-rule-gone
+
+# 22. The skill tells the agent to translate the title.
+fresh_copy skill-translates-title
+edit 's/^included, following \[references\/language.md\](references\/language.md). Keep the term architecture$/included, following [references\/language.md](references\/language.md). Translate the term architecture/' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail skill-translates-title
+
+# 23. The dossier index template translates the row label.
+fresh_copy dossier-label-translated
+edit 's/, and the label "Architecture Characteristics" as it is, in every language//' \
+  "$COPY/reference/templates/dossier-readme.md"
+edit 's/(language.md). Leave/Leave/' "$COPY/reference/templates/dossier-readme.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail dossier-label-translated
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

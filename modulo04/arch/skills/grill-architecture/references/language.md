@@ -29,6 +29,11 @@ This covers everything a skill writes for the user:
 - Established technical terms, inside the translated text, when the user's language has no
   established translation for them (for example ADR, Target, fitness function, architecture
   quantum, harness). Keep their meaning from the vocabulary.
+- The term **architecture characteristic** (plural architecture characteristics; characteristic
+  when it is short for it), in every language and always, like Target and fitness function: in the
+  title, the section headings, the table headers, the row of the dossier index and the text. The
+  title of the characteristics file is `Architecture Characteristics: <system name>` in every
+  language.
 
 ## Existing files
 
