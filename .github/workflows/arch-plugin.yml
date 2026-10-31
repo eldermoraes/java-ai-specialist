@@ -25,3 +25,9 @@ jobs:
         run: modulo04/arch/scripts/check-language.sh
       - name: Every known break is caught
         run: modulo04/arch/scripts/test-check-language.sh
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Risk matrix script
+        run: modulo04/arch/scripts/test-risk-score.sh

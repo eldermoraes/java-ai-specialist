@@ -154,9 +154,102 @@ the concepts directly.
 | Conditional, loop or supervisor | Mediator | |
 | Tools / MCP | Microkernel | The remote plug-in (an MCP server) brings network and failure inside the system; the model, not the core, chooses which tool to call |
 
+## Resilience and risk
+
+- **Provider**: the company that serves the model through its API. It goes down, it slows down,
+  and it refuses requests over its **rate limit** (the requests per minute it accepts).
+- **Resilience**: staying useful when a dependency fails.
+- **Synchronous call**: the caller waits for the response to go on. A synchronous call to the
+  provider puts the provider inside the quantum of the caller for the duration of the call: its
+  availability and its latency become yours. Availabilities in series multiply (99.9% and 99.5%
+  give about 99.4%).
+- **Asynchronous call**: the caller goes on without waiting for the response. A queue holds the
+  request until someone processes it, and separates the two quanta.
+- **Fallacies of distributed computing**: eight false assumptions about the network, each with its
+  reading in an agent. The network is reliable (a model call can be lost on the way); latency is
+  zero (a model response takes seconds); bandwidth is infinite (the whole context travels in every
+  call); the network is secure (the prompt leaves the company in every call); the topology does not
+  change (the provider changes versions and retires models); there is one administrator (another
+  company runs the provider); transport cost is zero (every token that travels is billed); the
+  network is homogeneous (each provider has its own API and its own errors).
+- **Timeout**: the most a call may wait. Condition: every call over the network; the timeout always
+  applies. Calls in sequence add up their timeouts, and a reasoning model needs a longer one.
+- **Retry**: repeating a call that failed. Condition: a transient failure (a lost connection, a
+  timeout, a rate limit, a server error) on a call with no effect, or on an idempotent one. An
+  invalid request fails the same way the second time. With **backoff** (a wait that grows with
+  each attempt) and jitter (a random variation, so the clients do not come back together). Every
+  retry is a paid call and counts in the worst case of the per-task ceiling; one more attempt
+  doubles the worst wait.
+  - A **guardrail retry** repeats a response that came and was rejected, to correct it; a
+    **resilience retry** repeats a call that failed and brought no response. Nested, they
+    multiply: a guardrail with two more attempts inside a resilience retry with one more attempt
+    makes up to six calls for one response.
+- **Fallback**: an alternative response when the call fails for good. Condition: an alternative
+  response the user accepts (another model or another provider, which changes the quality of the
+  answer; a stored response to the same request; a partial response that says what is missing). A
+  clear error, without internal detail, is the minimum fallback.
+- **Circuit breaker** (of a dependency, distinct from the loop circuit breaker): stops calling a
+  dependency that keeps failing. After several failures in a row it opens; while open, it fails at
+  once without waiting for the timeout; after a while, it tries one call. Condition: many calls to
+  the same dependency in a short time. With low volume, timeout and retry are enough, and it is
+  `not now`.
+- **Emitter**: a part that publishes events to whoever subscribes (publish/subscribe). The user
+  gets the progress without waiting for the end. Asynchronous to the user, synchronous to the
+  provider: the model call still waits for the response, the provider stays in the quantum, and the
+  work lives in the memory of the process (a restart loses it).
+- **Queue with persisted work**: the request writes the job and answers at once; a consumer reads
+  the queue and calls the provider; the result arrives later, by query or notice. One more part to
+  run and monitor. Condition: the user does not need the answer at once, the work cannot be lost in
+  a crash, or the volume goes past the rate limit of the provider. With none of the three, the
+  queue is `not now`.
+- **State**: what the agent keeps between one call and the next (the memory of the conversation,
+  the current step of the task). **State scoped by user or tenant** (a tenant is a customer with
+  its own isolated data): the failure of one does not corrupt the state of another, and the retry
+  resumes the state of the right user. Condition: state kept between requests.
+- **Compensation**: an action that undoes the effect of a step. **Saga**: a sequence of steps, each
+  with its compensation; when a step fails, the compensations of the steps done run. Condition:
+  effectful actions in more than one system; without effectful actions, the saga is `not now`.
+- **Effectful retry**: a retry that repeats an effectful action. Repeating a read is safe;
+  repeating a write can duplicate the effect, and the failure can come after the effect (the
+  message left and the response was lost). Repeating a model call repeats the tools it already ran.
+- **Idempotent**: repeating it has the same effect as doing it once. An idempotent action accepts a
+  retry; an action that is not idempotent gets no automatic retry.
+- **Architecture risk**: what can fail and how much it hurts.
+- **Risk matrix**: impact first, then likelihood, 1 to 3 each, multiplied; the possible scores are
+  1, 2, 3, 4, 6 and 9. Levels: 1–2 low, 3–4 medium, 6–9 high. A scale to recommend with
+  consistency:
+  - Impact 1: one part degrades and the user is still served. Impact 2: one request fails or loses
+    part of its result. Impact 3: the system stops doing its job, loses data, or causes an effect
+    outside.
+  - Likelihood 1: unlikely, with protection or redundancy seen in the code. Likelihood 2: possible,
+    an external dependency without protection seen. Likelihood 3: expected, it has happened or
+    happens in normal use.
+- **Unproven technology**: a technology unknown to the team. It always scores 9, without the
+  matrix, because nobody can score what they do not know. Checked in every run, whatever the
+  dimension, and scored in the area that depends on the technology. It is mitigated with a proof of
+  concept or spike (a small test of the technology before depending on it), which is not an
+  architecture decision.
+- **Risk storming**: an exercise in which a group finds the risks of an architecture, one dimension
+  per run, one block per dimension in `risk.md`. A **dimension** is the kind of risk assessed; the
+  candidate dimensions are performance, scalability, availability (with its transitive
+  dependencies), data loss, single point of failure and security. An **area** is a part of the
+  architecture where the risk can show. Effectful retry and unproven technology are checked in
+  every run, not picked as a dimension.
+  - **Identification**: each person scores alone, without seeing the other scores, so nobody pulls
+    the attention of the group.
+  - **Consensus**: the group discusses the scores that diverge, and also a score only one person
+    gave (that person may have seen what nobody saw), and ends with one score per risk.
+  - **Mitigation**: a change in the architecture that lowers the risk. Every mitigation costs, and
+    whoever pays decides whether the risk is worth the cost.
+- **Single-assessor**: a risk only one person scored. Without consensus, the score is marked. The
+  agent prepares and recommends; people score.
+- **Direction**: the score against the previous assessment of the same dimension: `improving`
+  (lower), `stable` (the same) or `worsening` (higher); `new` on the first assessment, with no
+  previous score to compare. A fitness function shows the trend.
+
 ## Tracker labels
 
 - `decision`: an open decision that still needs an ADR.
-- `high-risk`: a risk scored 6 or 9 without mitigation.
+- `high-risk`: a risk scored 6 or 9 without mitigation in place.
 - `gap`: something the architecture requires that is not in place yet (for example, a missing
   fitness function).

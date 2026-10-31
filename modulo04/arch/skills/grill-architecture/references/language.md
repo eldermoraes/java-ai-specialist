@@ -26,6 +26,11 @@ This covers everything a skill writes for the user:
   with their values (`open` and `closed` in a local task), file and folder names, commands.
 - The term `not now`, for a part of a decision postponed on purpose: write it as it is, in every
   language, never translated.
+- The terms risk storming, effectful retry, unproven technology and `single-assessor`, the
+  Direction values (`new`, `improving`, `stable`, `worsening`) and the scores: write them as they
+  are, in every language, like architecture characteristic. The headings Identification,
+  Consensus, Mitigation and Risk Matrix are translated with the other headings, and so is the
+  level of a risk (low, medium, high), which no skill reads back.
 - The headings `## Agent skills` and `### Architecture` of the architecture block, which other
   skill sets look for.
 - Established technical terms, inside the translated text, when the user's language has no

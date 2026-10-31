@@ -37,6 +37,11 @@ to-adr:language.md
 to-adr:adr.md
 to-adr:dossier-readme.md
 to-adr:NextAdrNumber.java
+to-risk:vocabulary.md
+to-risk:language.md
+to-risk:risk.md
+to-risk:dossier-readme.md
+to-risk:RiskScore.java
 "
 
 for pair in $PAIRS; do
