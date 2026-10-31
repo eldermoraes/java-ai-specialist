@@ -266,6 +266,14 @@ fresh_copy readme-old-count
 edit 's/lists the four skills/lists the three skills/' "$COPY/README.md"
 expect_fail readme-old-count
 
+# 35. The 15 times back as a market estimate (the source is a measurement a provider published
+#     about its own multi-agent research system).
+fresh_copy multiplier-market-estimate
+edit 's/a provider measured its own multi-agent research system spending/a common market estimate is that a multi-agent system spends/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail multiplier-market-estimate
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

@@ -81,8 +81,8 @@ the concepts directly.
 - **Workflow**: a system in which the path is defined in code ahead of time; the model fills steps
   of a known path.
 - **Multi-agent**: several agents, each with its own context, coordinated by code or by another
-  agent. Model calls multiply (a common market estimate is that a multi-agent system spends about
-  15 times the tokens of a single-agent chat).
+  agent. Model calls multiply (a provider measured its own multi-agent research system spending
+  about 15 times the tokens of a single-agent chat; the number varies from system to system).
 - **Harness**: everything around the model (prompt, tools, memory and context, limits, guardrails,
   observability). Agent = model + harness. The model comes ready-made; the team designs the
   harness, and each piece of the harness is an architecture decision.

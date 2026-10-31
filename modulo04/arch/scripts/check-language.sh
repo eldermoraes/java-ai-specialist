@@ -38,7 +38,8 @@
 #     writes characteristics.md no longer keeps the term architecture characteristic as it is (the
 #     title "Architecture Characteristics: <system name>" in every language), or a file translates
 #     it ("Características de arquitetura");
-#   - the vocabulary counts the multiplier in calls ("15 times the calls") instead of tokens;
+#   - the vocabulary counts the multiplier in calls ("15 times the calls") instead of tokens, or
+#     calls the 15 times a market estimate instead of a measurement published by a provider;
 #   - the vocabulary, the ADR template or a SKILL.md uses `not now` without "the condition that
 #     reopens it";
 #   - the vocabulary lost a condition of the model gateway, or the condition of the loop circuit
@@ -278,6 +279,16 @@ fi
 if ! folded "$VOCABULARY" | grep -q 'about 15 times the tokens of a single-agent chat'; then
   fail "reference/vocabulary.md no longer says that a multi-agent system spends about 15 times the tokens of a single-agent chat"
 fi
+# The 15 times is a measurement a provider published about its own multi-agent research system,
+# not a market estimate: the vocabulary once said "a common market estimate".
+if ! folded "$VOCABULARY" | grep -q 'a provider measured its own multi-agent research system'; then
+  fail "reference/vocabulary.md no longer says that the 15 times is a measurement a provider published about its own system"
+fi
+for file in $(find "$PLUGIN_ROOT/reference" "$PLUGIN_ROOT/skills" "$PLUGIN_ROOT/README.md" -type f); do
+  if folded "$file" | grep -qi 'market estimate'; then
+    fail "${file#"$PLUGIN_ROOT"/} calls the 15 times a market estimate; it is a measurement published by a provider"
+  fi
+done
 for file in $(find "$PLUGIN_ROOT/reference" "$PLUGIN_ROOT/skills" "$PLUGIN_ROOT/README.md" -type f); do
   if folded "$file" | grep -qi '15 times the calls'; then
     fail "${file#"$PLUGIN_ROOT"/} counts the multiplier in calls (\"15 times the calls\"); it is about 15 times the tokens"
