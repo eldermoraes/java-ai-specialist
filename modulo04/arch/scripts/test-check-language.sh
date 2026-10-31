@@ -814,6 +814,22 @@ edit '/^When the user has written nothing yet but the command (alone, or with a 
 "$COPY/scripts/sync-references.sh" > /dev/null
 expect_fail language-command-alone
 
+# 106 to 109. A skill reads the Next: /arch:to-adr line back by the word "Next:" (in a conversation
+#      in Portuguese the task says "Próximo:"; to-adr did not list it, to-risk skipped the ADR of
+#      the mitigation; validation of 31/10, round 4).
+fresh_copy next-match-language
+edit 's/ (for example `Próximo: \/arch:to-adr "..."`) must match it by the command, not by the word before it\./ (for example `Próximo: \/arch:to-adr "..."`)./' \
+  "$COPY/reference/language.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail next-match-language
+
+for skill in to-adr to-risk check-architecture; do
+  fresh_copy "next-match-$skill"
+  edit 's/: match it by the command, not by the word before it\././' \
+    "$COPY/skills/$skill/SKILL.md"
+  expect_fail "next-match-$skill"
+done
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

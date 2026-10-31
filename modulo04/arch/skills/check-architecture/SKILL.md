@@ -158,6 +158,7 @@ Verified (needs telemetry). State the next command; never run it. End with one o
 translated into the user's language, with commands and file names as they are:
 
 - The first Violated item whose task has a `Next: /arch:to-adr "..."` line: end with that line.
+  The line is translated in the user's language (for example `Próximo: /arch:to-adr "..."`): match it by the command, not by the word before it.
 - Otherwise, the first Violated item: end with what closes it, from its task.
 - Otherwise, the first Not Verified (needs telemetry) item: end with the telemetry it needs.
 - Otherwise, the first document of the dossier in `pending`: end with

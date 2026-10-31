@@ -101,7 +101,9 @@
 #   - setup-architecture lets the user keep the GitHub tracker without the labels (it creates them
 #     only when confirmed, or lost what to do when the user declines them);
 #   - language.md lost the rule for a command with no text of the user (the language the host is
-#     set to answer in, otherwise one question with a recommendation).
+#     set to answer in, otherwise one question with a recommendation);
+#   - language.md, to-adr, to-risk or check-architecture reads the `Next: /arch:to-adr "..."` line
+#     of a task back without matching it by the command (the word Next: is translated).
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -790,6 +792,16 @@ fi
 if ! printf '%s\n' "$LANGUAGE_TEXT" | grep -qF 'When the user has written nothing yet but the command (alone, or with a path), use the language the host is set to answer in; with no such setting, ask once which language to use, with your recommendation (the language of the project'"'"'s README), before the first summary'; then
   fail "reference/language.md lost the rule for a command with no text of the user (the host setting, otherwise one question with the README language as the recommendation)"
 fi
+# The Next: line of a task is translated with the fixed sentences (Próximo: in Portuguese), and the
+# skills that read it back looked for the literal "Next:": to-adr did not list the task as a
+# candidate, to-risk skipped the ADR of the mitigation (validation of 31/10, round 4).
+NEXT_MATCH='match it by the command, not by the word before it'
+for file in "$PLUGIN_ROOT/reference/language.md" "$TO_ADR" "$TO_RISK" "$CHECK_ARCH"; do
+  [ -f "$file" ] || continue
+  if ! folded "$file" | grep -qF "$NEXT_MATCH"; then
+    fail "${file#"$PLUGIN_ROOT"/} reads the Next: /arch:to-adr line back without \"$NEXT_MATCH\" (the line is translated)"
+  fi
+done
 
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then
   fail "references out of sync with reference/ (run scripts/sync-references.sh)"
