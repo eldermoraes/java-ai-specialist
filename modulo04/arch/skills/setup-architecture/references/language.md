@@ -31,6 +31,10 @@ This covers everything a skill writes for the user:
   are, in every language, like architecture characteristic. The headings Identification,
   Consensus, Mitigation and Risk Matrix are translated with the other headings, and so is the
   level of a risk (low, medium, high), which no skill reads back.
+- The terms blast radius, kill switch and least agency, and the Permission values (`forbidden`, `propose`, `with-approval`, `autonomous`):
+  write them as they are, in every language. The headings Design Principle, Actions, Kill Switch,
+  Excess Check and Actions Without Effect, and the field names of each action, are translated
+  with the other headings.
 - The headings `## Agent skills` and `### Architecture` of the architecture block, which other
   skill sets look for.
 - Established technical terms, inside the translated text, when the user's language has no

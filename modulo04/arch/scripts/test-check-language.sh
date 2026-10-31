@@ -257,13 +257,13 @@ expect_fail missing-script
 
 # 33. The README leaves to-adr out of the skills the agent installs.
 fresh_copy readme-without-to-adr
-edit 's/`to-characteristics`, `to-adr` and `to-risk`\./`to-characteristics` and `to-risk`./' \
+edit 's/`to-characteristics`, `to-adr`, `to-risk` and$/`to-characteristics`, `to-risk` and/' \
   "$COPY/README.md"
 expect_fail readme-without-to-adr
 
 # 34. The README still says the plugin has three skills.
 fresh_copy readme-old-count
-edit 's/lists the five skills/lists the three skills/' "$COPY/README.md"
+edit 's/lists the six skills/lists the three skills/' "$COPY/README.md"
 expect_fail readme-old-count
 
 # 35. The 15 times back as a market estimate (the source is a measurement a provider published
@@ -370,7 +370,7 @@ expect_fail adr-closes-high-risk
 
 # 49. The README still says the plugin has four skills.
 fresh_copy readme-four-skills
-edit 's/lists the five skills/lists the four skills/' "$COPY/README.md"
+edit 's/lists the six skills/lists the four skills/' "$COPY/README.md"
 expect_fail readme-four-skills
 
 # 50. The copy of RiskScore.java in to-risk drifts from the single source.
@@ -420,6 +420,111 @@ edit 's/Match an area of the$/Match an area of the previous block by its exact n
 edit 's/^  previous block by its subject, not by its exact name:/  by its subject:/' \
   "$COPY/skills/to-risk/SKILL.md"
 expect_fail area-by-exact-name
+
+# 56. to-autonomy lost the rule on limits only in the prompt (a ceiling only in the system message
+#     would pass for a hard limit).
+fresh_copy prompt-limit-gone
+edit 's/A limit that only the prompt states is not a hard limit\. //' \
+  "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail prompt-limit-gone
+
+# 56b. The vocabulary lost the same rule.
+fresh_copy prompt-limit-gone-vocabulary
+edit 's/A limit that only the prompt states is not a hard limit\. //' "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail prompt-limit-gone-vocabulary
+
+# 57. to-autonomy no longer records who approved (an approval without a name proves nothing).
+fresh_copy approver-not-recorded
+edit '/^- Who approved is an identity too/d' "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail approver-not-recorded
+
+# 57b. to-autonomy assumes who approves instead of asking.
+fresh_copy approver-assumed
+edit 's/Never assume who approves: ask\. //' "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail approver-assumed
+
+# 58. to-autonomy scores risk (the work of to-risk), in the description and in the body.
+fresh_copy autonomy-scores-risk
+edit 's/[Dd]oes not score risk/score each action with the risk matrix/g' \
+  "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail autonomy-scores-risk
+
+# 58b. to-autonomy runs the risk matrix script.
+fresh_copy autonomy-runs-risk-script
+echo "- run scripts/RiskScore.java for each action" >> "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail autonomy-runs-risk-script
+
+# 59. The template writes a Permission value differently from the vocabulary.
+fresh_copy permission-value-drift
+edit 's/`with-approval`/`approval`/g' "$COPY/reference/templates/autonomy.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail permission-value-drift
+
+# 60. to-autonomy recommends autonomous for an effect that cannot be undone.
+fresh_copy autonomous-without-undo
+edit 's/ and the effect can be undone//' "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail autonomous-without-undo
+
+# 60b. The vocabulary lost the same rule.
+fresh_copy autonomous-without-undo-vocabulary
+edit 's/ and the effect can be undone//' "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail autonomous-without-undo-vocabulary
+
+# 61. One kill switch per action (every action would open the same question).
+fresh_copy kill-switch-per-action
+edit '/^- One kill switch per system: record it once/d' "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail kill-switch-per-action
+
+# 62. to-autonomy opens a decision task for an action an accepted ADR already decides.
+fresh_copy decision-despite-adr
+edit 's/ without an accepted ADR whose/ whose/' "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail decision-despite-adr
+
+# 63. language.md no longer keeps least agency as it is.
+fresh_copy least-agency-translated
+edit 's/kill switch and least agency, and the Permission/kill switch, and the Permission/' \
+  "$COPY/reference/language.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail least-agency-translated
+
+# 64. The dossier index template lost the row of the autonomy file.
+fresh_copy dossier-without-autonomy
+edit '/^| \[Autonomy\](autonomy.md) | pending | |$/d' "$COPY/reference/templates/dossier-readme.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail dossier-without-autonomy
+
+# 65. The kill switch lost its condition through an approval (a workflow with an approval would
+#     get no kill switch).
+fresh_copy kill-switch-without-approval-condition
+edit 's/, even through an approval\./. /' "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail kill-switch-without-approval-condition
+
+# 66. The README still says the plugin has five skills.
+fresh_copy readme-five-skills
+edit 's/lists the six skills/lists the five skills/' "$COPY/README.md"
+expect_fail readme-five-skills
+
+# 67. to-autonomy closes the decision task (it closes in to-adr, when the ADR is accepted).
+fresh_copy autonomy-closes-task
+echo "   - GitHub tracker: gh issue close <number>" >> "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail autonomy-closes-task
+
+# 68. A required kill switch without a task, when Approval, Idempotency and Hard Limits are already
+#     in the code.
+fresh_copy kill-switch-without-task
+edit 's/^   opened for it when there is none\.$/   when that task exists./' \
+  "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail kill-switch-without-task
+
+# 69. to-adr matches the decision task by the exact text (the decision typed in other words would
+#     leave the task open for ever).
+fresh_copy decision-by-exact-text
+edit 's/holds the same decision, matched by the subject and not by the exact text\./holds the same decision./' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail decision-by-exact-text
 
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"

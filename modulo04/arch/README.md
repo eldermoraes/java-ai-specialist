@@ -16,7 +16,8 @@ change your host's plugin configuration: ask the user to approve them when your 
 
 The plugin lives in the marketplace `java-ai-specialist` (the catalog file
 `.claude-plugin/marketplace.json` at the root of the repository). Its skills are
-`setup-architecture`, `grill-architecture`, `to-characteristics`, `to-adr` and `to-risk`.
+`setup-architecture`, `grill-architecture`, `to-characteristics`, `to-adr`, `to-risk` and
+`to-autonomy`.
 
 ### If you are Claude Code
 
@@ -27,7 +28,7 @@ The plugin lives in the marketplace `java-ai-specialist` (the catalog file
    `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` set in its environment.
 2. Run `claude plugin install arch@java-ai-specialist`.
 3. Verify: `claude plugin list` shows `arch@java-ai-specialist` enabled, and
-   `claude plugin details arch` lists the five skills.
+   `claude plugin details arch` lists the six skills.
 4. Tell the user to run `/reload-plugins` (or start a new session), and finish with:
    `Next: /arch:setup-architecture`
 
@@ -67,17 +68,19 @@ Updating never touches the files the skills generated in the user's project (`do
 | `to-characteristics` | `/arch:to-characteristics` | `$arch:to-characteristics` | `docs/architecture/characteristics.md` (Target, Measure and fitness function per characteristic, one section per quantum, Out of Scope), one `gap` task per characteristic without a fitness function |
 | `to-adr` | `/arch:to-adr` | `$arch:to-adr` | `docs/adr/NNNN-slug.md` (one decision per run, each part with the condition it needs, `not now` with the condition that reopens it), closes the `decision` task it answers, one `gap` task when Compliance has no fitness function |
 | `to-risk` | `/arch:to-risk` | `$arch:to-risk` | `docs/architecture/risk.md` (one block per dimension: areas, impact and likelihood, score from the risk matrix script, assessors, Direction; Effectful Retry for the whole system), one `high-risk` task per risk of 6 or 9 without mitigation in place |
+| `to-autonomy` | `/arch:to-autonomy` | `$arch:to-autonomy` | `docs/architecture/autonomy.md` (one block per effectful action: effect, blast radius, agent identity, permission level, approval, idempotency, hard limits; the kill switch of the system; the three excesses), one `decision` task per effectful action whose autonomy is not settled in the code or in an accepted ADR |
 
 The skills run only when you call them: the agent never starts them on its own
 (`disable-model-invocation: true` for Claude Code, `agents/openai.yaml` with
 `allow_implicit_invocation: false` for Codex).
 
 Each skill works on its own. Without the setup, `grill-architecture`, `to-characteristics`,
-`to-adr` and `to-risk` write to the default locations and keep their tasks as local files in
-`.scratch/architecture/issues/`. `to-characteristics` needs no brief and no ADR either: it reads
-the code of a project, or starts from a two-line description. `to-adr` needs no brief either: it
-reads the code where the decision lives. `to-risk` needs no other document: it reads the code
-where the external dependencies live.
+`to-adr`, `to-risk` and `to-autonomy` write to the default locations and keep their tasks as local
+files in `.scratch/architecture/issues/`. `to-characteristics` needs no brief and no ADR either: it
+reads the code of a project, or starts from a two-line description. `to-adr` needs no brief either:
+it reads the code where the decision lives. `to-risk` needs no other document: it reads the code
+where the external dependencies live. `to-autonomy` needs no other document: it reads the code
+where the actions live.
 
 The skills write in your language: the files, tasks and questions follow the language you use in
 the conversation, unless you ask for another one (rule in `reference/language.md`).
@@ -100,6 +103,10 @@ the conversation, unless you ask for another one (rule in `reference/language.md
    (the scores recommended for each area, the technologies the team does not know yet, who
    assesses), read the draft, and confirm. Read `docs/architecture/risk.md` and the `high-risk`
    tasks, and follow the `Next:` line.
+8. `/arch:to-autonomy`: answer the two rounds (the design principle, the permission level of each
+   action and who approves; then the hard limits, the idempotency and the kill switch), read the
+   draft, and confirm. Read `docs/architecture/autonomy.md` and the `decision` tasks, and follow
+   the `Next:` line.
 
 On a project that already has code, `to-characteristics` also runs alone, from the project root
 (`/arch:to-characteristics`) or with a path (`/arch:to-characteristics path/to/project`), and so

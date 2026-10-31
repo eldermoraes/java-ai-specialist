@@ -42,6 +42,10 @@ to-risk:language.md
 to-risk:risk.md
 to-risk:dossier-readme.md
 to-risk:RiskScore.java
+to-autonomy:vocabulary.md
+to-autonomy:language.md
+to-autonomy:autonomy.md
+to-autonomy:dossier-readme.md
 "
 
 for pair in $PAIRS; do
