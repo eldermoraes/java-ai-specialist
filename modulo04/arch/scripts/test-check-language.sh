@@ -718,6 +718,36 @@ echo "     task that asked for this ADR with a \`Next: /arch:to-adr\` line is cl
   >> "$COPY/skills/to-adr/SKILL.md"
 expect_fail adr-gap-closed-again
 
+# 95. The vocabulary says an output guardrail can only judge the whole response (false with an
+#     accumulator, which runs the guardrails on each chunk; validation of 31/10, aula 2).
+fresh_copy guardrail-only-whole
+edit 's/^  without it, the user waits for the whole response (an output guardrail waits for the whole$/  without it, the user waits for the whole response (an output guardrail can only judge the whole/' \
+  "$COPY/reference/vocabulary.md"
+edit 's/^  response by default)\.$/  response)./' "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail guardrail-only-whole
+
+# 96. to-characteristics says the same (the sentence lands in the student's characteristics.md).
+fresh_copy characteristics-guardrail-only-whole
+edit 's/(an output guardrail waits for the whole response by default)/(an output guardrail can only judge the whole response)/' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail characteristics-guardrail-only-whole
+
+# 97. The setup recommends GitHub Issues without the write permission (in a clone of the course
+#     repository, labels and tasks fail, or land in someone else's repository; validation of 31/10,
+#     aula 7).
+fresh_copy setup-issues-without-permission
+edit 's/^  authenticated and `gh repo view --json viewerPermission` gives ADMIN, MAINTAIN or WRITE;$/  authenticated;/' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-issues-without-permission
+
+# 98. The setup recommends local files without saying why (the user answers "ok" to a choice he
+#     does not understand).
+fresh_copy setup-local-without-reason
+edit 's/^  otherwise recommend local files, and say why\.$/  otherwise recommend local files./' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-local-without-reason
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

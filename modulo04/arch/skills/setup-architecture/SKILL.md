@@ -26,6 +26,7 @@ Templates for the files you write:
 Look before you ask. Check each item and keep a note of what you found:
 
 - `git remote -v`: is the remote on GitHub? Is `gh` installed and authenticated (`gh auth status`)?
+  Can the user write to that repository (`gh repo view --json viewerPermission`)?
 - `CLAUDE.md` and `AGENTS.md` at the repository root: which exist?
 - `docs/adr/`, `docs/architecture/` and `.scratch/`: which exist, and what is inside?
 - `docs/agents/architecture.md`: if it exists, this is a re-run; its current values are the
@@ -50,8 +51,9 @@ answer before the next question. Skip a question whose answer the exploration al
 say why you skipped it.
 
 - **A. Tracker.** Where do architecture tasks live: GitHub Issues or local files in
-  `.scratch/architecture/issues/`? Recommend GitHub Issues when the remote is GitHub and `gh` is
-  authenticated; otherwise recommend local files.
+  `.scratch/architecture/issues/`? Recommend GitHub Issues when the remote is GitHub, `gh` is
+  authenticated and `gh repo view --json viewerPermission` gives ADMIN, MAINTAIN or WRITE;
+  otherwise recommend local files, and say why.
 - **B. Labels** (GitHub only). Create the labels `decision`, `high-risk` and `gap`? Recommend yes:
   the other architecture skills open tasks with these labels.
 - **C. Layout.** Ask only when the exploration found more than one deployable: one dossier at

@@ -88,6 +88,12 @@
 #     backend, the items of traces.md (each required row Structural, a row the code records also
 #     Operational, the Trace of a Request and the Content as Structural items); or it closes a
 #     task or writes the dossier index; the vocabulary lost the two checks of a required attribute.
+#   - the vocabulary or to-characteristics says an output guardrail can only judge the whole
+#     response (an accumulator lets it run on chunks), or lost "waits for the whole response by
+#     default";
+#   - setup-architecture recommends GitHub Issues without the write permission on the repository
+#     (`gh repo view --json viewerPermission` with ADMIN, MAINTAIN or WRITE), or lost "say why"
+#     when it recommends local files.
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -697,6 +703,34 @@ if [ -f "$CHECK_ARCH" ]; then
   if grep -q 'references/dossier-readme.md' "$CHECK_ARCH"; then
     fail "skills/check-architecture/SKILL.md writes the dossier index; the check report stays out of it"
   fi
+fi
+
+# An output guardrail waits for the whole response by default; with an accumulator it runs on each
+# chunk, so "can only judge the whole response" is false (Quarkus LangChain4j, streamed responses).
+TO_CHARACTERISTICS="$PLUGIN_ROOT/skills/to-characteristics/SKILL.md"
+for file in "$VOCABULARY" "$TO_CHARACTERISTICS"; do
+  [ -f "$file" ] || continue
+  if ! folded "$file" | grep -qF 'an output guardrail waits for the whole response by default'; then
+    fail "${file#"$PLUGIN_ROOT"/} lost \"an output guardrail waits for the whole response by default\""
+  fi
+done
+for file in $RULE_FILES; do
+  if folded "$file" | grep -qiF 'can only judge the whole response'; then
+    fail "${file#"$PLUGIN_ROOT"/} says an output guardrail can only judge the whole response"
+  fi
+done
+# The setup recommends GitHub Issues only when the user can write to the repository: in a clone of
+# someone else's public repository, labels and tasks would fail, or land there.
+SETUP_ARCH="$PLUGIN_ROOT/skills/setup-architecture/SKILL.md"
+if [ -f "$SETUP_ARCH" ]; then
+  SETUP_ARCH_TEXT=$(folded "$SETUP_ARCH")
+  for phrase in \
+      '`gh repo view --json viewerPermission` gives ADMIN, MAINTAIN or WRITE' \
+      'otherwise recommend local files, and say why'; do
+    if ! printf '%s\n' "$SETUP_ARCH_TEXT" | grep -qF "$phrase"; then
+      fail "skills/setup-architecture/SKILL.md lost \"$phrase\""
+    fi
+  done
 fi
 
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then

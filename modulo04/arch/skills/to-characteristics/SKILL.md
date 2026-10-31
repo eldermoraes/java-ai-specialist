@@ -110,7 +110,7 @@ For each characteristic:
   - Partial evidence is an estimate too: a percentile taken from a few samples or from a single
     run is an estimate, and you mark it as one.
   - For latency in an agent, say which one the user feels: TTFT with streaming, the whole response
-    without it (an output guardrail can only judge the whole response).
+    without it (an output guardrail waits for the whole response by default).
   - For cost in an agent, set a ceiling per request: model calls per request, and tokens when the
     project measures them.
 - **Measure**: the family that observes it: Operational (at runtime), Structural (in the code) or
