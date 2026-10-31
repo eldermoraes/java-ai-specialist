@@ -50,7 +50,17 @@
 #   - a script in skills/*/scripts/ differs from its source in reference/scripts/, or a SKILL.md
 #     runs a script its folder does not ship;
 #   - the README leaves a skill out of "Its skills are ...", of the Skills table, or of the count
-#     that `claude plugin details arch` lists.
+#     that `claude plugin details arch` lists;
+#   - the vocabulary lost the score of an unproven technology (9, without the matrix), the levels
+#     of the risk matrix (written the same way in the risk template), the condition of a retry (no
+#     effect, or idempotent) or a condition of the queue with persisted work;
+#   - language.md no longer keeps the risk terms and the Direction values as they are, or the
+#     dossier index template lost the row of risk.md;
+#   - to-risk lost a contract: the score from RiskScore.java, the agent not being an assessor,
+#     high-risk only for 6 or 9 without mitigation in place, the retry of a call that ran tools,
+#     unproven technology checked in every run with one question, no Next: line for a proof of
+#     concept, one block per dimension, the area matched by its subject, or which tasks it closes;
+#   - to-adr closes the high-risk task, or no longer sends the user to the code before to-risk.
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -404,6 +414,75 @@ case $count in
 esac
 if ! printf '%s\n' "$README_TEXT" | grep -q "lists the $count_word skills"; then
   fail "README.md does not say that \`claude plugin details arch\` lists the $count_word skills"
+fi
+
+# Risk assessment (to-risk). Each rule below is a sentence a reviewer asked for when the skill was
+# built; losing one changes what the skill writes.
+TO_RISK="$PLUGIN_ROOT/skills/to-risk/SKILL.md"
+TO_ADR="$PLUGIN_ROOT/skills/to-adr/SKILL.md"
+RISK_TEMPLATE="$PLUGIN_ROOT/reference/templates/risk.md"
+LEVELS='1–2 low, 3–4 medium, 6–9 high'
+# A technology unknown to the team scores 9 without the matrix.
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -q 'unknown to the team. It always scores 9, without the matrix'; then
+  fail "reference/vocabulary.md no longer says that a technology unknown to the team always scores 9, without the matrix"
+fi
+# The levels of the risk matrix, written the same way in the vocabulary and in the template.
+for file in "$VOCABULARY" "$RISK_TEMPLATE"; do
+  if [ ! -f "$file" ] || ! folded "$file" | grep -q "$LEVELS"; then
+    fail "${file#"$PLUGIN_ROOT"/} lost the levels of the risk matrix (\"$LEVELS\")"
+  fi
+done
+# The condition of a retry: a call with no effect, or an idempotent one.
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -q 'on a call with no effect, or on an idempotent one'; then
+  fail "reference/vocabulary.md lost the condition of a retry (\"on a call with no effect, or on an idempotent one\")"
+fi
+# The three conditions of a queue with persisted work.
+for condition in 'does not need the answer at once' 'cannot be lost in a crash' 'past the rate limit of the provider'; do
+  if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -q "$condition"; then
+    fail "reference/vocabulary.md lost a condition of the queue with persisted work (\"$condition\")"
+  fi
+done
+# The risk terms stay as they are in every language.
+LANGUAGE_TEXT=$(folded "$PLUGIN_ROOT/reference/language.md")
+if ! printf '%s\n' "$LANGUAGE_TEXT" | grep -q 'The terms risk storming, effectful retry, unproven technology and `single-assessor`, the Direction values (`new`, `improving`, `stable`, `worsening`)'; then
+  fail "reference/language.md no longer keeps risk storming, effectful retry, unproven technology, single-assessor and the Direction values as they are"
+fi
+# The dossier index has the row of the risk assessment.
+if ! grep -q '^| \[Risk\](risk.md) | pending | |$' "$PLUGIN_ROOT/reference/templates/dossier-readme.md"; then
+  fail "reference/templates/dossier-readme.md lost the row that links to risk.md"
+fi
+# One block per dimension in the template.
+if [ -f "$RISK_TEMPLATE" ] && ! folded "$RISK_TEMPLATE" | grep -q 'replaces only the block of that dimension'; then
+  fail "reference/templates/risk.md lost \"replaces only the block of that dimension\""
+fi
+if [ -f "$TO_RISK" ]; then
+  TO_RISK_TEXT=$(folded "$TO_RISK")
+  for phrase in \
+      'scripts/RiskScore.java <impact> <likelihood>' \
+      'is not an assessor' \
+      '6 or 9 without mitigation in place' \
+      'a call that ran tools' \
+      'Every technology an area depends on is checked for unproven technology in every run, whatever the dimension' \
+      'A proof of concept or spike is not an architecture decision and gets no Next: line' \
+      'Ask one question about it: list only the technologies the build or the README marks as beta or pre-release' \
+      'replaces only the block of that dimension' \
+      'Match an area of the previous block by its subject' \
+      'Close only high-risk tasks of the dimension assessed in this run'; do
+    if ! printf '%s\n' "$TO_RISK_TEXT" | grep -qF "$phrase"; then
+      fail "skills/to-risk/SKILL.md lost \"$phrase\""
+    fi
+  done
+  if printf '%s\n' "$TO_RISK_TEXT" | grep -qiE '(4|four) or more'; then
+    fail "skills/to-risk/SKILL.md opens high-risk tasks below 6"
+  fi
+fi
+# to-adr keeps the high-risk task open, and sends the user to the code before to-risk.
+TO_ADR_TEXT=$(folded "$TO_ADR")
+if ! printf '%s\n' "$TO_ADR_TEXT" | grep -q 'keep the high-risk task open'; then
+  fail "skills/to-adr/SKILL.md no longer says \"keep the high-risk task open\""
+fi
+if ! printf '%s\n' "$TO_ADR_TEXT" | grep -q 'put the mitigation in the code, then /arch:to-risk'; then
+  fail "skills/to-adr/SKILL.md no longer ends with \"put the mitigation in the code, then /arch:to-risk\" when the ADR answers a high-risk task"
 fi
 
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then

@@ -1,0 +1,5 @@
+interface:
+  display_name: "To Risk"
+  short_description: "Assess architecture risk with a risk storming"
+policy:
+  allow_implicit_invocation: false
