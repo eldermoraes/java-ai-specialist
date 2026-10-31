@@ -685,6 +685,26 @@ edit 's/^- A required attribute is checked twice: in the code, whether the code 
 "$COPY/scripts/sync-references.sh" > /dev/null
 expect_fail vocabulary-one-check
 
+# 91. to-risk counts the Next: line of a high-risk task an ADR already answers (the user who follows
+#     the Next: lines goes back and forth between to-risk and to-adr, and never reaches to-autonomy).
+fresh_copy risk-adr-loop
+edit 's/^  answered: its `Next:` line does not count\. Say in one line that its mitigation is still missing$/  open./' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail risk-adr-loop
+
+# 92. to-adr always returns to to-risk (an ADR asked by to-autonomy or check-architecture sends the
+#     user back to a dimension already assessed).
+fresh_copy adr-fixed-return
+edit 's/^- Otherwise, take the first of `risk.md`, `autonomy.md` and `traces.md`, in this order, that is$/- Otherwise, if the plugin you are running from has the `to-risk` skill, end with `Next: \/arch:to-risk`; skip/' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail adr-fixed-return
+
+# 93. to-adr never sends the user to check-architecture (the chain stops before the check).
+fresh_copy adr-no-check
+edit '/^  `Next: \/arch:check-architecture (Claude Code) /d' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail adr-no-check
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi
