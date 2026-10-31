@@ -24,6 +24,8 @@ This covers everything a skill writes for the user:
   status values (`proposed`, `accepted`, `pending`, `generated`, `reviewed`), label names
   (`decision`, `high-risk`, `gap`), the `Tracker:`, `Layout:`, `Labels:` and `Status:` lines
   with their values (`open` and `closed` in a local task), file and folder names, commands.
+- The term `not now`, for a part of a decision postponed on purpose: write it as it is, in every
+  language, never translated.
 - The headings `## Agent skills` and `### Architecture` of the architecture block, which other
   skill sets look for.
 - Established technical terms, inside the translated text, when the user's language has no

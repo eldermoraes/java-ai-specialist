@@ -114,6 +114,8 @@ the concepts directly.
   it after the money is gone. Cost per request is an architecture characteristic, and the per-task
   ceiling is its Target. A token ceiling that is too short cuts the response in the middle: the
   reasoning can spend it before the text.
+  - Condition: any task that calls a model; the ceiling always applies (from the design when there
+    is no loop, from a counter in the code when there is one).
 - **Loop**: the model chooses the next step and repeats (a supervisor that chooses which agent runs
   next, a loop agent, tool calling until the answer is found). The model decides when to stop, and
   it may never decide to stop; every turn is a paid call. A retry is not a loop: its limit is in
