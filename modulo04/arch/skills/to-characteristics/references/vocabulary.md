@@ -275,10 +275,16 @@ the concepts directly.
     `propose` when a person or the code acts after the yes, `with-approval` when the agent acts
     after the yes.
   - Recommend `autonomous` only when the blast radius is small and the effect can be undone.
+  - The one exception: when the action only delivers to the person who made the request what a
+    person already approved in the same request, and a hard limit in the code checks that the
+    content matches the approval, recommend `autonomous` within that hard limit and say why: a
+    second approval of the same decision becomes a rubber stamp. Its Approval names the approval
+    it delivers.
 - **Human-in-the-loop**: a person approves before the effect. The approval pauses the work; every
   pause has a deadline, and a deadline that passes ends the request. Too many approvals become a
   rubber stamp: whoever approves everything stops reading.
-  - Condition of the approval: a large blast radius or an effect that cannot be undone.
+  - Condition of the approval: a large blast radius or an effect that cannot be undone, unless the
+    action only delivers what a person already approved in the same request.
 - **One ADR per effectful action**: the design principle guides; the ADR decides the rule of each
   action.
 - **Idempotency key**: a unique identifier of the request, checked before the effect; a repeated

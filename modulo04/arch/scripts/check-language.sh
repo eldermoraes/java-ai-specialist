@@ -72,6 +72,9 @@
 #     (written the same way in the autonomy template), the rule for `autonomous`, or the condition
 #     of the kill switch through an approval; language.md no longer keeps the autonomy terms and
 #     the Permission values as they are; the dossier index template lost the row of autonomy.md;
+#   - the vocabulary or to-autonomy lost the exception to a second approval (an action that only
+#     delivers what a person already approved in the same request, with a hard limit that checks
+#     the content), in the rule for `autonomous` or in the condition of the approval;
 #   - to-autonomy lost a contract: the prompt limit, the rule for `autonomous`, who approved as an
 #     identity, never assuming who approves, one kill switch per system, the rule of the decision
 #     task, the required kill switch with a task, not scoring risk (description and body), or it
@@ -601,6 +604,19 @@ done
 if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF "$AUTONOMOUS_RULE"; then
   fail "reference/vocabulary.md lost \"$AUTONOMOUS_RULE\""
 fi
+# The one exception: an action that only delivers what a person already approved in the same
+# request, with a hard limit that checks the content against the approval. Without it, the skill
+# asks a second approval of the same decision (the rubber stamp the vocabulary condemns; the reply
+# to the seller in aprovacao-desconto came out propose; validation of 31/10, round 7). Without the
+# hard limit, the exception would let the model change what was approved.
+RUBBER_STAMP_RULE='when the action only delivers to the person who made the request what a person already approved in the same request, and a hard limit in the code checks that the content matches the approval, recommend `autonomous` within that hard limit and say why: a second approval of the same decision becomes a rubber stamp'
+APPROVAL_EXCEPTION='an effect that cannot be undone, unless the action only delivers what a person already approved in the same request'
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF "$RUBBER_STAMP_RULE"; then
+  fail "reference/vocabulary.md lost the exception to a second approval (\"$RUBBER_STAMP_RULE\")"
+fi
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF "$APPROVAL_EXCEPTION"; then
+  fail "reference/vocabulary.md lost the exception in the condition of the approval (\"$APPROVAL_EXCEPTION\")"
+fi
 # The kill switch also holds when a model output leads to an effectful action through an approval
 # (a workflow with an approval would get no kill switch).
 if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF 'or a model output leads to an effectful action, even through an approval'; then
@@ -619,6 +635,8 @@ if [ -f "$TO_AUTONOMY" ]; then
   for phrase in \
       "$PROMPT_LIMIT" \
       "$AUTONOMOUS_RULE" \
+      "$RUBBER_STAMP_RULE" \
+      "$APPROVAL_EXCEPTION" \
       'Who approved is an identity too: an approval that does not record who approved proves nothing' \
       'Never assume who approves: ask' \
       'One kill switch per system: record it once, and say in each action whether it stops that action' \

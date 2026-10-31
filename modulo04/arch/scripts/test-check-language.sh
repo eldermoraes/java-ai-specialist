@@ -851,6 +851,45 @@ edit '/^7\. When the user accepted the move of the local tasks (question A), aft
   "$COPY/skills/setup-architecture/SKILL.md"
 expect_fail setup-local-tasks-move-step
 
+# 113 to 117. to-autonomy asks a second approval of a decision a person already approved in the
+#      same request (aprovacao-desconto: the manager approves the discount, then checks again the
+#      text of the reply that only delivers it; the rubber stamp the vocabulary condemns;
+#      validation of 31/10, round 7). 114: the exception without the hard limit that checks the
+#      content would let the model change what was approved.
+fresh_copy rubber-stamp-vocabulary
+edit '/^  - The one exception: when the action only delivers to the person who made the request what a$/,/^    it delivers\.$/d' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail rubber-stamp-vocabulary
+
+fresh_copy rubber-stamp-without-hard-limit
+edit 's/^    person already approved in the same request, and a hard limit in the code checks that the$/    person already approved in the same request,/' \
+  "$COPY/reference/vocabulary.md"
+edit 's/^    content matches the approval, recommend `autonomous` within that hard limit and say why: a$/    recommend `autonomous` and say why: a/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail rubber-stamp-without-hard-limit
+
+fresh_copy rubber-stamp-approval-condition
+edit 's/^  - Condition of the approval: a large blast radius or an effect that cannot be undone, unless the$/  - Condition of the approval: a large blast radius or an effect that cannot be undone./' \
+  "$COPY/reference/vocabulary.md"
+edit '/^    action only delivers what a person already approved in the same request\.$/d' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail rubber-stamp-approval-condition
+
+fresh_copy rubber-stamp-to-autonomy
+edit '/^    The one exception, from the vocabulary: when the action only delivers to the person who made$/,/^    not in the code yet, recommend it as a hard limit of the action in the second round\.$/d' \
+  "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail rubber-stamp-to-autonomy
+
+fresh_copy rubber-stamp-to-autonomy-condition
+edit 's/^  cannot be undone, unless the action only delivers what a person already approved in the same$/  cannot be undone/' \
+  "$COPY/skills/to-autonomy/SKILL.md"
+edit 's/^  request), idempotency/  ), idempotency/' \
+  "$COPY/skills/to-autonomy/SKILL.md"
+expect_fail rubber-stamp-to-autonomy-condition
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

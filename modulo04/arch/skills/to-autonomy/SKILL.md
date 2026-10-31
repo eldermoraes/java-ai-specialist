@@ -129,6 +129,11 @@ Done when each excess has its answer and its evidence.
     need the action; `propose` or `with-approval` when the blast radius is large or the effect
     cannot be undone (`propose` when a person or the code acts after the yes, `with-approval` when
     the agent acts after the yes). Recommend `autonomous` only when the blast radius is small and the effect can be undone.
+    The one exception, from the vocabulary: when the action only delivers to the person who made
+    the request what a person already approved in the same request, and a hard limit in the code
+    checks that the content matches the approval, recommend `autonomous` within that hard limit
+    and say why: a second approval of the same decision becomes a rubber stamp. When that check is
+    not in the code yet, recommend it as a hard limit of the action in the second round.
   - who approves, when the level asks for an approval. Never assume who approves: ask. The agent
     is never the one who approves.
 - Second round:
@@ -147,7 +152,8 @@ kill switch is settled, or the user left a part open.
 ## 6. Check the condition of each part
 
 - Each part has the condition of the vocabulary: approval (a large blast radius or an effect that
-  cannot be undone), idempotency (every effectful action that can run twice: a resent request, a
+  cannot be undone, unless the action only delivers what a person already approved in the same
+  request), idempotency (every effectful action that can run twice: a resent request, a
   retry, two approvals), hard limits (every effectful action; always), kill switch (the model
   chooses the next step, or a model output leads to an effectful action, even through an approval).
 - Say whether the system meets each condition, and where you saw it. A part whose condition the
