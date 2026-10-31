@@ -705,6 +705,19 @@ edit '/^  `Next: \/arch:check-architecture (Claude Code) /d' \
   "$COPY/skills/to-adr/SKILL.md"
 expect_fail adr-no-check
 
+# 94. to-adr closes the gap task that asked for the ADR and opens another for the same check (the
+#     subject stays open under a new task; ticket-router run of 31/10).
+fresh_copy adr-gap-not-reused
+edit 's/^   - A `gap` task that asked for this ADR with a `Next: \/arch:to-adr` line stays open and becomes$/   - A `gap` task that asked for this ADR with a `Next: \/arch:to-adr` line is closed and replaced by/' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail adr-gap-not-reused
+
+# 94b. The old sentence comes back next to the new one (two rules, the agent follows the closing one).
+fresh_copy adr-gap-closed-again
+echo "     task that asked for this ADR with a \`Next: /arch:to-adr\` line is closed the same way." \
+  >> "$COPY/skills/to-adr/SKILL.md"
+expect_fail adr-gap-closed-again
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

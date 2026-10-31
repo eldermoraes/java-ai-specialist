@@ -71,7 +71,8 @@
 #   - to-autonomy lost a contract: the prompt limit, the rule for `autonomous`, who approved as an
 #     identity, never assuming who approves, one kill switch per system, the rule of the decision
 #     task, the required kill switch with a task, not scoring risk (description and body), or it
-#     runs a script or closes a task; to-adr no longer matches the decision task by the subject;
+#     runs a script or closes a task; to-adr no longer matches the decision task by the subject,
+#     or closes the gap task that asked for the ADR instead of reusing it for Compliance;
 #   - the vocabulary or to-traces lost the namespace of the application for what gen_ai.* does not
 #     name, the cost computed from the tokens, the content out of the telemetry by default, or the
 #     durable record of an effectful action that sampling may drop; a file requires an older name
@@ -588,6 +589,14 @@ fi
 # words would leave the task open for ever).
 if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'the open `decision` task whose `Next: /arch:to-adr "..."` line holds the same decision, matched by the subject and not by the exact text'; then
   fail "skills/to-adr/SKILL.md no longer matches the decision task by its Next: line, by the subject"
+fi
+# to-adr reuses the gap task that asked for the ADR as the gap task of Compliance (closing it and
+# opening another for the same check leaves the subject open under a new task).
+if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'A `gap` task that asked for this ADR with a `Next: /arch:to-adr` line stays open and becomes the `gap` task of Compliance'; then
+  fail "skills/to-adr/SKILL.md no longer reuses the gap task that asked for the ADR as the gap task of Compliance"
+fi
+if printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'asked for this ADR with a `Next: /arch:to-adr` line is closed'; then
+  fail "skills/to-adr/SKILL.md closes the gap task that asked for the ADR and opens another for the same check"
 fi
 
 # Traceability (to-traces) and the architecture check (check-architecture). Each rule below is a
