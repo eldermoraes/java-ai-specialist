@@ -28,7 +28,8 @@ Look before you ask. Check each item and keep a note of what you found:
 - `git remote -v`: is the remote on GitHub? Is `gh` installed and authenticated (`gh auth status`)?
   Can the user write to that repository (`gh repo view --json viewerPermission`)?
 - `CLAUDE.md` and `AGENTS.md` at the repository root: which exist?
-- `docs/adr/`, `docs/architecture/` and `.scratch/`: which exist, and what is inside?
+- `docs/adr/`, `docs/architecture/` and `.scratch/`: which exist, and what is inside? In
+  `.scratch/architecture/issues/`, how many tasks say `Status: open`?
 - `docs/agents/architecture.md`: if it exists, this is a re-run; its current values are the
   defaults for every question.
 - `docs/agents/issue-tracker.md`: if it exists, another skill set already chose the tracker. Reuse
@@ -53,7 +54,12 @@ say why you skipped it.
 - **A. Tracker.** Where do architecture tasks live: GitHub Issues or local files in
   `.scratch/architecture/issues/`? Recommend GitHub Issues when the remote is GitHub, `gh` is
   authenticated and `gh repo view --json viewerPermission` gives ADMIN, MAINTAIN or WRITE;
-  otherwise recommend local files, and say why.
+  otherwise recommend local files, and say why. When `.scratch/architecture/issues/` already holds
+  tasks, say how many are open, and recommend keeping local files: the dossier links them and every
+  skill reads only the chosen tracker. If the user still picks GitHub Issues, offer once, with your
+  recommendation (yes), to move each open task to a GitHub Issue with the same title, label and
+  body, mark the local file `Status: closed` with a line linking the new issue, and update the
+  links in the dossier documents; list the moves in the draft of step 4.
 - **B. Labels** (GitHub only). Create the labels `decision`, `high-risk` and `gap`? Recommend yes:
   the other architecture skills open tasks with these labels. If the user declines, say in one
   line that every architecture skill opens GitHub Issues with these labels and cannot do it
@@ -107,9 +113,13 @@ Create:
    is the title already translated, in kebab-case), whose first lines are a `# Title`, a
    `Labels: <label>` line and a `Status: open` line. Closing the task means changing that line to
    `Status: closed`.
+7. When the user accepted the move of the local tasks (question A), after the labels: for each
+   open task, `gh issue create` with its title, label and body; then mark the local file
+   `Status: closed` with a line linking the new issue, and point the links in the dossier
+   documents to the new issue.
 
 Done when every file in the draft exists with the confirmed content, and, with the GitHub tracker,
-`gh label list` shows the three labels.
+`gh label list` shows the three labels, and every moved task has its GitHub Issue.
 
 ## 5. Report and next step
 
