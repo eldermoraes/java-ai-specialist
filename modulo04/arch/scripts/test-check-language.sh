@@ -788,6 +788,32 @@ edit 's/^  - A \*\*guardrail retry\*\* repeats the call after a response came an
 "$COPY/scripts/sync-references.sh" > /dev/null
 expect_fail vocabulary-guardrail-retry-corrects
 
+# 103. The setup creates the labels only when the user confirms them (GitHub tracker without the
+#      labels: every gh issue create --label of the other skills fails; validation of 31/10,
+#      round 3).
+fresh_copy setup-labels-only-confirmed
+edit 's/^5\. With the GitHub tracker, the labels are always created\. Run for each label:$/5. With the GitHub tracker and labels confirmed, run for each label:/' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-labels-only-confirmed
+
+# 104. The setup lost what to do when the user declines the labels (the user keeps the GitHub
+#      tracker with no labels, and the first task of any skill fails or lands without a label).
+fresh_copy setup-labels-declined
+edit 's/^  the other architecture skills open tasks with these labels\. If the user declines, say in one$/  the other architecture skills open tasks with these labels./' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+edit '/^  line that every architecture skill opens GitHub Issues with these labels and cannot do it$/,/^  recommendation\.$/d' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-labels-declined
+
+# 105. language.md lost the rule for a command with no text of the user (a student with no
+#      language setting who types only /arch:to-traces gets the summary, the questions and the
+#      artifact in the language of the SKILL.md; validation of 31/10, round 3).
+fresh_copy language-command-alone
+edit '/^When the user has written nothing yet but the command (alone, or with a path), use the language$/,/^recommendation (the language of the project.s README), before the first summary\.$/d' \
+  "$COPY/reference/language.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail language-command-alone
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

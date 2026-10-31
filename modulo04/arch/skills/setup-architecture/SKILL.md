@@ -55,7 +55,10 @@ say why you skipped it.
   authenticated and `gh repo view --json viewerPermission` gives ADMIN, MAINTAIN or WRITE;
   otherwise recommend local files, and say why.
 - **B. Labels** (GitHub only). Create the labels `decision`, `high-risk` and `gap`? Recommend yes:
-  the other architecture skills open tasks with these labels.
+  the other architecture skills open tasks with these labels. If the user declines, say in one
+  line that every architecture skill opens GitHub Issues with these labels and cannot do it
+  without them, and recommend the local tracker instead; ask again question A with that
+  recommendation.
 - **C. Layout.** Ask only when the exploration found more than one deployable: one dossier at
   `docs/architecture/` for the whole repository, or one dossier per quantum at
   `docs/architecture/<quantum>/`? Recommend one dossier unless the deployables have clearly
@@ -91,7 +94,7 @@ Create:
    ```
 
    If a `## Agent skills` heading already exists, add only the `### Architecture` part under it.
-5. With the GitHub tracker and labels confirmed, run for each label:
+5. With the GitHub tracker, the labels are always created. Run for each label:
 
    ```
    gh label create decision --color 1D76DB --description "Open architecture decision that needs an ADR" --force
