@@ -274,6 +274,20 @@ edit 's/a provider measured its own multi-agent research system spending/a commo
 "$COPY/scripts/sync-references.sh" > /dev/null
 expect_fail multiplier-market-estimate
 
+# 36. The per-task ceiling without its condition (the model had to guess when the ceiling applies).
+fresh_copy ceiling-without-condition
+edit '/Condition: any task that calls a model; the ceiling always applies/d' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail ceiling-without-condition
+
+# 37. language.md no longer keeps not now as it is (a run could write "agora não" in the ADR).
+fresh_copy not-now-translated
+edit '/^- The term `not now`, for a part of a decision postponed on purpose/d' \
+  "$COPY/reference/language.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail not-now-translated
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

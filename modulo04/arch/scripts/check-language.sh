@@ -41,9 +41,10 @@
 #   - the vocabulary counts the multiplier in calls ("15 times the calls") instead of tokens, or
 #     calls the 15 times a market estimate instead of a measurement published by a provider;
 #   - the vocabulary, the ADR template or a SKILL.md uses `not now` without "the condition that
-#     reopens it";
-#   - the vocabulary lost a condition of the model gateway, or the condition of the loop circuit
-#     breaker (the model chooses the next step), or a file counts retries as that condition;
+#     reopens it", or language.md no longer keeps `not now` as it is in every language;
+#   - the vocabulary lost a condition of the model gateway, the condition of the per-task ceiling
+#     (any task that calls a model), or the condition of the loop circuit breaker (the model
+#     chooses the next step), or a file counts retries as that condition;
 #   - the vocabulary or a SKILL.md that supersedes an ADR edits more than "only the Status line";
 #   - a SKILL.md that closes tasks lacks `Status: closed` for local tasks, or deletes the task file;
 #   - a script in skills/*/scripts/ differs from its source in reference/scripts/, or a SKILL.md
@@ -303,6 +304,10 @@ fi
 if ! folded "$PLUGIN_ROOT/reference/templates/adr.md" | grep -q '`not now`, with the condition that reopens it'; then
   fail "reference/templates/adr.md no longer asks for each part with its condition (\`not now\`, with the condition that reopens it)"
 fi
+# `not now` stays as it is in every language: a run could write "agora não" or "adiado" in the ADR.
+if ! folded "$PLUGIN_ROOT/reference/language.md" | grep -q 'The term `not now`, for a part of a decision postponed on purpose: write it as it is, in every language'; then
+  fail "reference/language.md no longer keeps \`not now\` as it is, in every language"
+fi
 for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   text=$(folded "$skill_md")
   if printf '%s\n' "$text" | grep -qi 'not now' \
@@ -321,6 +326,11 @@ for condition in 'more than one model' 'per-user quota' 'keys kept out of the ap
 done
 # The loop circuit breaker needs a loop: the model chooses the next step. A retry has its limit in
 # the code and counts only in the worst case of the ceiling (decision of 2026-10-31).
+# The per-task ceiling always applies: the vocabulary once gave it no condition, and the model had
+# to guess it.
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -q 'Condition: any task that calls a model; the ceiling always applies'; then
+  fail "reference/vocabulary.md lost the condition of the per-task ceiling (\"any task that calls a model; the ceiling always applies\")"
+fi
 if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -q 'Condition: the model chooses the next step (a supervisor, a loop agent, tool calling)\.'; then
   fail "reference/vocabulary.md lost the condition of the loop circuit breaker (\"the model chooses the next step (a supervisor, a loop agent, tool calling)\")"
 fi
