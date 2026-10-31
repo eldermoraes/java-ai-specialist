@@ -1,0 +1,5 @@
+interface:
+  display_name: "Check Architecture"
+  short_description: "Check the dossier against the code"
+policy:
+  allow_implicit_invocation: false

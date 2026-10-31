@@ -46,6 +46,13 @@ to-autonomy:vocabulary.md
 to-autonomy:language.md
 to-autonomy:autonomy.md
 to-autonomy:dossier-readme.md
+to-traces:vocabulary.md
+to-traces:language.md
+to-traces:traces.md
+to-traces:dossier-readme.md
+check-architecture:vocabulary.md
+check-architecture:language.md
+check-architecture:check-report.md
 "
 
 for pair in $PAIRS; do

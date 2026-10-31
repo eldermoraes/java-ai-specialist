@@ -1,0 +1,5 @@
+interface:
+  display_name: "To Traces"
+  short_description: "Decide what the trace must carry"
+policy:
+  allow_implicit_invocation: false

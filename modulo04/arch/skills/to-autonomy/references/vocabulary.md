@@ -298,10 +298,82 @@ the concepts directly.
     in production), or a model output leads to an effectful action, even through an approval.
   - With neither, `not now`, with the condition that reopens it.
 
+## Traceability
+
+- **Telemetry**: data the system emits about its own work. A **log** is a line of text with an
+  event; a **metric** is a number aggregated over time; a **trace** is the path of one request
+  through the system. A **span** is one step of the path, with a start and an end; spans nest to
+  show who called whom; an **attribute** is a name and a value recorded on a span; the **trace id**
+  ties the spans of one request.
+- **OpenTelemetry**: an open standard to emit and export telemetry, the same in every stack. The
+  **exporter** sends the telemetry to a backend that stores and shows the traces; changing the
+  backend does not change the code.
+- **Semantic conventions**: standard names of spans and attributes, so every backend reads the
+  same name. The `gen_ai.*` conventions name model calls (span `chat`), agents (span
+  `invoke_agent`) and tools (span `execute_tool`), with `gen_ai.operation.name`,
+  `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.response.model`,
+  `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` (reasoning tokens included in the
+  output) and `gen_ai.agent.name`. They are still in development and their names may change, so
+  the dossier records the version followed.
+- The `gen_ai.*` conventions do not name the user, the tenant, the approver or the reason of a
+  step: these go in the namespace of the application (a **namespace** is the prefix that groups
+  attributes, like `gen_ai`). Who asked is `enduser.id`, from the standard conventions outside
+  `gen_ai`: an id, never a name or an e-mail.
+- **What a trace must carry**, each with its condition (without it, `not now`, with the condition
+  that reopens it):
+  - who asked: the system identifies its user;
+  - the tenant: the system has tenants;
+  - which agent: more than one agent or model role;
+  - each model call and its tokens: every model call; always;
+  - each effectful action, with what it did, on which record and with what result: an effectful
+    action;
+  - who approved, as an identity: an approval;
+  - the reason of each step: the model or the data choose the next step; with a path fixed in the
+    code, the spans are enough;
+  - the end of the task, and why it ended (goal reached, limit of steps, nothing left to do, error):
+    every task; always.
+- **Cost in the trace**: the trace carries the tokens and the model of each call; the cost is
+  computed from them and the price, never recorded as the attribute of cost, because the price
+  changes and the tokens stay. Cost per task, per user or per tenant is the sum of the tokens by
+  the task, or by who asked.
+- **Decision path**: the steps that ran, in order, why each ran, and why the task ended. A
+  non-negotiable of an agent in production (see Agentic systems). Without the reason of the end, a
+  stop looks like a success. A log line per step loses the nesting; the trace keeps the order, the
+  duration and the parent of each step.
+- **Content**: prompt and response content stays out of the telemetry unless the user decides
+  otherwise, with the place where it holds (for example, development only). The conventions treat
+  the content (`gen_ai.system_instructions`, `gen_ai.input.messages`, `gen_ai.output.messages`,
+  tool arguments and results) as opt-in: it may carry personal data or a secret to the backend,
+  and the trust boundary holds for the telemetry backend too. A log is telemetry: the same rule
+  holds for the log.
+- **Sampling**: keeping only part of the traces, so the telemetry costs less. Sampling may drop a
+  trace: an effectful action also goes to a durable record, tied to the trace by its trace id. A
+  trace is not an audit record.
+
+## Architecture check
+
+- **Dossier**: the folder with the architecture documents of the system; each document states
+  something about the system that can be checked.
+- **What is checked**: every Target of a characteristic, every Compliance of an accepted ADR,
+  every required attribute of the traces, and every part a document says is in the code (approval,
+  idempotency, hard limits, kill switch, mitigation). Without a dossier, the non-negotiables of an
+  agent in production.
+- Each item has a type, the family of what it observes (see Measures): Operational, Structural or
+  Process.
+- **Results**: **Verified** (the evidence shows the item holds), **Violated** (the evidence shows
+  it does not hold) and **Not Verified (needs telemetry)** (only the running system can tell).
+  Never mark a runtime item Verified by reading the code: without telemetry there is no data, and
+  a result without data is a guess. Not Verified is not Violated.
+- A Verified item without a fitness function gets a `gap` task: checked today, it can break in the
+  next commit.
+- **What to do first**: Violated before Not Verified. Each gap becomes a `gap` task, an open one is
+  reused, and the check states the next command without running it.
+
 ## Tracker labels
 
 - `decision`: an open decision that still needs an ADR; for `to-autonomy`, an effectful action
   whose autonomy is not settled in the code or in an accepted ADR.
 - `high-risk`: a risk scored 6 or 9 without mitigation in place.
 - `gap`: something the architecture requires that is not in place yet (for example, a missing
-  fitness function).
+  fitness function); for `to-traces`, a required attribute the code does not record; for
+  `check-architecture`, an item that is not Verified or has no fitness function.

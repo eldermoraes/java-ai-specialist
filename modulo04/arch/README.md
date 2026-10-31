@@ -16,8 +16,8 @@ change your host's plugin configuration: ask the user to approve them when your 
 
 The plugin lives in the marketplace `java-ai-specialist` (the catalog file
 `.claude-plugin/marketplace.json` at the root of the repository). Its skills are
-`setup-architecture`, `grill-architecture`, `to-characteristics`, `to-adr`, `to-risk` and
-`to-autonomy`.
+`setup-architecture`, `grill-architecture`, `to-characteristics`, `to-adr`, `to-risk`,
+`to-autonomy`, `to-traces` and `check-architecture`.
 
 ### If you are Claude Code
 
@@ -28,7 +28,7 @@ The plugin lives in the marketplace `java-ai-specialist` (the catalog file
    `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` set in its environment.
 2. Run `claude plugin install arch@java-ai-specialist`.
 3. Verify: `claude plugin list` shows `arch@java-ai-specialist` enabled, and
-   `claude plugin details arch` lists the six skills.
+   `claude plugin details arch` lists the eight skills.
 4. Tell the user to run `/reload-plugins` (or start a new session), and finish with:
    `Next: /arch:setup-architecture`
 
@@ -69,18 +69,22 @@ Updating never touches the files the skills generated in the user's project (`do
 | `to-adr` | `/arch:to-adr` | `$arch:to-adr` | `docs/adr/NNNN-slug.md` (one decision per run, each part with the condition it needs, `not now` with the condition that reopens it), closes the `decision` task it answers, one `gap` task when Compliance has no fitness function |
 | `to-risk` | `/arch:to-risk` | `$arch:to-risk` | `docs/architecture/risk.md` (one block per dimension: areas, impact and likelihood, score from the risk matrix script, assessors, Direction; Effectful Retry for the whole system), one `high-risk` task per risk of 6 or 9 without mitigation in place |
 | `to-autonomy` | `/arch:to-autonomy` | `$arch:to-autonomy` | `docs/architecture/autonomy.md` (one block per effectful action: effect, blast radius, agent identity, permission level, approval, idempotency, hard limits; the kill switch of the system; the three excesses), one `decision` task per effectful action whose autonomy is not settled in the code or in an accepted ADR |
+| `to-traces` | `/arch:to-traces` | `$arch:to-traces` | `docs/architecture/traces.md` (the trace of a request; each required attribute with its convention, `gen_ai.*` or the namespace of the application, its condition and its place in the code; cost computed from the tokens; content; sampling; Stack Reference), one `gap` task per required attribute the code does not record, or one for the instrumentation when the system emits no trace |
+| `check-architecture` | `/arch:check-architecture` | `$arch:check-architecture` | `docs/architecture/check-report.md` (each item of the dossier Verified, Violated or Not Verified (needs telemetry), with its type and evidence; without a dossier, the non-negotiables of an agent in production; the next command), one `gap` task per item that is not Verified or has no fitness function, reusing the open ones |
 
 The skills run only when you call them: the agent never starts them on its own
 (`disable-model-invocation: true` for Claude Code, `agents/openai.yaml` with
 `allow_implicit_invocation: false` for Codex).
 
 Each skill works on its own. Without the setup, `grill-architecture`, `to-characteristics`,
-`to-adr`, `to-risk` and `to-autonomy` write to the default locations and keep their tasks as local
-files in `.scratch/architecture/issues/`. `to-characteristics` needs no brief and no ADR either: it
+`to-adr`, `to-risk`, `to-autonomy`, `to-traces` and `check-architecture` write to the default
+locations and keep their tasks as local files in `.scratch/architecture/issues/`. `to-characteristics` needs no brief and no ADR either: it
 reads the code of a project, or starts from a two-line description. `to-adr` needs no brief either:
 it reads the code where the decision lives. `to-risk` needs no other document: it reads the code
 where the external dependencies live. `to-autonomy` needs no other document: it reads the code
-where the actions live.
+where the actions live. `to-traces` needs no other document: it reads the code where a request
+starts and where the model is called. `check-architecture` checks whatever the dossier has, and
+without a dossier the non-negotiables of an agent in production.
 
 The skills write in your language: the files, tasks and questions follow the language you use in
 the conversation, unless you ask for another one (rule in `reference/language.md`).
@@ -107,6 +111,12 @@ the conversation, unless you ask for another one (rule in `reference/language.md
    action and who approves; then the hard limits, the idempotency and the kill switch), read the
    draft, and confirm. Read `docs/architecture/autonomy.md` and the `decision` tasks, and follow
    the `Next:` line.
+9. `/arch:to-traces`: answer the round (the content of prompts and responses, the namespace of the
+   application, the sampling), read the draft, and confirm. Read `docs/architecture/traces.md` and
+   the `gap` tasks, and follow the `Next:` line.
+10. `/arch:check-architecture`: answer the round (the telemetry to read, if any), read the draft,
+    and confirm. Read `docs/architecture/check-report.md` and the `gap` tasks, and follow the Next
+    Command.
 
 On a project that already has code, `to-characteristics` also runs alone, from the project root
 (`/arch:to-characteristics`) or with a path (`/arch:to-characteristics path/to/project`), and so
