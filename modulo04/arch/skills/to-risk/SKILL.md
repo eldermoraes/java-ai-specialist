@@ -48,7 +48,8 @@ One dimension per run. Another dimension is another run of this skill.
   traces, check-report and its `README.md`; ADRs stay in `docs/adr/` and tasks in the tracker.
   Every `docs/architecture/` path below then means that folder, and the index row of the ADRs
   links to `../../adr/`.
-- Without it, the setup has not run. Use the defaults: risk assessment at
+- Without `docs/agents/architecture.md`, the setup has not run. Use the defaults:
+  risk assessment at
   `docs/architecture/risk.md`, dossier index at `docs/architecture/README.md`, ADRs at `docs/adr/`,
   tasks as local files in `.scratch/architecture/issues/`. Do not ask about the tracker. Tell the
   user in one line, and suggest `/arch:setup-architecture` (Claude Code) or
