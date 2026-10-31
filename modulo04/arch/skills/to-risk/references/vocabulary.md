@@ -247,9 +247,61 @@ the concepts directly.
   (lower), `stable` (the same) or `worsening` (higher); `new` on the first assessment, with no
   previous score to compare. A fitness function shows the trend.
 
+## Autonomy
+
+- **Autonomy**: what the agent may do without a person, decided per action, not for the agent as a
+  whole. It is a design principle, not an architecture characteristic (see Architecture
+  characteristics). The question holds for an agent and for a workflow.
+- **Agent identity**: who the system recognizes as the author of an action. An agent has its own
+  identity, separate from the user's, with only the permissions of its actions; it acts on behalf
+  of the user and never does more than the user may; the record keeps both. Who approved is an
+  identity too: an approval that does not record who approved proves nothing.
+- **Blast radius**: the most damage if the action goes wrong: what it reaches, what the error
+  costs, whether it can be undone. The larger the blast radius, the lower the autonomy.
+- **The three excesses**: excessive functionality (the agent reaches functions the use case does
+  not need), excessive permission (the identity can do more than the action needs) and excessive
+  autonomy (a high-impact action without a person checking). An error of the model becomes damage
+  through them, whatever caused the error.
+- **Least agency**: the least functionality, permission and autonomy, decided per tool (what it
+  does, how often, how far it reaches). It extends **least privilege** (an identity with only the
+  access it needs) to what the agent decides. A model without a tool only writes text, and the
+  code acts on it.
+- **Permission levels**: `forbidden` (the use case does not need the action), `propose` (the agent
+  suggests, a person decides), `with-approval` (the agent acts after a person approves),
+  `autonomous` (the agent acts alone, within hard limits). The four values, written as they are in
+  every language: `forbidden`, `propose`, `with-approval`, `autonomous`.
+  - A large blast radius or an effect that cannot be undone asks for `propose` or `with-approval`:
+    `propose` when a person or the code acts after the yes, `with-approval` when the agent acts
+    after the yes.
+  - Recommend `autonomous` only when the blast radius is small and the effect can be undone.
+- **Human-in-the-loop**: a person approves before the effect. The approval pauses the work; every
+  pause has a deadline, and a deadline that passes ends the request. Too many approvals become a
+  rubber stamp: whoever approves everything stops reading.
+  - Condition of the approval: a large blast radius or an effect that cannot be undone.
+- **One ADR per effectful action**: the design principle guides; the ADR decides the rule of each
+  action.
+- **Idempotency key**: a unique identifier of the request, checked before the effect; a repeated
+  key returns the result of the first time. Checking the state before the effect (only a pending
+  request is approved) also makes an action idempotent.
+  - Condition: every effectful action that can run twice (a resent request, a retry, two
+    approvals).
+- **Hard limit**: a rule in the code the agent cannot cross, outside the model; the prompt asks,
+  the code guarantees. A limit that only the prompt states is not a hard limit. Execution limits
+  (steps, time, tokens) and limits of the action (value, frequency, reach).
+  - Condition: every effectful action; hard limits always apply.
+  - **Prompt injection** (an instruction in the context that changes the behavior of the
+    application) can ask for what the rule forbids; the hard limit holds whatever the prompt.
+- **Kill switch**: turns off what the model drives, at once, without a deploy; one per system. It
+  says who may trigger it, what happens to the work in progress (pending actions stop before the
+  effect; effects already done stay recorded), and the path without the agent.
+  - Condition: the model chooses the next step (with the hard limits, a non-negotiable of an agent
+    in production), or a model output leads to an effectful action, even through an approval.
+  - With neither, `not now`, with the condition that reopens it.
+
 ## Tracker labels
 
-- `decision`: an open decision that still needs an ADR.
+- `decision`: an open decision that still needs an ADR; for `to-autonomy`, an effectful action
+  whose autonomy is not settled in the code or in an accepted ADR.
 - `high-risk`: a risk scored 6 or 9 without mitigation in place.
 - `gap`: something the architecture requires that is not in place yet (for example, a missing
   fitness function).

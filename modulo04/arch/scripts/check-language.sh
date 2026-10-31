@@ -60,7 +60,15 @@
 #     high-risk only for 6 or 9 without mitigation in place, the retry of a call that ran tools,
 #     unproven technology checked in every run with one question, no Next: line for a proof of
 #     concept, one block per dimension, the area matched by its subject, or which tasks it closes;
-#   - to-adr closes the high-risk task, or no longer sends the user to the code before to-risk.
+#   - to-adr closes the high-risk task, or no longer sends the user to the code before to-risk;
+#   - the vocabulary lost a limit only in the prompt not being a hard limit, the Permission values
+#     (written the same way in the autonomy template), the rule for `autonomous`, or the condition
+#     of the kill switch through an approval; language.md no longer keeps the autonomy terms and
+#     the Permission values as they are; the dossier index template lost the row of autonomy.md;
+#   - to-autonomy lost a contract: the prompt limit, the rule for `autonomous`, who approved as an
+#     identity, never assuming who approves, one kill switch per system, the rule of the decision
+#     task, the required kill switch with a task, not scoring risk (description and body), or it
+#     runs a script or closes a task; to-adr no longer matches the decision task by the subject.
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -483,6 +491,73 @@ if ! printf '%s\n' "$TO_ADR_TEXT" | grep -q 'keep the high-risk task open'; then
 fi
 if ! printf '%s\n' "$TO_ADR_TEXT" | grep -q 'put the mitigation in the code, then /arch:to-risk'; then
   fail "skills/to-adr/SKILL.md no longer ends with \"put the mitigation in the code, then /arch:to-risk\" when the ADR answers a high-risk task"
+fi
+
+# Autonomy (to-autonomy). Each rule below is a sentence a reviewer asked for when the skill was
+# built; losing one changes what the skill decides or writes.
+TO_AUTONOMY="$PLUGIN_ROOT/skills/to-autonomy/SKILL.md"
+AUTONOMY_TEMPLATE="$PLUGIN_ROOT/reference/templates/autonomy.md"
+PERMISSION_VALUES='`forbidden`, `propose`, `with-approval`, `autonomous`'
+PROMPT_LIMIT='A limit that only the prompt states is not a hard limit'
+AUTONOMOUS_RULE='Recommend `autonomous` only when the blast radius is small and the effect can be undone'
+# A limit only in the prompt is not a hard limit (a ceiling only in the system message would pass).
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF "$PROMPT_LIMIT"; then
+  fail "reference/vocabulary.md lost \"$PROMPT_LIMIT\""
+fi
+# The four Permission values, written the same way in the vocabulary and in the template.
+for file in "$VOCABULARY" "$AUTONOMY_TEMPLATE"; do
+  if [ ! -f "$file" ] || ! folded "$file" | grep -qF "$PERMISSION_VALUES"; then
+    fail "${file#"$PLUGIN_ROOT"/} lost the Permission values (\"$PERMISSION_VALUES\")"
+  fi
+done
+# autonomous only with a small blast radius and an effect that can be undone.
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF "$AUTONOMOUS_RULE"; then
+  fail "reference/vocabulary.md lost \"$AUTONOMOUS_RULE\""
+fi
+# The kill switch also holds when a model output leads to an effectful action through an approval
+# (a workflow with an approval would get no kill switch).
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF 'or a model output leads to an effectful action, even through an approval'; then
+  fail "reference/vocabulary.md lost the condition of the kill switch (\"a model output leads to an effectful action, even through an approval\")"
+fi
+# The autonomy terms and the Permission values stay as they are in every language.
+if ! printf '%s\n' "$LANGUAGE_TEXT" | grep -qF "The terms blast radius, kill switch and least agency, and the Permission values ($PERMISSION_VALUES)"; then
+  fail "reference/language.md no longer keeps blast radius, kill switch, least agency and the Permission values as they are"
+fi
+# The dossier index has the row of the autonomy file.
+if ! grep -q '^| \[Autonomy\](autonomy.md) | pending | |$' "$PLUGIN_ROOT/reference/templates/dossier-readme.md"; then
+  fail "reference/templates/dossier-readme.md lost the row that links to autonomy.md"
+fi
+if [ -f "$TO_AUTONOMY" ]; then
+  TO_AUTONOMY_TEXT=$(folded "$TO_AUTONOMY")
+  for phrase in \
+      "$PROMPT_LIMIT" \
+      "$AUTONOMOUS_RULE" \
+      'Who approved is an identity too: an approval that does not record who approved proves nothing' \
+      'Never assume who approves: ask' \
+      'One kill switch per system: record it once, and say in each action whether it stops that action' \
+      'Open one decision task per effectful action without an accepted ADR whose Approval, Idempotency or Hard Limits are not in the code' \
+      'A required kill switch that is not in the code goes to the decision task of the action with the largest blast radius, opened for it when there is none' \
+      'It does not score risk'; do
+    if ! printf '%s\n' "$TO_AUTONOMY_TEXT" | grep -qF "$phrase"; then
+      fail "skills/to-autonomy/SKILL.md lost \"$phrase\""
+    fi
+  done
+  if ! awk 'NR == 1 { next } /^---$/ { exit } { print }' "$TO_AUTONOMY" | grep -q '^description: .*Does not score risk\.$'; then
+    fail "skills/to-autonomy/SKILL.md description lost \"Does not score risk.\""
+  fi
+  # to-autonomy decides what the agent may do; it never scores risk with the risk matrix script.
+  if grep -q 'RiskScore' "$TO_AUTONOMY" || grep -q 'scripts/[A-Za-z0-9_.-]*\.java' "$TO_AUTONOMY"; then
+    fail "skills/to-autonomy/SKILL.md runs a script (\"RiskScore\" or scripts/*.java); it does not score risk"
+  fi
+  # The decision task closes in to-adr, when its ADR is accepted.
+  if grep -q 'gh issue close' "$TO_AUTONOMY"; then
+    fail "skills/to-autonomy/SKILL.md closes a task; the decision task closes in to-adr"
+  fi
+fi
+# to-adr matches the decision task by its Next: line, by the subject (the decision typed in other
+# words would leave the task open for ever).
+if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'the open `decision` task whose `Next: /arch:to-adr "..."` line holds the same decision, matched by the subject and not by the exact text'; then
+  fail "skills/to-adr/SKILL.md no longer matches the decision task by its Next: line, by the subject"
 fi
 
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then

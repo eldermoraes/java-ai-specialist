@@ -1,0 +1,5 @@
+interface:
+  display_name: "To Autonomy"
+  short_description: "Decide what the agent may do on its own"
+policy:
+  allow_implicit_invocation: false

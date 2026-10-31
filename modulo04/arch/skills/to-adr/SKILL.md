@@ -96,8 +96,9 @@ the completion of a `proposed` one, or a new ADR that supersedes an `accepted` o
   where you saw it. The vocabulary gives the condition of the known parts: the per-task ceiling,
   the loop circuit breaker, the router by cost and the model gateway, and the parts of resilience:
   timeout, retry, fallback, the circuit breaker of a dependency, the queue with persisted work, the
-  saga and the state scoped by user or tenant. For any other part, reason out its condition and
-  state it.
+  saga and the state scoped by user or tenant, and the parts of autonomy: the approval, the
+  idempotency, the hard limits and the kill switch. For any other part, reason out its condition
+  and state it.
 - A part whose condition the system does not meet: recommend `not now`, recorded with the
   condition that reopens it. Do not invent what the code does not show: no loop in the code means
   no loop for the loop circuit breaker to stop.
@@ -165,7 +166,9 @@ user confirms or corrects it.
    - Close the `decision` task the ADR answers, when the ADR is `accepted`. GitHub tracker:
      `gh issue close <number> --comment "<link to the ADR>"`. Local tracker: change its line to
      `Status: closed` and add a line with the path of the ADR; never delete the task file. A `gap`
-     task that asked for this ADR with a `Next: /arch:to-adr` line is closed the same way.
+     task that asked for this ADR with a `Next: /arch:to-adr` line is closed the same way. With the
+     decision in the input, the task the ADR answers is the open `decision` task whose
+     `Next: /arch:to-adr "..."` line holds the same decision, matched by the subject and not by the exact text.
    - When the ADR answers a `high-risk` task, keep the high-risk task open: the risk falls when the mitigation
      reaches the code, and `to-risk` closes it then. Add the link to the ADR to it: a comment on
      GitHub (`gh issue comment <number> --body "<link to the ADR>"`), a line with the path of the
