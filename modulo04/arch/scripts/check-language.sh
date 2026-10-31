@@ -861,9 +861,30 @@ for file in "$TO_ADR" "$TO_RISK" "$TO_AUTONOMY" "$TO_TRACES" "$CHECK_ARCH"; do
     fail "${file#"$PLUGIN_ROOT"/} lost the per-quantum rule (ask the quantum, read and write its folder)"
   fi
 done
+# The per-quantum bullet sits between "Read docs/agents/architecture.md" and "Without it, the setup
+# has not run": the nearest antecedent of "it" became the per-quantum layout, and an agent reading
+# it literally took "no per-quantum layout" for "no setup", writing the tasks of a student with the
+# single layout and GitHub Issues to .scratch (validation of 31/10, round 10). Name the file.
+SETUP_MISSING='- Without `docs/agents/architecture.md`, the setup has not run. Use the defaults:'
+for file in "$TO_ADR" "$TO_RISK" "$TO_AUTONOMY" "$TO_TRACES" "$CHECK_ARCH"; do
+  [ -f "$file" ] || continue
+  if ! folded "$file" | grep -qF -- "$SETUP_MISSING"; then
+    fail "${file#"$PLUGIN_ROOT"/} does not name docs/agents/architecture.md in \"Without ..., the setup has not run\" (after the per-quantum bullet, \"it\" means the layout)"
+  fi
+  if folded "$file" | grep -qF 'Without it, the setup has not run'; then
+    fail "${file#"$PLUGIN_ROOT"/} still has \"Without it, the setup has not run\" (the antecedent of it is the per-quantum layout)"
+  fi
+done
 GRILL_ARCH="$PLUGIN_ROOT/skills/grill-architecture/SKILL.md"
 if [ -f "$GRILL_ARCH" ] && ! folded "$GRILL_ARCH" | grep -qF 'in `docs/architecture/README.md` (the `README.md` of the quantum folder, with the per-quantum layout'; then
   fail "skills/grill-architecture/SKILL.md updates the root index with the per-quantum layout (the index is the README.md of the quantum folder)"
+fi
+# The grill asked the quantum with no recommendation and outside a round, while the other skills of
+# the dossier ask it in the first round with a recommendation, and the grill itself promises a
+# recommendation for every question (validation of 31/10, round 10).
+GRILL_QUANTUM_ASK='With the per-quantum layout, ask which quantum this brief is for, in the first round, with your recommendation (the path given, or the deployable the input names), and write under its folder; ADRs stay in `docs/adr/` and tasks in the tracker.'
+if [ -f "$GRILL_ARCH" ] && ! folded "$GRILL_ARCH" | grep -qF "$GRILL_QUANTUM_ASK"; then
+  fail "skills/grill-architecture/SKILL.md asks the quantum without \"in the first round, with your recommendation\""
 fi
 AGENTS_ARCH="$PLUGIN_ROOT/reference/templates/agents-architecture.md"
 if [ -f "$AGENTS_ARCH" ] && ! folded "$AGENTS_ARCH" | grep -qF 'Each quantum folder holds the same documents: README.md, brief.md, characteristics.md, risk.md, autonomy.md, traces.md and check-report.md'; then

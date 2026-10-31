@@ -938,6 +938,25 @@ edit 's/^then this line: Each quantum folder holds the same documents: README\.m
 "$COPY/scripts/sync-references.sh" > /dev/null
 expect_fail per-quantum-template
 
+# 126 to 130. "Without it, the setup has not run" right after the per-quantum bullet: the nearest
+#      antecedent of "it" is the per-quantum layout, and a student with the single layout and
+#      GitHub Issues got the tasks in .scratch (validation of 31/10, round 10).
+for skill in to-adr to-risk to-autonomy to-traces check-architecture; do
+  fresh_copy "setup-missing-it-$skill"
+  edit 's/^- Without `docs\/agents\/architecture\.md`, the setup has not run\. Use the defaults:$/- Without it, the setup has not run. Use the defaults:/' \
+    "$COPY/skills/$skill/SKILL.md"
+  expect_fail "setup-missing-it-$skill"
+done
+
+# 131. The grill asks the quantum without the recommendation and outside the first round, unlike
+#      the other skills of the dossier and its own promise (validation of 31/10, round 10).
+fresh_copy grill-quantum-no-recommendation
+edit 's/^- With the per-quantum layout, ask which quantum this brief is for, in the first round, with your$/- With the per-quantum layout, ask which quantum this brief is for, and/' \
+  "$COPY/skills/grill-architecture/SKILL.md"
+edit 's/^  recommendation (the path given, or the deployable the input names), and write under its$/  write under its/' \
+  "$COPY/skills/grill-architecture/SKILL.md"
+expect_fail grill-quantum-no-recommendation
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

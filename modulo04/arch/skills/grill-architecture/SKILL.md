@@ -37,7 +37,9 @@ translate each into the user's language, and keep commands and file names as the
   at `docs/adr/`, tasks as local files in `.scratch/architecture/issues/`. Tell the user in one
   line, and suggest `/arch:setup-architecture` (Claude Code) or `$arch:setup-architecture` (Codex) for
   later. Then go on.
-- With the per-quantum layout, ask which quantum this brief is for, and write under its folder.
+- With the per-quantum layout, ask which quantum this brief is for, in the first round, with your
+  recommendation (the path given, or the deployable the input names), and write under its
+  folder; ADRs stay in `docs/adr/` and tasks in the tracker.
 - If a brief already exists, read it: its answers are settled, and you grill only what it leaves
   open. If the input is a project path, read its README, build files and main source folders
   first, and treat what the code shows as answered (say where you saw it).
