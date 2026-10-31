@@ -917,6 +917,27 @@ edit 's/^    line, and suggest `\/arch:setup-architecture` (Claude Code) or `\$a
 edit '/^    for one dossier per quantum\.$/d' "$COPY/skills/to-characteristics/SKILL.md"
 expect_fail characteristics-no-setup-suggestion
 
+# 119 to 125. With the per-quantum layout, the skills after to-characteristics wrote at the root of
+#      docs/architecture/ and created a second index there; check-architecture did not know which
+#      dossier to check (order-hub, two deployables; validation of 31/10, round 9).
+for skill in to-adr to-risk to-autonomy to-traces check-architecture; do
+  fresh_copy "per-quantum-$skill"
+  edit '/^- With the per-quantum layout, ask which quantum this run is for, in the first round, with your$/,/^  links to `..\/..\/adr\/`\.$/d' \
+    "$COPY/skills/$skill/SKILL.md"
+  expect_fail "per-quantum-$skill"
+done
+
+fresh_copy per-quantum-grill-index
+edit 's/^4\. \*\*Dossier index\*\*: in `docs\/architecture\/README\.md` (the `README\.md` of the quantum folder,$/4. **Dossier index**: in `docs\/architecture\/README.md` (the root index,/' \
+  "$COPY/skills/grill-architecture/SKILL.md"
+expect_fail per-quantum-grill-index
+
+fresh_copy per-quantum-template
+edit 's/^then this line: Each quantum folder holds the same documents: README\.md, brief\.md,$/then nothing else./' \
+  "$COPY/reference/templates/agents-architecture.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail per-quantum-template
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

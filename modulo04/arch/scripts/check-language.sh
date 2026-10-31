@@ -849,6 +849,27 @@ for file in "$PLUGIN_ROOT/reference/language.md" "$TO_ADR" "$TO_RISK" "$CHECK_AR
   fi
 done
 
+# With the per-quantum layout, only the setup, the grill and to-characteristics knew the quantum
+# folders: to-adr, to-risk, to-autonomy, to-traces and check-architecture read and wrote
+# docs/architecture/ and created a second index at its root, with the brief and the characteristics
+# in pending; check-architecture did not know which dossier to check (order-hub, two deployables;
+# validation of 31/10, round 9).
+PER_QUANTUM_ASK='With the per-quantum layout, ask which quantum this run is for, in the first round, with your recommendation (the path given, or the deployable the input names), and read and write that quantum'"'"'s folder: `docs/architecture/<quantum>/` for brief, characteristics, risk, autonomy, traces, check-report and its `README.md`; ADRs stay in `docs/adr/` and tasks in the tracker.'
+for file in "$TO_ADR" "$TO_RISK" "$TO_AUTONOMY" "$TO_TRACES" "$CHECK_ARCH"; do
+  [ -f "$file" ] || continue
+  if ! folded "$file" | grep -qF "$PER_QUANTUM_ASK"; then
+    fail "${file#"$PLUGIN_ROOT"/} lost the per-quantum rule (ask the quantum, read and write its folder)"
+  fi
+done
+GRILL_ARCH="$PLUGIN_ROOT/skills/grill-architecture/SKILL.md"
+if [ -f "$GRILL_ARCH" ] && ! folded "$GRILL_ARCH" | grep -qF 'in `docs/architecture/README.md` (the `README.md` of the quantum folder, with the per-quantum layout'; then
+  fail "skills/grill-architecture/SKILL.md updates the root index with the per-quantum layout (the index is the README.md of the quantum folder)"
+fi
+AGENTS_ARCH="$PLUGIN_ROOT/reference/templates/agents-architecture.md"
+if [ -f "$AGENTS_ARCH" ] && ! folded "$AGENTS_ARCH" | grep -qF 'Each quantum folder holds the same documents: README.md, brief.md, characteristics.md, risk.md, autonomy.md, traces.md and check-report.md'; then
+  fail "reference/templates/agents-architecture.md does not say what each quantum folder holds"
+fi
+
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then
   fail "references out of sync with reference/ (run scripts/sync-references.sh)"
 fi

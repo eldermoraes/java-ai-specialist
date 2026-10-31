@@ -31,7 +31,10 @@ Tracker: {{tracker}}
 <!-- single | per-quantum -->
 Layout: {{layout}}
 
-{{quanta: one line per quantum, with its folder under docs/architecture/, only for per-quantum}}
+{{quanta: only for per-quantum, one line per quantum with its folder under docs/architecture/,
+then this line: Each quantum folder holds the same documents: README.md, brief.md,
+characteristics.md, risk.md, autonomy.md, traces.md and check-report.md. ADRs stay in docs/adr/
+and tasks in the tracker.}}
 
 ## Artifact locations
 
@@ -41,4 +44,8 @@ Layout: {{layout}}
 | Brief | `docs/architecture/brief.md` |
 | ADRs | `docs/adr/NNNN-slug.md` |
 | Architecture characteristics | `docs/architecture/characteristics.md` |
+| Risk assessment | `docs/architecture/risk.md` |
+| Autonomy | `docs/architecture/autonomy.md` |
+| Traces | `docs/architecture/traces.md` |
+| Check report | `docs/architecture/check-report.md` |
 | Local tasks | `.scratch/architecture/issues/` (only with the `local` tracker) |

@@ -123,8 +123,9 @@ Show the user the brief and the ADR as drafts. Write only after the user confirm
      already translated, in kebab-case) with a `# <title>` line, a `Labels: <label>` line, a
      `Status: open` line, and the same body as on GitHub.
    Put the link or file name of each task in the Open Decisions table of the brief.
-4. **Dossier index**: in `docs/architecture/README.md`, set the rows that link to `brief.md` and to
-   `../adr/` to `generated` with today's date. Find each row by its link, never by its label,
+4. **Dossier index**: in `docs/architecture/README.md` (the `README.md` of the quantum folder,
+   with the per-quantum layout, where the ADR row links to `../../adr/`), set the rows that link
+   to `brief.md` and to `../adr/` to `generated` with today's date. Find each row by its link, never by its label,
    which is translated into the user's language. If a row is missing, add it. If the file does not
    exist, create it from [references/dossier-readme.md](references/dossier-readme.md), translated,
    with those two rows as `generated` and the other rows as `pending`.
