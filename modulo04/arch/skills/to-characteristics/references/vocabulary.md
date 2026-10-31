@@ -35,8 +35,8 @@ the concepts directly.
   2 s, cost per request under a set amount).
 - **Latency in an agent** is measured by **TTFT** (time to first token of the response) and
   **TPOT** (time per output token after the first). With streaming, the user feels the TTFT;
-  without it, the user waits for the whole response (an output guardrail can only judge the whole
-  response).
+  without it, the user waits for the whole response (an output guardrail waits for the whole
+  response by default).
 - **Measures**: **Operational** (observed at runtime: latency, availability, cost),
   **Structural** (observed in the code: dependencies, layering, where an SDK is used), and
   **Process** (observed in how the team works: test coverage, deploy frequency).
