@@ -84,7 +84,7 @@ Show the user the full list of files and labels you will create or change, with 
 Create:
 
 1. `docs/architecture/README.md` from the dossier template (one per quantum with the per-quantum
-   layout). If it exists, keep its rows and add the missing ones.
+   layout, in `docs/architecture/<quantum>/README.md`, with the ADR row linking to `../../adr/`). If it exists, keep its rows and add the missing ones.
 2. `docs/adr/`, if it does not exist, with a `.gitkeep` file so git keeps the empty folder. Keep
    any ADR already there: the architecture skills continue its numbering.
 3. `docs/agents/architecture.md` from its template, with the answers filled in.

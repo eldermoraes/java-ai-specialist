@@ -40,6 +40,12 @@ names as they are.
 
 - Read `docs/agents/architecture.md`. It gives the tracker (`github` or `local`), the layout and
   the artifact locations.
+- With the per-quantum layout, ask which quantum this run is for, in the first round, with your
+  recommendation (the path given, or the deployable the input names), and read and write that
+  quantum's folder: `docs/architecture/<quantum>/` for brief, characteristics, risk, autonomy,
+  traces, check-report and its `README.md`; ADRs stay in `docs/adr/` and tasks in the tracker.
+  Every `docs/architecture/` path below then means that folder, and the index row of the ADRs
+  links to `../../adr/`.
 - Without it, the setup has not run. Use the defaults: traces at `docs/architecture/traces.md`,
   dossier index at `docs/architecture/README.md`, ADRs at `docs/adr/`, tasks as local files in
   `.scratch/architecture/issues/`. Do not ask about the tracker. Tell the user in one line, and
@@ -167,7 +173,8 @@ confirms or corrects it.
      `Status: open` line, and the same body as on GitHub.
    - This skill never closes a task.
    Put the link or file name of each task in the In the Code column of its rows.
-3. **Dossier index**: in `docs/architecture/README.md`, set the row that links to `traces.md` to
+3. **Dossier index**: in `docs/architecture/README.md` (the `README.md` of the quantum
+   folder, with the per-quantum layout), set the row that links to `traces.md` to
    `generated` with today's date. Find the row by its link, never by its label, which is
    translated into the user's language. If the row is missing, add it. If the file does not exist,
    create it from [the dossier template](references/dossier-readme.md), translated, with that row

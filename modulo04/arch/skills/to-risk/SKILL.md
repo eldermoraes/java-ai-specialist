@@ -42,6 +42,12 @@ One dimension per run. Another dimension is another run of this skill.
 
 - Read `docs/agents/architecture.md`. It gives the tracker (`github` or `local`), the layout and
   the artifact locations.
+- With the per-quantum layout, ask which quantum this run is for, in the first round, with your
+  recommendation (the path given, or the deployable the input names), and read and write that
+  quantum's folder: `docs/architecture/<quantum>/` for brief, characteristics, risk, autonomy,
+  traces, check-report and its `README.md`; ADRs stay in `docs/adr/` and tasks in the tracker.
+  Every `docs/architecture/` path below then means that folder, and the index row of the ADRs
+  links to `../../adr/`.
 - Without it, the setup has not run. Use the defaults: risk assessment at
   `docs/architecture/risk.md`, dossier index at `docs/architecture/README.md`, ADRs at `docs/adr/`,
   tasks as local files in `.scratch/architecture/issues/`. Do not ask about the tracker. Tell the
@@ -212,7 +218,8 @@ user confirms or corrects it.
      a technology the team now knows. The question about unproven technology is asked in every run,
      so its answer holds for any block; a task of an area of another dimension stays as it is.
    Put the link or file name of each task in the Mitigation table.
-3. **Dossier index**: in `docs/architecture/README.md`, set the row that links to `risk.md` to
+3. **Dossier index**: in `docs/architecture/README.md` (the `README.md` of the quantum
+   folder, with the per-quantum layout), set the row that links to `risk.md` to
    `generated` with today's date. Find the row by its link, never by its label, which is
    translated into the user's language. If the row is missing, add it. If the file does not exist,
    create it from [the dossier template](references/dossier-readme.md), translated, with that row
