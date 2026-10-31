@@ -744,7 +744,7 @@ expect_fail setup-issues-without-permission
 # 98. The setup recommends local files without saying why (the user answers "ok" to a choice he
 #     does not understand).
 fresh_copy setup-local-without-reason
-edit 's/^  otherwise recommend local files, and say why\.$/  otherwise recommend local files./' \
+edit 's/^  otherwise recommend local files, and say why\. When/  otherwise recommend local files. When/' \
   "$COPY/skills/setup-architecture/SKILL.md"
 expect_fail setup-local-without-reason
 
@@ -829,6 +829,27 @@ for skill in to-adr to-risk check-architecture; do
     "$COPY/skills/$skill/SKILL.md"
   expect_fail "next-match-$skill"
 done
+
+# 110 to 112. The setup switches to GitHub Issues with local tasks already open and says nothing:
+#      every skill then reads only GitHub, the open gap, decision and high-risk tasks drop out of
+#      the chain, check-architecture opens duplicates and the dossier links point to files no
+#      skill reads (validation of 31/10, round 6).
+fresh_copy setup-local-tasks-ignored
+edit 's/^  tasks, say how many are open, and recommend keeping local files: the dossier links them and every$/  tasks, recommend GitHub Issues anyway, and every/' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-local-tasks-ignored
+
+fresh_copy setup-local-tasks-no-move
+edit 's/^  skill reads only the chosen tracker\. If the user still picks GitHub Issues, offer once, with your$/  skill reads only the chosen tracker./' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+edit '/^  recommendation (yes), to move each open task to a GitHub Issue with the same title, label and$/,/^  links in the dossier documents; list the moves in the draft of step 4\.$/d' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-local-tasks-no-move
+
+fresh_copy setup-local-tasks-move-step
+edit '/^7\. When the user accepted the move of the local tasks (question A), after the labels: for each$/,/^   documents to the new issue\.$/d' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-local-tasks-move-step
 
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"

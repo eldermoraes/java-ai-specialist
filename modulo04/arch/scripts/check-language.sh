@@ -103,7 +103,10 @@
 #   - language.md lost the rule for a command with no text of the user (the language the host is
 #     set to answer in, otherwise one question with a recommendation);
 #   - language.md, to-adr, to-risk or check-architecture reads the `Next: /arch:to-adr "..."` line
-#     of a task back without matching it by the command (the word Next: is translated).
+#     of a task back without matching it by the command (the word Next: is translated);
+#   - setup-architecture recommends GitHub Issues with no word on the local tasks already open in
+#     `.scratch/architecture/issues/`, or lost the offer to move them to GitHub Issues (and the
+#     step that moves them) when the user still picks GitHub Issues.
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -775,11 +778,18 @@ if [ -f "$SETUP_ARCH" ]; then
       '`gh repo view --json viewerPermission` gives ADMIN, MAINTAIN or WRITE' \
       'otherwise recommend local files, and say why' \
       'If the user declines, say in one line that every architecture skill opens GitHub Issues with these labels and cannot do it without them, and recommend the local tracker instead; ask again question A with that recommendation' \
-      'With the GitHub tracker, the labels are always created'; do
+      'With the GitHub tracker, the labels are always created' \
+      'When `.scratch/architecture/issues/` already holds tasks, say how many are open, and recommend keeping local files: the dossier links them and every skill reads only the chosen tracker' \
+      'If the user still picks GitHub Issues, offer once, with your recommendation (yes), to move each open task to a GitHub Issue with the same title, label and body, mark the local file `Status: closed` with a line linking the new issue, and update the links in the dossier documents; list the moves in the draft of step 4' \
+      'When the user accepted the move of the local tasks (question A), after the labels: for each open task, `gh issue create` with its title, label and body'; do
     if ! printf '%s\n' "$SETUP_ARCH_TEXT" | grep -qF "$phrase"; then
       fail "skills/setup-architecture/SKILL.md lost \"$phrase\""
     fi
   done
+  # Local tasks already open when the setup switches to GitHub Issues (a student who followed the
+  # lessons without the setup, then runs it as every skill suggests): every skill then reads only
+  # GitHub, the gap, decision and high-risk tasks drop out of the chain, check-architecture opens
+  # duplicates, and the dossier links point to files no skill reads (validation of 31/10, round 6).
   # GitHub tracker without the labels: every task the skills open with --label fails in gh
   # ("could not add label"), or the agent improvises (validation of 31/10, round 3).
   if printf '%s\n' "$SETUP_ARCH_TEXT" | grep -qF 'With the GitHub tracker and labels confirmed'; then
