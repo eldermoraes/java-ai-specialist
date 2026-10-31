@@ -64,6 +64,10 @@
 #   - to-risk sends the user back to to-adr for a high-risk task an ADR already answers, or to-adr
 #     no longer sends the user to the first of risk.md, autonomy.md and traces.md still pending,
 #     then to check-architecture;
+#   - to-adr sends the user to code a mitigation when the ADR stays `proposed`, instead of the
+#     decision still open, or to-risk counts a high-risk task with only a `proposed` ADR as answered;
+#   - the vocabulary says a guardrail retry repeats a response to correct it, instead of repeating
+#     the call with or without the reason for the rejection;
 #   - the vocabulary lost a limit only in the prompt not being a hard limit, the Permission values
 #     (written the same way in the autonomy template), the rule for `autonomous`, or the condition
 #     of the kill switch through an approval; language.md no longer keeps the autonomy terms and
@@ -528,6 +532,43 @@ if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'the first of `risk.md`, `autonomy.
 fi
 if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'end with `Next: /arch:check-architecture'; then
   fail "skills/to-adr/SKILL.md no longer ends with \"Next: /arch:check-architecture\" when the dossier documents are written"
+fi
+# An ADR that stays `proposed` decided no mitigation. to-adr sends the user to the decision still
+# open, never to the code; to-risk counts as answered only a high-risk task with an `accepted` ADR,
+# and a task with only a `proposed` ADR neither sends the user back to to-adr (the loop) nor
+# disappears from the chain (validation of 31/10, aula 7: the student who answers "later").
+for phrase in \
+    'If the ADR stays `proposed`, end with the decision task and what is missing to decide' \
+    '`Next: decide <what is missing> (<decision task>), then /arch:to-adr "<decision>"' \
+    'If the ADR is `accepted` and answers a `high-risk` task, end with'; do
+  if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF "$phrase"; then
+    fail "skills/to-adr/SKILL.md lost \"$phrase\" (a proposed ADR sends the user to code a mitigation nobody decided)"
+  fi
+done
+if printf '%s\n' "$TO_ADR_TEXT" | grep -qF -- '- If the ADR answers a `high-risk` task, end with'; then
+  fail "skills/to-adr/SKILL.md sends the user to the code for any ADR that answers a high-risk task, proposed included"
+fi
+if [ -f "$TO_RISK" ]; then
+  for phrase in \
+      'A `high-risk` task that already links an `accepted` ADR' \
+      'A `high-risk` task that links only a `proposed` ADR is not answered, and its `Next:` line does not count either' \
+      'say in one line that its decision is still pending'; do
+    if ! printf '%s\n' "$TO_RISK_TEXT" | grep -qF "$phrase"; then
+      fail "skills/to-risk/SKILL.md lost \"$phrase\" (a proposed ADR counts as an answer, or the loop with to-adr comes back)"
+    fi
+  done
+  if printf '%s\n' "$TO_RISK_TEXT" | grep -qF 'A `high-risk` task that already links an ADR'; then
+    fail "skills/to-risk/SKILL.md counts a high-risk task with any ADR as answered, proposed included"
+  fi
+fi
+# A guardrail retry repeats the call, with or without the reason for the rejection (retry and
+# reprompt, the canonical pair of the guardrails module); it never "repeats a response to correct
+# it" (validation of 31/10, aula 4).
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF 'A **guardrail retry** repeats the call after a response came and was rejected, with or without the reason for the rejection'; then
+  fail "reference/vocabulary.md lost \"a guardrail retry repeats the call ... with or without the reason for the rejection\""
+fi
+if printf '%s\n' "$VOCABULARY_TEXT" | grep -qF 'repeats a response that came and was rejected, to correct it'; then
+  fail "reference/vocabulary.md says a guardrail retry repeats a response to correct it (the guardrails module: a retry without the reason corrects nothing)"
 fi
 
 # Autonomy (to-autonomy). Each rule below is a sentence a reviewer asked for when the skill was

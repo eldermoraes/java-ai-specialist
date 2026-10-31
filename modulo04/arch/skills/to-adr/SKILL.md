@@ -215,7 +215,10 @@ part that is `not now` with the condition that reopens it. Say that another deci
 run of this skill. Then end with one of these lines, translated into the user's language, with
 commands and file names as they are:
 
-- If the ADR answers a `high-risk` task, end with
+- If the ADR stays `proposed`, end with the decision task and what is missing to decide, in the form
+  `Next: decide <what is missing> (<decision task>), then /arch:to-adr "<decision>" (Claude Code) · $arch:to-adr "<decision>" (Codex)`.
+  No mitigation was decided yet, so never send the user to the code.
+- If the ADR is `accepted` and answers a `high-risk` task, end with
   `Next: put the mitigation in the code, then /arch:to-risk to close the high-risk task (Claude Code) · $arch:to-risk (Codex)`.
 - Otherwise, take the first of `risk.md`, `autonomy.md` and `traces.md`, in this order, that is
   `pending` or missing in the dossier index. If the plugin you are running from has the skill that

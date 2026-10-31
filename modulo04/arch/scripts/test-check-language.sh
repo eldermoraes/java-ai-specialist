@@ -688,7 +688,7 @@ expect_fail vocabulary-one-check
 # 91. to-risk counts the Next: line of a high-risk task an ADR already answers (the user who follows
 #     the Next: lines goes back and forth between to-risk and to-adr, and never reaches to-autonomy).
 fresh_copy risk-adr-loop
-edit 's/^  answered: its `Next:` line does not count\. Say in one line that its mitigation is still missing$/  open./' \
+edit 's/^  answers, is answered: its `Next:` line does not count\. Say in one line that its mitigation is$/  answers, is open./' \
   "$COPY/skills/to-risk/SKILL.md"
 expect_fail risk-adr-loop
 
@@ -747,6 +747,46 @@ fresh_copy setup-local-without-reason
 edit 's/^  otherwise recommend local files, and say why\.$/  otherwise recommend local files./' \
   "$COPY/skills/setup-architecture/SKILL.md"
 expect_fail setup-local-without-reason
+
+# 99. Next do to-adr com ADR proposed manda pôr a mitigação no código: the student answers "later"
+#     to the decision, the ADR stays proposed, and the skill still says "put the mitigation in the
+#     code, then /arch:to-risk" (no mitigation was decided; validation of 31/10, aula 7).
+fresh_copy adr-proposed-sends-to-code
+edit '/^- If the ADR stays `proposed`, end with the decision task and what is missing to decide, in the form$/,/^  No mitigation was decided yet, so never send the user to the code\.$/d' \
+  "$COPY/skills/to-adr/SKILL.md"
+edit 's/^- If the ADR is `accepted` and answers a `high-risk` task, end with$/- If the ADR answers a `high-risk` task, end with/' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail adr-proposed-sends-to-code
+
+# 99b. Only the accepted condition goes away (the proposed line stays, and the high-risk line,
+#      checked first by the agent, still catches the proposed ADR).
+fresh_copy adr-high-risk-any-status
+edit 's/^- If the ADR is `accepted` and answers a `high-risk` task, end with$/- If the ADR answers a `high-risk` task, end with/' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail adr-high-risk-any-status
+
+# 100. to-risk counts a high-risk task that links only a proposed ADR as answered (the decision the
+#      student postponed disappears from the chain of Next: lines).
+fresh_copy risk-proposed-answered
+edit 's/^  in the list\. A `high-risk` task that already links an `accepted` ADR, or that an `accepted` ADR$/  in the list. A `high-risk` task that already links an ADR, or that an `accepted` ADR/' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail risk-proposed-answered
+
+# 101. to-risk sends the user back to to-adr for a high-risk task with only a proposed ADR (the loop
+#      fixed in PR #21 comes back through the proposed ADR).
+fresh_copy risk-proposed-loop
+edit 's/^  links only a `proposed` ADR is not answered, and its `Next:` line does not count either: say in$/  links only a `proposed` ADR is not answered, and its `Next:` line counts: say in/' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail risk-proposed-loop
+
+# 102. The vocabulary says a guardrail retry repeats a response to correct it (the guardrails module
+#      teaches that a retry without the reason corrects nothing; the reprompt carries the reason;
+#      validation of 31/10, aula 4).
+fresh_copy vocabulary-guardrail-retry-corrects
+edit 's/^  - A \*\*guardrail retry\*\* repeats the call after a response came and was rejected, with or$/  - A **guardrail retry** repeats a response that came and was rejected, to correct it; or/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail vocabulary-guardrail-retry-corrects
 
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
