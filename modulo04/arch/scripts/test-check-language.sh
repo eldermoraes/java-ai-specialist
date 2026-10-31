@@ -257,13 +257,13 @@ expect_fail missing-script
 
 # 33. The README leaves to-adr out of the skills the agent installs.
 fresh_copy readme-without-to-adr
-edit 's/`to-characteristics`, `to-adr`, `to-risk` and$/`to-characteristics`, `to-risk` and/' \
+edit 's/`to-characteristics`, `to-adr`, `to-risk`,$/`to-characteristics`, `to-risk`,/' \
   "$COPY/README.md"
 expect_fail readme-without-to-adr
 
 # 34. The README still says the plugin has three skills.
 fresh_copy readme-old-count
-edit 's/lists the six skills/lists the three skills/' "$COPY/README.md"
+edit 's/lists the eight skills/lists the three skills/' "$COPY/README.md"
 expect_fail readme-old-count
 
 # 35. The 15 times back as a market estimate (the source is a measurement a provider published
@@ -370,7 +370,7 @@ expect_fail adr-closes-high-risk
 
 # 49. The README still says the plugin has four skills.
 fresh_copy readme-four-skills
-edit 's/lists the six skills/lists the four skills/' "$COPY/README.md"
+edit 's/lists the eight skills/lists the four skills/' "$COPY/README.md"
 expect_fail readme-four-skills
 
 # 50. The copy of RiskScore.java in to-risk drifts from the single source.
@@ -504,7 +504,7 @@ expect_fail kill-switch-without-approval-condition
 
 # 66. The README still says the plugin has five skills.
 fresh_copy readme-five-skills
-edit 's/lists the six skills/lists the five skills/' "$COPY/README.md"
+edit 's/lists the eight skills/lists the five skills/' "$COPY/README.md"
 expect_fail readme-five-skills
 
 # 67. to-autonomy closes the decision task (it closes in to-adr, when the ADR is accepted).
@@ -525,6 +525,138 @@ fresh_copy decision-by-exact-text
 edit 's/holds the same decision, matched by the subject and not by the exact text\./holds the same decision./' \
   "$COPY/skills/to-adr/SKILL.md"
 expect_fail decision-by-exact-text
+
+# 70. to-traces lost the namespace of the application (the skill would invent gen_ai.approver).
+fresh_copy traces-namespace-gone
+edit 's/^  these go in the namespace of the application\. Use the current names/  Use the current names/' \
+  "$COPY/skills/to-traces/SKILL.md"
+expect_fail traces-namespace-gone
+
+# 70b. The vocabulary lost the same rule.
+fresh_copy vocabulary-namespace-gone
+edit 's/^  step: these go in the namespace of the application (a/  step (a/' "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail vocabulary-namespace-gone
+
+# 71. The template requires the older name of the tokens (the stack writes it; the conventions
+#     moved on).
+fresh_copy older-token-name
+edit 's/gen_ai\.usage\.input_tokens/gen_ai.usage.prompt_tokens/' "$COPY/reference/templates/traces.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail older-token-name
+
+# 72. to-traces records the cost as an attribute (the price changes, and the old number lies).
+fresh_copy cost-recorded
+edit 's/^  price, never recorded as the attribute of cost\. A cost/  price. A cost/' \
+  "$COPY/skills/to-traces/SKILL.md"
+expect_fail cost-recorded
+
+# 73. to-traces lost the content out of the telemetry by default (prompts would reach the backend).
+fresh_copy content-in-telemetry
+edit 's/^  content stays out of the telemetry unless the user decides otherwise, with/  content goes to the telemetry, with/' \
+  "$COPY/skills/to-traces/SKILL.md"
+expect_fail content-in-telemetry
+
+# 73b. The vocabulary lost the same rule.
+fresh_copy content-in-telemetry-vocabulary
+edit 's/content stays out of the telemetry unless the user decides$/content goes to the telemetry unless the user decides/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail content-in-telemetry-vocabulary
+
+# 74. Sampling takes the place of the durable record (a dropped trace would lose the action).
+fresh_copy sampling-without-record
+edit 's/^  action also goes to a durable record, tied to the trace by its trace id\. Without/  action is kept. Without/' \
+  "$COPY/skills/to-traces/SKILL.md"
+expect_fail sampling-without-record
+
+# 75. The decision path without the end of the task (a limit of steps reached would look like a
+#     success).
+fresh_copy decision-path-without-end
+edit 's/in order, why each ran, and why the task ended\./in order, and why each ran./' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail decision-path-without-end
+
+# 76. One gap task per attribute in a system with no trace at all (nine tasks with one cause).
+fresh_copy one-task-per-attribute
+edit 's/When the system emits no trace at all, open one gap task for the instrumentation, with$/When the system emits no trace at all, open the same tasks, with/' \
+  "$COPY/skills/to-traces/SKILL.md"
+expect_fail one-task-per-attribute
+
+# 77. check-architecture marks a runtime item Verified by reading the code.
+fresh_copy runtime-verified-by-code
+edit 's/^- Never mark a runtime item Verified by reading the code: without telemetry, it is Not Verified$/- A runtime item may be Verified by reading the code; without telemetry, it may be Not Verified/' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail runtime-verified-by-code
+
+# 78. Violated without evidence (an item could be marked Violated on a guess).
+fresh_copy violated-without-evidence
+edit '/^- Violated needs evidence too/d' "$COPY/skills/check-architecture/SKILL.md"
+expect_fail violated-without-evidence
+
+# 79. A Verified item without a fitness function gets no gap task (it breaks in the next commit).
+fresh_copy verified-without-fitness-function
+edit 's/A Verified item without a fitness function gets a gap task, so$/A Verified item is done, so/' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail verified-without-fitness-function
+
+# 80. check-architecture runs the next skill instead of stating it.
+fresh_copy check-runs-next
+edit 's/State the next command; never run it\./Run the next command./' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail check-runs-next
+
+# 80b. check-architecture closes a task (the team closes it, from Tasks That Can Be Closed).
+fresh_copy check-closes-task
+echo "   - GitHub tracker: gh issue close <number>" >> "$COPY/skills/check-architecture/SKILL.md"
+expect_fail check-closes-task
+
+# 81. check-architecture reuses only its own gap tasks (the task of to-traces would be opened twice).
+fresh_copy check-reuses-own-only
+edit 's/and the same subject, whichever skill opened it, and reuse it\./and the same subject that this skill opened, and reuse it./' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail check-reuses-own-only
+
+# 82. Without a dossier, nothing to check (the skill would stop on an old project).
+fresh_copy check-without-dossier
+edit 's/^- Without a dossier, check the non-negotiables of an agent in production: hard limits, the log of$/- Without a dossier, stop and suggest the other skills: hard limits, the log of/' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail check-without-dossier
+
+# 83. language.md no longer keeps Not Verified (needs telemetry) as it is (a run could write
+#     "Não verificado").
+fresh_copy result-translated
+edit 's/, `Not Verified (needs telemetry)`)/)/' "$COPY/reference/language.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail result-translated
+
+# 84. The dossier index template lost the row of the traces.
+fresh_copy dossier-without-traces
+edit '/^| \[Traces\](traces.md) | pending | |$/d' "$COPY/reference/templates/dossier-readme.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail dossier-without-traces
+
+# 85. The README still says the plugin has six skills.
+fresh_copy readme-six-skills
+edit 's/lists the eight skills/lists the six skills/' "$COPY/README.md"
+expect_fail readme-six-skills
+
+# 86. Every missing test becomes a request for an ADR.
+fresh_copy next-adr-for-every-gap
+edit 's/^   line only when closing the gap needs an architecture decision; a missing test does not\. The$/   line to every task. The/' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail next-adr-for-every-gap
+
+# 86b. check-architecture calls a telemetry backend on its own.
+fresh_copy check-calls-backend
+edit 's/^  call a backend on your own\.$/  hesitate to query the backend./' "$COPY/skills/check-architecture/SKILL.md"
+expect_fail check-calls-backend
+
+# 86c. to-traces closes a task.
+fresh_copy traces-closes-task
+echo "   - GitHub tracker: gh issue close <number>" >> "$COPY/skills/to-traces/SKILL.md"
+expect_fail traces-closes-task
 
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"

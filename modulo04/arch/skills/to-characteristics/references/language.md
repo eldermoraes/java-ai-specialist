@@ -35,6 +35,12 @@ This covers everything a skill writes for the user:
   write them as they are, in every language. The headings Design Principle, Actions, Kill Switch,
   Excess Check and Actions Without Effect, and the field names of each action, are translated
   with the other headings.
+- The names of attributes and spans (`gen_ai.*`, `enduser.id`, the names in the namespace of the
+  application, `chat`, `invoke_agent`, `execute_tool`), the results of an architecture check (`Verified`, `Violated`, `Not Verified (needs telemetry)`) and the types Operational, Structural and Process:
+  write them as they are, in every language. The three results are headings and values at once,
+  and stay as they are in both places. The headings Trace of a Request, Required Attributes,
+  Content, Sampling, Stack Reference, Tasks That Can Be Closed and Next Command, and the table
+  headers, are translated with the other headings.
 - The headings `## Agent skills` and `### Architecture` of the architecture block, which other
   skill sets look for.
 - Established technical terms, inside the translated text, when the user's language has no

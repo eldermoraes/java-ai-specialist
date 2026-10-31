@@ -68,7 +68,20 @@
 #   - to-autonomy lost a contract: the prompt limit, the rule for `autonomous`, who approved as an
 #     identity, never assuming who approves, one kill switch per system, the rule of the decision
 #     task, the required kill switch with a task, not scoring risk (description and body), or it
-#     runs a script or closes a task; to-adr no longer matches the decision task by the subject.
+#     runs a script or closes a task; to-adr no longer matches the decision task by the subject;
+#   - the vocabulary or to-traces lost the namespace of the application for what gen_ai.* does not
+#     name, the cost computed from the tokens, the content out of the telemetry by default, or the
+#     durable record of an effectful action that sampling may drop; a file requires an older name
+#     of the token attributes; the vocabulary lost the end of the task in the decision path; the
+#     dossier index template lost the row of traces.md; language.md no longer keeps the results of
+#     an architecture check, the types or the attribute names as they are;
+#   - to-traces lost one gap task for the instrumentation, the older names as evidence, or the
+#     reuse of a gap task opened by any skill, or it closes a task;
+#   - check-architecture lost a contract: no runtime item Verified by reading the code, evidence
+#     for Verified and for Violated, a gap task for a Verified item without a fitness function,
+#     never running the next command, the reuse of a gap task opened by any skill, the
+#     non-negotiables without a dossier, the Next: line only for a decision, never calling a
+#     backend; or it closes a task or writes the dossier index.
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -558,6 +571,96 @@ fi
 # words would leave the task open for ever).
 if ! printf '%s\n' "$TO_ADR_TEXT" | grep -qF 'the open `decision` task whose `Next: /arch:to-adr "..."` line holds the same decision, matched by the subject and not by the exact text'; then
   fail "skills/to-adr/SKILL.md no longer matches the decision task by its Next: line, by the subject"
+fi
+
+# Traceability (to-traces) and the architecture check (check-architecture). Each rule below is a
+# sentence a reviewer asked for when the skills were built; losing one changes what the skill
+# records or how it judges an item.
+TO_TRACES="$PLUGIN_ROOT/skills/to-traces/SKILL.md"
+CHECK_ARCH="$PLUGIN_ROOT/skills/check-architecture/SKILL.md"
+TRACES_TEMPLATE="$PLUGIN_ROOT/reference/templates/traces.md"
+NAMESPACE_RULE='The `gen_ai.*` conventions do not name the user, the tenant, the approver or the reason of a step: these go in the namespace of the application'
+COST_RULE='the cost is computed from them and the price, never recorded as the attribute of cost'
+CONTENT_RULE='Prompt and response content stays out of the telemetry unless the user decides otherwise'
+SAMPLING_RULE='Sampling may drop a trace: an effectful action also goes to a durable record, tied to the trace by its trace id'
+REUSE_RULE='look for an open one with the gap label and the same subject, whichever skill opened it, and reuse it'
+# The vocabulary and to-traces carry the rules on namespace, cost, content and sampling.
+for rule in "$NAMESPACE_RULE" "$COST_RULE" "$CONTENT_RULE" "$SAMPLING_RULE"; do
+  for file in "$VOCABULARY" "$TO_TRACES"; do
+    if [ ! -f "$file" ] || ! folded "$file" | grep -qiF "$rule"; then
+      fail "${file#"$PLUGIN_ROOT"/} lost \"$rule\""
+    fi
+  done
+done
+# The current names of the token attributes. The older names (prompt_tokens, completion_tokens)
+# are what some stacks still write: evidence for the Stack Reference, never the name to require.
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF '`gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`'; then
+  fail "reference/vocabulary.md lost the current names of the token attributes (gen_ai.usage.input_tokens, gen_ai.usage.output_tokens)"
+fi
+if [ ! -f "$TRACES_TEMPLATE" ] || ! grep -qF '`gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`' "$TRACES_TEMPLATE"; then
+  fail "reference/templates/traces.md lost the current names of the token attributes"
+fi
+for file in $(find "$PLUGIN_ROOT/reference" "$PLUGIN_ROOT/skills" "$PLUGIN_ROOT/README.md" -type f); do
+  if grep -qE 'gen_ai\.usage\.(prompt|completion)_tokens' "$file"; then
+    fail "${file#"$PLUGIN_ROOT"/} requires an older name of the token attributes: $(grep -nE 'gen_ai\.usage\.(prompt|completion)_tokens' "$file" | head -1)"
+  fi
+done
+# The decision path includes why the task ended: a limit of steps reached would look like a success.
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF 'the end of the task, and why it ended'; then
+  fail "reference/vocabulary.md lost the end of the task in what a trace must carry (\"the end of the task, and why it ended\")"
+fi
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF 'why each ran, and why the task ended'; then
+  fail "reference/vocabulary.md lost the end of the task in the decision path (\"why each ran, and why the task ended\")"
+fi
+# The dossier index has the row of the traces.
+if ! grep -q '^| \[Traces\](traces.md) | pending | |$' "$PLUGIN_ROOT/reference/templates/dossier-readme.md"; then
+  fail "reference/templates/dossier-readme.md lost the row that links to traces.md"
+fi
+# The results, the attribute names and the types stay as they are in every language.
+if ! printf '%s\n' "$LANGUAGE_TEXT" | grep -qF 'the results of an architecture check (`Verified`, `Violated`, `Not Verified (needs telemetry)`) and the types Operational, Structural and Process'; then
+  fail "reference/language.md no longer keeps the results of an architecture check and the types as they are"
+fi
+if ! printf '%s\n' "$LANGUAGE_TEXT" | grep -qF 'The names of attributes and spans (`gen_ai.*`, `enduser.id`'; then
+  fail "reference/language.md no longer keeps the names of attributes and spans as they are"
+fi
+if [ -f "$TO_TRACES" ]; then
+  TO_TRACES_TEXT=$(folded "$TO_TRACES")
+  for phrase in \
+      'When the system emits no trace at all, open one gap task for the instrumentation, with every required attribute in its body, not one task per attribute' \
+      'a name the stack still writes in an older form is evidence, recorded in the Stack Reference' \
+      "$REUSE_RULE"; do
+    if ! printf '%s\n' "$TO_TRACES_TEXT" | grep -qF "$phrase"; then
+      fail "skills/to-traces/SKILL.md lost \"$phrase\""
+    fi
+  done
+  if grep -q 'gh issue close' "$TO_TRACES"; then
+    fail "skills/to-traces/SKILL.md closes a task; it only opens or reuses gap tasks"
+  fi
+fi
+if [ -f "$CHECK_ARCH" ]; then
+  CHECK_ARCH_TEXT=$(folded "$CHECK_ARCH")
+  for phrase in \
+      'Never mark a runtime item Verified by reading the code: without telemetry, it is Not Verified (needs telemetry)' \
+      'Violated needs evidence too' \
+      'Verified needs evidence' \
+      'A Verified item without a fitness function gets a gap task' \
+      'State the next command; never run it' \
+      "$REUSE_RULE" \
+      'Without a dossier, check the non-negotiables of an agent in production: hard limits, the log of the decision path, and the kill switch' \
+      'Add a `Next: /arch:to-adr` line only when closing the gap needs an architecture decision; a missing test does not' \
+      'Never call a backend on your own'; do
+    if ! printf '%s\n' "$CHECK_ARCH_TEXT" | grep -qF "$phrase"; then
+      fail "skills/check-architecture/SKILL.md lost \"$phrase\""
+    fi
+  done
+  # The check never closes a task: the team closes it, from Tasks That Can Be Closed.
+  if grep -q 'gh issue close' "$CHECK_ARCH" || grep -q 'Status: closed' "$CHECK_ARCH"; then
+    fail "skills/check-architecture/SKILL.md closes a task; it lists them in Tasks That Can Be Closed"
+  fi
+  # The check report is not a deliverable of the dossier: the skill never writes the index.
+  if grep -q 'references/dossier-readme.md' "$CHECK_ARCH"; then
+    fail "skills/check-architecture/SKILL.md writes the dossier index; the check report stays out of it"
+  fi
 fi
 
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then

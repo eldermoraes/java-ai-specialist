@@ -17,3 +17,4 @@ Status values: `pending` (not written yet), `generated` (written by the agent, n
 | [Architecture Characteristics](characteristics.md) | pending | |
 | [Risk](risk.md) | pending | |
 | [Autonomy](autonomy.md) | pending | |
+| [Traces](traces.md) | pending | |

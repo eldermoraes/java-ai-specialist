@@ -8,7 +8,7 @@
     {
       "name": "arch",
       "source": "./modulo04/arch",
-      "description": "Agentic architecture skills: set up the architecture dossier, grill a design into a brief and its first ADR, find the architecture characteristics with their Targets and fitness functions, record decisions as ADRs, assess architecture risk, and decide the autonomy of each action."
+      "description": "Agentic architecture skills: set up the architecture dossier, grill a design into a brief and its first ADR, find the architecture characteristics with their Targets and fitness functions, record decisions as ADRs, assess architecture risk, decide the autonomy of each action, decide what the trace must carry, and check the dossier against the code."
     }
   ]
 }
