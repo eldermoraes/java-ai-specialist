@@ -45,7 +45,9 @@ as they are.
   - the characteristics (`characteristics.md`): the Target, the Measure and the Fitness Function
     of each characteristic;
   - the ADRs in `docs/adr/` with the status `accepted`: the Compliance of each;
-  - the traces (`traces.md`): the In the Code of each required row;
+  - the traces (`traces.md`): the In the Code of each required row; what the Trace of a Request
+    section says is in the code today (an id the system generates per request and how far it
+    reaches, the spans and log lines that exist); and the decision of the Content section;
   - the autonomy (`autonomy.md`): the Approval, Idempotency, Hard Limits and Kill Switch it says are
     in the code;
   - the risk assessment (`risk.md`): the mitigations it says are in the code.
@@ -73,6 +75,15 @@ documents exist and where the report goes.
 - Each item with its type, by the rule of the vocabulary: the family of what the item observes,
   not of where its test runs. A test in the build that counts model calls still checks an
   Operational item.
+- The items of `traces.md`, in every system:
+  - each required row (its condition met) is a Structural item: whether the code records its
+    attributes, from its In the Code, checked in the code;
+  - each required row that the code records is also an Operational item: whether its attributes
+    show in the traces at runtime;
+  - each part the Trace of a Request section says is in the code is a Structural item;
+  - the decision of the Content section is a Structural item, checked in the configuration that
+    logs or exports the content;
+  - a row in `not now` is not an item: it stays in `traces.md`, with the condition that reopens it.
 - The name of the system is the name the build file declares: in Maven, `<name>` when it exists,
   otherwise `<artifactId>`; in Gradle, `rootProject.name` in `settings.gradle`; in other builds,
   the project name field (`name` in `package.json`). The README title is not a source for the
