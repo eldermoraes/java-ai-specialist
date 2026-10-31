@@ -142,7 +142,7 @@ with a path or a `gap` task.
 
 ## 7. Show the draft, then write
 
-Show the user the ADR as a draft, with the tasks you will close and open. Write only after the
+Show the user the ADR as a draft, with the tasks you will close, update and open. Write only after the
 user confirms or corrects it.
 
 1. **ADR**: get the number by running the script that ships in this skill's folder (the folder
@@ -165,10 +165,18 @@ user confirms or corrects it.
 3. **Tasks**:
    - Close the `decision` task the ADR answers, when the ADR is `accepted`. GitHub tracker:
      `gh issue close <number> --comment "<link to the ADR>"`. Local tracker: change its line to
-     `Status: closed` and add a line with the path of the ADR; never delete the task file. A `gap`
-     task that asked for this ADR with a `Next: /arch:to-adr` line is closed the same way. With the
+     `Status: closed` and add a line with the path of the ADR; never delete the task file. With the
      decision in the input, the task the ADR answers is the open `decision` task whose
      `Next: /arch:to-adr "..."` line holds the same decision, matched by the subject and not by the exact text.
+   - A `gap` task that asked for this ADR with a `Next: /arch:to-adr` line stays open and becomes
+     the `gap` task of Compliance, when there is no fitness function: the subject is the same, now
+     checked against the ADR. Never close it and open another task for the same check. Update its
+     body with what the check must confirm and the link to the ADR, without the `Next:` line:
+     GitHub tracker, `gh issue edit <number> --body "<what the check must confirm, and a link to the ADR>"`;
+     local tracker, the body of the file, keeping its `#` title, `Labels:` and `Status: open`
+     lines. When Compliance points to a fitness function, close it the same way as the `decision`
+     task. When the ADR stays `proposed`, leave it as it is. It is matched like the `decision`
+     task: by the subject of its `Next: /arch:to-adr "..."` line.
    - When the ADR answers a `high-risk` task, keep the high-risk task open: the risk falls when the mitigation
      reaches the code, and `to-risk` closes it then. Add the link to the ADR to it: a comment on
      GitHub (`gh issue comment <number> --body "<link to the ADR>"`), a line with the path of the
@@ -178,7 +186,8 @@ user confirms or corrects it.
      matches, the ADR answers no `high-risk` task.
    - When the ADR stays `proposed`, keep the `decision` task open, or open one with what is
      missing to decide.
-   - Open the `gap` task of Compliance, when there is no fitness function. Before creating, look
+   - Open the `gap` task of Compliance, when there is no fitness function and no `gap` task asked
+     for this ADR (that task is the one, as above). Before creating, look
      for an open task with the same label and subject and reuse it. Match by the label and the
      subject, not by the exact title: an earlier run may have translated the title differently,
      and a `gap` task for the same check opened by another skill serves.
@@ -196,12 +205,12 @@ user confirms or corrects it.
    exist, create it from [references/dossier-readme.md](references/dossier-readme.md), translated,
    with that row as `generated` and the other rows as `pending`.
 
-Done when the ADR has all seven sections, every task is closed or opened as above, and the dossier
+Done when the ADR has all seven sections, every task is closed, updated or opened as above, and the dossier
 index shows the ADRs as `generated`.
 
 ## 8. Report and next step
 
-List the files written and the tasks closed and opened. State the decision in one line, and each
+List the files written and the tasks closed, updated and opened. State the decision in one line, and each
 part that is `not now` with the condition that reopens it. Say that another decision is another
 run of this skill. Then end with one of these lines, translated into the user's language, with
 commands and file names as they are:
