@@ -7,6 +7,9 @@ in English; that says nothing about the language of what you write for the user.
 
 Write every file and every task for the user in **the user's language**: the language the user is
 writing in, in this conversation. When the user asks for another language, use that one.
+When the user has written nothing yet but the command (alone, or with a path), use the language
+the host is set to answer in; with no such setting, ask once which language to use, with your
+recommendation (the language of the project's README), before the first summary.
 
 This covers everything a skill writes for the user:
 

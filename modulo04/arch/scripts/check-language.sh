@@ -97,7 +97,11 @@
 #     default";
 #   - setup-architecture recommends GitHub Issues without the write permission on the repository
 #     (`gh repo view --json viewerPermission` with ADMIN, MAINTAIN or WRITE), or lost "say why"
-#     when it recommends local files.
+#     when it recommends local files;
+#   - setup-architecture lets the user keep the GitHub tracker without the labels (it creates them
+#     only when confirmed, or lost what to do when the user declines them);
+#   - language.md lost the rule for a command with no text of the user (the language the host is
+#     set to answer in, otherwise one question with a recommendation).
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -767,11 +771,24 @@ if [ -f "$SETUP_ARCH" ]; then
   SETUP_ARCH_TEXT=$(folded "$SETUP_ARCH")
   for phrase in \
       '`gh repo view --json viewerPermission` gives ADMIN, MAINTAIN or WRITE' \
-      'otherwise recommend local files, and say why'; do
+      'otherwise recommend local files, and say why' \
+      'If the user declines, say in one line that every architecture skill opens GitHub Issues with these labels and cannot do it without them, and recommend the local tracker instead; ask again question A with that recommendation' \
+      'With the GitHub tracker, the labels are always created'; do
     if ! printf '%s\n' "$SETUP_ARCH_TEXT" | grep -qF "$phrase"; then
       fail "skills/setup-architecture/SKILL.md lost \"$phrase\""
     fi
   done
+  # GitHub tracker without the labels: every task the skills open with --label fails in gh
+  # ("could not add label"), or the agent improvises (validation of 31/10, round 3).
+  if printf '%s\n' "$SETUP_ARCH_TEXT" | grep -qF 'With the GitHub tracker and labels confirmed'; then
+    fail "skills/setup-architecture/SKILL.md creates the labels only when the user confirms them; with the GitHub tracker they are always created"
+  fi
+fi
+# A command with no text of the user (alone, or with a path) leaves no language to follow but the
+# host setting: without the rule, a student with no language setting gets everything in the
+# language of the SKILL.md (validation of 31/10, round 3).
+if ! printf '%s\n' "$LANGUAGE_TEXT" | grep -qF 'When the user has written nothing yet but the command (alone, or with a path), use the language the host is set to answer in; with no such setting, ask once which language to use, with your recommendation (the language of the project'"'"'s README), before the first summary'; then
+  fail "reference/language.md lost the rule for a command with no text of the user (the host setting, otherwise one question with the README language as the recommendation)"
 fi
 
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then
