@@ -890,6 +890,33 @@ edit 's/^  request), idempotency/  ), idempotency/' \
   "$COPY/skills/to-autonomy/SKILL.md"
 expect_fail rubber-stamp-to-autonomy-condition
 
+# 118. to-characteristics asks the layout without the setup (one dossier or one per quantum): a
+#      student who picks one per quantum has no rule for where to write, and the next skills go
+#      back to the single-dossier defaults (order-hub, two deployables; validation of 31/10,
+#      round 8).
+fresh_copy characteristics-asks-layout
+edit 's/^  - Without the setup, keep one dossier with one section per quantum, without asking: say so in one$/  - Without the setup, ask whether to keep one dossier for the whole system or one per quantum./' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+edit '/^    line, and suggest `\/arch:setup-architecture` (Claude Code) or `\$arch:setup-architecture` (Codex)$/d' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+edit 's/^    for one dossier per quantum\.$/    Recommend one dossier unless the quanta clearly need different characteristics./' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail characteristics-asks-layout
+
+# 118b. The new rule stays and the old question comes back next to it (two rules, the agent asks).
+fresh_copy characteristics-asks-layout-again
+echo "  - Without the setup, ask whether to keep one dossier for the whole system or one per quantum." \
+  >> "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail characteristics-asks-layout-again
+
+# 118c. The rule keeps one dossier and drops the suggestion of the setup (the student never learns
+#       how to get one dossier per quantum).
+fresh_copy characteristics-no-setup-suggestion
+edit 's/^    line, and suggest `\/arch:setup-architecture` (Claude Code) or `\$arch:setup-architecture` (Codex)$/    line./' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+edit '/^    for one dossier per quantum\.$/d' "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail characteristics-no-setup-suggestion
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi
