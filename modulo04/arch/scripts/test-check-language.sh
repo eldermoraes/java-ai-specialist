@@ -196,6 +196,76 @@ edit 's/(language.md). Leave/Leave/' "$COPY/reference/templates/dossier-readme.m
 "$COPY/scripts/sync-references.sh" > /dev/null
 expect_fail dossier-label-translated
 
+# 24. The multiplier back in calls (the vocabulary said "about 15 times the calls of a single chat
+#     interaction"; the number the course uses is tokens).
+fresh_copy multiplier-in-calls
+edit 's/15 times the tokens of a single-agent chat/15 times the calls of a single chat interaction/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail multiplier-in-calls
+
+# 25. to-adr records not now without the condition that reopens it.
+fresh_copy not-now-without-condition
+edit 's/reopens it/waits for it/g' "$COPY/skills/to-adr/SKILL.md"
+expect_fail not-now-without-condition
+
+# 26. The ADR template lost the condition of each part.
+fresh_copy adr-template-without-condition
+edit 's/reopens it/waits for it/g' \
+  "$COPY/reference/templates/adr.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail adr-template-without-condition
+
+# 27. The model gateway lost one of its three conditions.
+fresh_copy gateway-condition-gone
+edit 's/Condition: more than one model, per-user quota, or keys kept out of the application/Condition: more than one model or per-user quota/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail gateway-condition-gone
+
+# 28. Retries back as a condition of the loop circuit breaker (a project with max-retries would get
+#     a breaker it does not need).
+fresh_copy breaker-on-retries
+edit 's/Condition: the model chooses the next step (a supervisor, a loop agent, tool calling)\./Condition: the model chooses the next step (a supervisor, a loop agent, tool calling, retries)./' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail breaker-on-retries
+
+# 29. to-adr edits an accepted ADR beyond its Status line.
+fresh_copy supersede-edits-old-adr
+edit 's/change only the Status line of$/update the old ADR, starting with the Status line of/' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail supersede-edits-old-adr
+
+# 30. to-adr deletes the local task instead of closing it.
+fresh_copy close-by-delete
+edit 's/change its line to$/delete the file instead of changing its line to/; s/`Status: closed` and add a line with the path of the ADR; never delete the task file\./its old status./' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail close-by-delete
+
+# 31. The copy of NextAdrNumber.java in to-adr drifts from the single source.
+fresh_copy stale-script
+drop_pair "to-adr:NextAdrNumber.java"
+edit 's/%04d%n/%03d%n/' "$COPY/skills/to-adr/scripts/NextAdrNumber.java"
+expect_fail stale-script
+
+# 32. A skill runs the script without shipping it.
+fresh_copy missing-script
+drop_pair "to-adr:NextAdrNumber.java"
+rm "$COPY/skills/to-adr/scripts/NextAdrNumber.java"
+expect_fail missing-script
+
+# 33. The README leaves to-adr out of the skills the agent installs.
+fresh_copy readme-without-to-adr
+edit 's/`setup-architecture`, `grill-architecture`, `to-characteristics` and `to-adr`\./`setup-architecture`, `grill-architecture` and `to-characteristics`./' \
+  "$COPY/README.md"
+expect_fail readme-without-to-adr
+
+# 34. The README still says the plugin has three skills.
+fresh_copy readme-old-count
+edit 's/lists the four skills/lists the three skills/' "$COPY/README.md"
+expect_fail readme-old-count
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi
