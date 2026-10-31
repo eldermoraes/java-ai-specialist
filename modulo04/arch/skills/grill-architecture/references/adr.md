@@ -10,12 +10,15 @@
 ## Context
 
 {{The forces at play: requirements, characteristics and constraints that make this decision
-necessary. Then the options considered, one per line, each with what it gives and what it costs.}}
+necessary. Then each part of the decision with the condition it needs and whether the system meets
+it, with where that shows (a part without its condition is `not now`, with the condition that
+reopens it). Then the options considered, one per line, each with what it gives and what it
+costs.}}
 
 ## Decision
 
 {{The decision, in affirmative voice ("We will ..."), followed by why this option and not the
-others.}}
+others. Each part that is `not now`, with the condition that reopens it.}}
 
 ## Consequences
 
