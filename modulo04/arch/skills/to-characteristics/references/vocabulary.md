@@ -180,7 +180,8 @@ the concepts directly.
   each attempt) and jitter (a random variation, so the clients do not come back together). Every
   retry is a paid call and counts in the worst case of the per-task ceiling; one more attempt
   doubles the worst wait.
-  - A **guardrail retry** repeats a response that came and was rejected, to correct it; a
+  - A **guardrail retry** repeats the call after a response came and was rejected, with or
+    without the reason for the rejection in the conversation; a
     **resilience retry** repeats a call that failed and brought no response. Nested, they
     multiply: a guardrail with two more attempts inside a resilience retry with one more attempt
     makes up to six calls for one response.
