@@ -73,9 +73,9 @@ each file goes and what is already answered.
   the file, with its own characteristics.
   - With the `per-quantum` layout in the setup, write one `characteristics.md` per quantum folder
     (`docs/architecture/<quantum>/characteristics.md`).
-  - Without the setup, ask whether to keep one dossier for the whole system or one per quantum.
-    Recommend one dossier unless the quanta clearly need different characteristics (for example, a
-    customer chat and a nightly batch job).
+  - Without the setup, keep one dossier with one section per quantum, without asking: say so in one
+    line, and suggest `/arch:setup-architecture` (Claude Code) or `$arch:setup-architecture` (Codex)
+    for one dossier per quantum.
 
 Done when every quantum has a name and you know which file holds its section.
 

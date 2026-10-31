@@ -109,7 +109,10 @@
 #     of a task back without matching it by the command (the word Next: is translated);
 #   - setup-architecture recommends GitHub Issues with no word on the local tasks already open in
 #     `.scratch/architecture/issues/`, or lost the offer to move them to GitHub Issues (and the
-#     step that moves them) when the user still picks GitHub Issues.
+#     step that moves them) when the user still picks GitHub Issues;
+#   - to-characteristics asks for the layout without the setup (one dossier or one per quantum),
+#     instead of keeping one dossier with one section per quantum and suggesting
+#     setup-architecture for one dossier per quantum.
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -787,6 +790,21 @@ for file in $RULE_FILES; do
     fail "${file#"$PLUGIN_ROOT"/} says an output guardrail can only judge the whole response"
   fi
 done
+# Without the setup, a project with more than one deployable got the question "one dossier or one
+# per quantum", and no rule said where to write one per quantum: the next skills went back to the
+# single-dossier defaults, and the index and the documents split (validation of 31/10, round 8).
+if [ -f "$TO_CHARACTERISTICS" ]; then
+  TO_CHARACTERISTICS_TEXT=$(folded "$TO_CHARACTERISTICS")
+  for phrase in \
+      'Without the setup, keep one dossier with one section per quantum, without asking: say so in one line, and suggest `/arch:setup-architecture` (Claude Code) or `$arch:setup-architecture` (Codex) for one dossier per quantum.'; do
+    if ! printf '%s\n' "$TO_CHARACTERISTICS_TEXT" | grep -qF "$phrase"; then
+      fail "skills/to-characteristics/SKILL.md lost \"$phrase\""
+    fi
+  done
+  if printf '%s\n' "$TO_CHARACTERISTICS_TEXT" | grep -qiF 'ask whether to keep one dossier'; then
+    fail "skills/to-characteristics/SKILL.md asks for the layout without the setup; it keeps one dossier with one section per quantum"
+  fi
+fi
 # The setup recommends GitHub Issues only when the user can write to the repository: in a clone of
 # someone else's public repository, labels and tasks would fail, or land there.
 SETUP_ARCH="$PLUGIN_ROOT/skills/setup-architecture/SKILL.md"
