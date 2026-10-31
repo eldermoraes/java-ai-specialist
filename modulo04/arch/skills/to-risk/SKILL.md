@@ -227,7 +227,8 @@ List the files written and the tasks opened and closed. State the highest risk i
 the other dimensions seen. Then end with one of these lines, translated into the user's language,
 with commands and file names as they are:
 
-- If an open `high-risk` task has a `Next: /arch:to-adr "..."` line, end with that line. The choice
+- If an open `high-risk` task has a `Next: /arch:to-adr "..."` line, end with that line. The line
+  is translated in the user's language (for example `Próximo: /arch:to-adr "..."`): match it by the command, not by the word before it. The choice
   is always among the tasks that have the line: the one with the highest risk; on a tie, the first
   in the list. A `high-risk` task that already links an `accepted` ADR, or that an `accepted` ADR
   answers, is answered: its `Next:` line does not count. Say in one line that its mitigation is

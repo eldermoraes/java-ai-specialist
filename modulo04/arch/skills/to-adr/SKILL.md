@@ -48,7 +48,8 @@ One decision per run. Another decision is another run of this skill.
 - Read the risk assessment (`docs/architecture/risk.md`, or the location the setup gives), if it
   exists: its scores and mitigations are evidence, do not ask them again.
 - Read the open `decision`, `gap` and `high-risk` tasks in the tracker. A `gap` or `high-risk`
-  task whose body has a `Next: /arch:to-adr "..."` line is a request for an ADR.
+  task whose body has a `Next: /arch:to-adr "..."` line is a request for an ADR. The line is
+  translated in the user's language (for example `Próximo: /arch:to-adr "..."`): match it by the command, not by the word before it.
   - GitHub tracker: `gh issue list --label decision --state open`,
     `gh issue list --label gap --state open` and `gh issue list --label high-risk --state open`.
   - Local tracker: the files in `.scratch/architecture/issues/` with a `Labels: decision`,
@@ -69,7 +70,8 @@ each file goes and what is already answered.
 
 - With the decision in the input, use it. Do not list other candidates.
 - Without it, list the candidates: open `decision` tasks, `gap` and `high-risk` tasks with a
-  `Next: /arch:to-adr "..."` line, and the Open Decisions of the brief. Recommend one, with its
+  `Next: /arch:to-adr "..."` line in any language (matched by the command, as in step 1), and the
+  Open Decisions of the brief. Recommend one, with its
   reason in one line, and ask in one round. With no candidate, ask the user for the decision in
   one line.
 
@@ -162,7 +164,8 @@ user confirms or corrects it.
 2. **Superseding**: when the new ADR supersedes an `accepted` one, change only the Status line of
    the old ADR, to `superseded by ADR-<new number>`, and link the old ADR in the Notes of the new
    one. No other line of an accepted ADR is ever edited.
-3. **Tasks**:
+3. **Tasks** (a `Next: /arch:to-adr "..."` line below is matched in any language, by the command,
+   as in step 1):
    - Close the `decision` task the ADR answers, when the ADR is `accepted`. GitHub tracker:
      `gh issue close <number> --comment "<link to the ADR>"`. Local tracker: change its line to
      `Status: closed` and add a line with the path of the ADR; never delete the task file. With the

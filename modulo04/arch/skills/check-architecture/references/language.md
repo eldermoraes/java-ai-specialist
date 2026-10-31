@@ -27,6 +27,9 @@ This covers everything a skill writes for the user:
   status values (`proposed`, `accepted`, `pending`, `generated`, `reviewed`), label names
   (`decision`, `high-risk`, `gap`), the `Tracker:`, `Layout:`, `Labels:` and `Status:` lines
   with their values (`open` and `closed` in a local task), file and folder names, commands.
+- The `Next:` line in the body of a task (`Next: /arch:to-adr "<decision>"`) is a fixed sentence:
+  the word `Next:` is translated, and the command stays as it is. A skill that reads the line back
+  (for example `Próximo: /arch:to-adr "..."`) must match it by the command, not by the word before it.
 - The term `not now`, for a part of a decision postponed on purpose: write it as it is, in every
   language, never translated.
 - The terms risk storming, effectful retry, unproven technology and `single-assessor`, the
