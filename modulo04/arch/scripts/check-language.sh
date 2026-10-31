@@ -81,7 +81,9 @@
 #     for Verified and for Violated, a gap task for a Verified item without a fitness function,
 #     never running the next command, the reuse of a gap task opened by any skill, the
 #     non-negotiables without a dossier, the Next: line only for a decision, never calling a
-#     backend; or it closes a task or writes the dossier index.
+#     backend, the items of traces.md (each required row Structural, a row the code records also
+#     Operational, the Trace of a Request and the Content as Structural items); or it closes a
+#     task or writes the dossier index; the vocabulary lost the two checks of a required attribute.
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -612,6 +614,11 @@ fi
 if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF 'why each ran, and why the task ended'; then
   fail "reference/vocabulary.md lost the end of the task in the decision path (\"why each ran, and why the task ended\")"
 fi
+# A required attribute is checked in the code (Structural) and, when the code records it, at
+# runtime (Operational): without the second, a check of traces never says which telemetry is missing.
+if ! printf '%s\n' "$VOCABULARY_TEXT" | grep -qF 'A required attribute is checked twice: in the code, whether the code records it (Structural); and, when the code records it, at runtime, whether it shows in the traces (Operational'; then
+  fail "reference/vocabulary.md lost the two checks of a required attribute (Structural in the code, Operational at runtime)"
+fi
 # The dossier index has the row of the traces.
 if ! grep -q '^| \[Traces\](traces.md) | pending | |$' "$PLUGIN_ROOT/reference/templates/dossier-readme.md"; then
   fail "reference/templates/dossier-readme.md lost the row that links to traces.md"
@@ -648,7 +655,12 @@ if [ -f "$CHECK_ARCH" ]; then
       "$REUSE_RULE" \
       'Without a dossier, check the non-negotiables of an agent in production: hard limits, the log of the decision path, and the kill switch' \
       'Add a `Next: /arch:to-adr` line only when closing the gap needs an architecture decision; a missing test does not' \
-      'Never call a backend on your own'; do
+      'Never call a backend on your own' \
+      'what the Trace of a Request section says is in the code today' \
+      'each part the Trace of a Request section says is in the code is a Structural item' \
+      'each required row (its condition met) is a Structural item' \
+      'each required row that the code records is also an Operational item' \
+      'the decision of the Content section is a Structural item'; do
     if ! printf '%s\n' "$CHECK_ARCH_TEXT" | grep -qF "$phrase"; then
       fail "skills/check-architecture/SKILL.md lost \"$phrase\""
     fi

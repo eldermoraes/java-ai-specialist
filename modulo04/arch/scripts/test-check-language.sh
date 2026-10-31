@@ -658,6 +658,33 @@ fresh_copy traces-closes-task
 echo "   - GitHub tracker: gh issue close <number>" >> "$COPY/skills/to-traces/SKILL.md"
 expect_fail traces-closes-task
 
+# 87. check-architecture reads only the In the Code of the required rows (the id a request carries,
+#     in the Trace of a Request, never becomes an item, and a system without traces has no Verified).
+fresh_copy check-skips-trace-of-request
+edit 's/^  - each part the Trace of a Request section says is in the code is a Structural item;$/  - the Trace of a Request section is context, not an item;/' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail check-skips-trace-of-request
+
+# 88. A required row the code records gets no Operational item (the report never says which
+#     telemetry is missing).
+fresh_copy check-no-runtime-item
+edit 's/^  - each required row that the code records is also an Operational item: whether its attributes$/  - each required row that the code records is done: whether its attributes/' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail check-no-runtime-item
+
+# 89. The decision on content is not checked (the prompt logged in every environment goes unseen).
+fresh_copy check-skips-content
+edit 's/^  - the decision of the Content section is a Structural item, checked in the configuration that$/  - the Content section is a note, checked in the configuration that/' \
+  "$COPY/skills/check-architecture/SKILL.md"
+expect_fail check-skips-content
+
+# 90. The vocabulary lost the runtime check of a required attribute.
+fresh_copy vocabulary-one-check
+edit 's/^- A required attribute is checked twice: in the code, whether the code records it (Structural);$/- A required attribute is checked in the code, whether the code records it (Structural);/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail vocabulary-one-check
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi

@@ -356,8 +356,11 @@ the concepts directly.
   something about the system that can be checked.
 - **What is checked**: every Target of a characteristic, every Compliance of an accepted ADR,
   every required attribute of the traces, and every part a document says is in the code (approval,
-  idempotency, hard limits, kill switch, mitigation). Without a dossier, the non-negotiables of an
-  agent in production.
+  idempotency, hard limits, kill switch, mitigation, the id a request carries, where the content
+  goes). Without a dossier, the non-negotiables of an agent in production.
+- A required attribute is checked twice: in the code, whether the code records it (Structural);
+  and, when the code records it, at runtime, whether it shows in the traces (Operational, Not
+  Verified (needs telemetry) without telemetry).
 - Each item has a type, the family of what it observes (see Measures): Operational, Structural or
   Process.
 - **Results**: **Verified** (the evidence shows the item holds), **Violated** (the evidence shows
