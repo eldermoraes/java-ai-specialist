@@ -20,7 +20,10 @@ Read [references/vocabulary.md](references/vocabulary.md) before you start: use 
 meanings. Do not mention the source book in generated files.
 
 Write every file, task and question in the user's language, template headings and table headers
-included, following [references/language.md](references/language.md).
+included, following [references/language.md](references/language.md). Keep the term architecture
+characteristic as it is, in every language, like Target and fitness function: the title of the
+file stays `Architecture Characteristics: <system name>`, and the table headers, the row of the
+dossier index and the text keep the term too.
 
 Templates for the files you write:
 - [references/characteristics.md](references/characteristics.md) for the characteristics;

@@ -33,7 +33,11 @@
 #       - takes the name of the system from the title of the README;
 #   - a SKILL.md names the system without the build file as the source and the question in the
 #     round that confirms the list as the fallback, or the characteristics template lost that rule;
-#   - the README asks to confirm the quanta without "only when there is more than one deployable".
+#   - the README asks to confirm the quanta without "only when there is more than one deployable";
+#   - language.md, the characteristics template, the dossier index template or a SKILL.md that
+#     writes characteristics.md no longer keeps the term architecture characteristic as it is (the
+#     title "Architecture Characteristics: <system name>" in every language), or a file translates
+#     it ("Características de arquitetura").
 #
 # What it cannot check is the wording of each SKILL.md beyond these phrases.
 #
@@ -222,6 +226,35 @@ if ! { printf '%s\n' "$TEMPLATE_TEXT" | grep -q 'the name the build file declare
        && printf '%s\n' "$TEMPLATE_TEXT" | grep -q 'the name the user gave'; }; then
   fail "reference/templates/characteristics.md lost the rule for the system name (build file, otherwise the name the user gave)"
 fi
+
+# The term architecture characteristic stays as it is in every language, like Target and fitness
+# function: a run in Portuguese once titled the file "Características de arquitetura".
+KEEP_TERM='Keep the term architecture characteristic as it is, in every language'
+if ! folded "$PLUGIN_ROOT/reference/language.md" \
+    | grep -q 'The title of the characteristics file is `Architecture Characteristics: <system name>` in every language'; then
+  fail "reference/language.md no longer keeps the term architecture characteristic (and the title of the characteristics file) as it is"
+fi
+if [ "$(head -1 "$PLUGIN_ROOT/reference/templates/characteristics.md")" != '# Architecture Characteristics: {{system name}}' ]; then
+  fail "reference/templates/characteristics.md lost the title \"# Architecture Characteristics: {{system name}}\""
+fi
+if ! printf '%s\n' "$TEMPLATE_TEXT" | grep -q "$KEEP_TERM"; then
+  fail "reference/templates/characteristics.md does not say \"$KEEP_TERM\""
+fi
+if ! folded "$PLUGIN_ROOT/reference/templates/dossier-readme.md" \
+    | grep -q 'the label "Architecture Characteristics" as it is, in every language'; then
+  fail "reference/templates/dossier-readme.md does not keep the label \"Architecture Characteristics\" as it is"
+fi
+for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
+  if grep -q '(references/characteristics.md)' "$skill_md" \
+      && ! folded "$skill_md" | grep -q "$KEEP_TERM"; then
+    fail "skills/$(basename "$(dirname "$skill_md")")/SKILL.md writes characteristics.md without \"$KEEP_TERM\""
+  fi
+done
+for file in $(find "$PLUGIN_ROOT/reference" "$PLUGIN_ROOT/skills" "$PLUGIN_ROOT/README.md" -type f); do
+  if grep -qi 'caracter.sticas de arquitetura' "$file"; then
+    fail "${file#"$PLUGIN_ROOT"/} translates the term architecture characteristic: $(grep -ni 'caracter.sticas de arquitetura' "$file" | head -1)"
+  fi
+done
 
 # With a single deployable the quantum is not asked.
 if folded "$PLUGIN_ROOT/README.md" | grep -q 'confirm the quanta' \
