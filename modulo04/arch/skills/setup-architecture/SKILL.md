@@ -68,8 +68,16 @@ say why you skipped it.
 - **C. Layout.** Ask only when the exploration found more than one deployable: one dossier at
   `docs/architecture/` for the whole repository, or one dossier per quantum at
   `docs/architecture/<quantum>/`? Recommend one dossier unless the deployables have clearly
-  different characteristics (for example, one public API and one batch job). With a single
-  deployable, use one dossier without asking.
+  different characteristics (for example, one public API and one batch job). When the root of
+  `docs/architecture/` already holds documents of the dossier (`brief.md`, `characteristics.md`,
+  `risk.md`, `autonomy.md`, `traces.md`, `check-report.md`), say how many there are, and recommend
+  keeping one dossier: every skill reads only the chosen layout, and the documents at the root
+  would no longer be read. If the user still picks one dossier per quantum, offer once, with your
+  recommendation (yes), to move each document to its quantum: each quantum's section of
+  `characteristics.md` goes to `docs/architecture/<quantum>/characteristics.md`, the brief and the
+  other documents go to the quantum the user names, and the rows of each quantum's index get the
+  status and date they had at the root, with the ADR row linking to `../../adr/`; list the moves in
+  the draft of step 4. With a single deployable, use one dossier without asking.
 - **D. Agent instructions file.** Ask only when neither `CLAUDE.md` nor `AGENTS.md` exists: create
   one to hold the architecture block? Recommend the file your host reads (`CLAUDE.md` for Claude
   Code, `AGENTS.md` for Codex).
@@ -117,9 +125,16 @@ Create:
    open task, `gh issue create` with its title, label and body; then mark the local file
    `Status: closed` with a line linking the new issue, and point the links in the dossier
    documents to the new issue.
+8. When the user accepted the move of the root documents (question C), after the index of each
+   quantum: move each document to its quantum folder as the draft lists, splitting
+   `characteristics.md` by its quantum sections; in each quantum's `README.md`, set the row of
+   every moved document to the status and date it had in the root index; change the links to
+   `../adr/` in the moved documents to `../../adr/`; and leave in `docs/architecture/README.md`
+   only one link per quantum folder.
 
 Done when every file in the draft exists with the confirmed content, and, with the GitHub tracker,
-`gh label list` shows the three labels, and every moved task has its GitHub Issue.
+`gh label list` shows the three labels, every moved task has its GitHub Issue, and every moved
+document is in its quantum folder.
 
 ## 5. Report and next step
 

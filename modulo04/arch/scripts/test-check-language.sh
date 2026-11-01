@@ -957,6 +957,49 @@ edit 's/^  recommendation (the path given, or the deployable the input names), a
   "$COPY/skills/grill-architecture/SKILL.md"
 expect_fail grill-quantum-no-recommendation
 
+# 132. The Artifact locations table of the setup file keeps the root paths with the per-quantum
+#      layout, below the line that puts every document in the quantum folder (order-hub, two
+#      deployables; validation of 31/10, round 11).
+fresh_copy agents-template-root-locations
+edit '/^With the per-quantum layout, every `docs\/architecture\/` location above is under$/,/^`docs\/architecture\/<quantum>\/`; ADRs stay in `docs\/adr\/`\.$/d' \
+  "$COPY/reference/templates/agents-architecture.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail agents-template-root-locations
+
+# 133. to-characteristics reads the brief and characteristics.md at the root with the per-quantum
+#      layout: it asks again what the brief of the quantum answered, and on a second run proposes
+#      everything from scratch (validation of 31/10, round 11).
+fresh_copy characteristics-root-brief
+edit '/^- With the per-quantum layout, read and write each quantum folder: `docs\/architecture\/<quantum>\/`$/,/^  hand\.$/d' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail characteristics-root-brief
+
+# 134. "Without it, the setup has not run" right after the per-quantum bullet of to-characteristics
+#      (the antecedent of "it" is the layout; validation of 31/10, round 11).
+fresh_copy characteristics-setup-missing-it
+edit 's/^- Without `docs\/agents\/architecture\.md`, the setup has not run\. Use the defaults: characteristics at$/- Without it, the setup has not run. Use the defaults: characteristics at/' \
+  "$COPY/skills/to-characteristics/SKILL.md"
+expect_fail characteristics-setup-missing-it
+
+# 135. The setup picks the per-quantum layout over documents already at the root of
+#      docs/architecture/ and leaves them there, read by no skill (a student who ran the grill and
+#      to-characteristics first, then the setup as to-characteristics suggests; order-hub;
+#      validation of 31/10, round 11).
+fresh_copy setup-root-documents-ignored
+edit 's/^  different characteristics (for example, one public API and one batch job)\. When the root of$/  different characteristics (for example, one public API and one batch job)./' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+edit '/^  `docs\/architecture\/` already holds documents of the dossier (`brief\.md`, `characteristics\.md`,$/,/^  status and date they had at the root, with the ADR row linking to `\.\.\/\.\.\/adr\/`; list the moves in$/d' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+edit 's/^  the draft of step 4\. With a single deployable, use one dossier without asking\.$/  With a single deployable, use one dossier without asking./' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-root-documents-ignored
+
+# 136. The setup offers the move and never runs it: step 4 has no item that moves the documents.
+fresh_copy setup-root-documents-not-moved
+edit '/^8\. When the user accepted the move of the root documents (question C), after the index of each$/,/^   only one link per quantum folder\.$/d' \
+  "$COPY/skills/setup-architecture/SKILL.md"
+expect_fail setup-root-documents-not-moved
+
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
 fi
