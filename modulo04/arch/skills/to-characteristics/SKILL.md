@@ -38,7 +38,11 @@ and file names as they are.
 
 - Read `docs/agents/architecture.md`. It gives the tracker (`github` or `local`), the layout and
   the artifact locations.
-- Without it, the setup has not run. Use the defaults: characteristics at
+- With the per-quantum layout, read and write each quantum folder: `docs/architecture/<quantum>/`
+  holds that quantum's brief, characteristics.md and README.md; ADRs stay in `docs/adr/` and tasks
+  in the tracker. Every `docs/architecture/` path below then means the folder of the quantum at
+  hand.
+- Without `docs/agents/architecture.md`, the setup has not run. Use the defaults: characteristics at
   `docs/architecture/characteristics.md`, dossier index at `docs/architecture/README.md`, tasks as
   local files in `.scratch/architecture/issues/`. Do not ask about the tracker. Tell the user in one
   line, and suggest `/arch:setup-architecture` (Claude Code) or `$arch:setup-architecture` (Codex)

@@ -890,6 +890,41 @@ AGENTS_ARCH="$PLUGIN_ROOT/reference/templates/agents-architecture.md"
 if [ -f "$AGENTS_ARCH" ] && ! folded "$AGENTS_ARCH" | grep -qF 'Each quantum folder holds the same documents: README.md, brief.md, characteristics.md, risk.md, autonomy.md, traces.md and check-report.md'; then
   fail "reference/templates/agents-architecture.md does not say what each quantum folder holds"
 fi
+# The Artifact locations table of the setup file kept the root paths with the per-quantum layout,
+# right below the line that puts every document in the quantum folder: the file contradicted
+# itself, and to-characteristics, which read the brief at docs/architecture/brief.md, missed the
+# brief of the quantum and asked again what it answered; on a second run it missed the
+# characteristics.md of the folder and proposed everything from scratch (order-hub, two
+# deployables; validation of 31/10, round 11).
+if [ -f "$AGENTS_ARCH" ] && ! folded "$AGENTS_ARCH" | grep -qF 'With the per-quantum layout, every `docs/architecture/` location above is under `docs/architecture/<quantum>/`; ADRs stay in `docs/adr/`.'; then
+  fail "reference/templates/agents-architecture.md keeps the root paths in Artifact locations with the per-quantum layout"
+fi
+if [ -f "$TO_CHARACTERISTICS" ]; then
+  if ! folded "$TO_CHARACTERISTICS" | grep -qF 'With the per-quantum layout, read and write each quantum folder: `docs/architecture/<quantum>/` holds that quantum'"'"'s brief, characteristics.md and README.md; ADRs stay in `docs/adr/` and tasks in the tracker. Every `docs/architecture/` path below then means the folder of the quantum at hand.'; then
+    fail "skills/to-characteristics/SKILL.md reads the brief and characteristics.md at the root with the per-quantum layout"
+  fi
+  if ! folded "$TO_CHARACTERISTICS" | grep -qF -- "$SETUP_MISSING"; then
+    fail "skills/to-characteristics/SKILL.md does not name docs/agents/architecture.md in \"Without ..., the setup has not run\" (after the per-quantum bullet, \"it\" means the layout)"
+  fi
+  if folded "$TO_CHARACTERISTICS" | grep -qF 'Without it, the setup has not run'; then
+    fail "skills/to-characteristics/SKILL.md still has \"Without it, the setup has not run\" (the antecedent of it is the per-quantum layout)"
+  fi
+fi
+# A student who ran the grill and to-characteristics without the setup, then followed the
+# suggestion of to-characteristics and picked one dossier per quantum: the setup created the quantum
+# folders with every row in pending and left the brief, characteristics.md and the index at the
+# root, which no skill reads with that layout. The work was lost in silence, and redoing it left two
+# characteristics.md and two indexes (order-hub; validation of 31/10, round 11).
+if [ -f "$SETUP_ARCH" ]; then
+  for phrase in \
+      'When the root of `docs/architecture/` already holds documents of the dossier (`brief.md`, `characteristics.md`, `risk.md`, `autonomy.md`, `traces.md`, `check-report.md`), say how many there are, and recommend keeping one dossier: every skill reads only the chosen layout, and the documents at the root would no longer be read' \
+      'If the user still picks one dossier per quantum, offer once, with your recommendation (yes), to move each document to its quantum: each quantum'"'"'s section of `characteristics.md` goes to `docs/architecture/<quantum>/characteristics.md`, the brief and the other documents go to the quantum the user names, and the rows of each quantum'"'"'s index get the status and date they had at the root, with the ADR row linking to `../../adr/`; list the moves in the draft of step 4' \
+      'When the user accepted the move of the root documents (question C), after the index of each quantum: move each document to its quantum folder as the draft lists, splitting `characteristics.md` by its quantum sections'; do
+    if ! folded "$SETUP_ARCH" | grep -qF "$phrase"; then
+      fail "skills/setup-architecture/SKILL.md lost \"$phrase\""
+    fi
+  done
+fi
 
 if ! "$PLUGIN_ROOT/scripts/sync-references.sh" --check > /dev/null; then
   fail "references out of sync with reference/ (run scripts/sync-references.sh)"

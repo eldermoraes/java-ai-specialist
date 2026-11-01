@@ -49,3 +49,6 @@ and tasks in the tracker.}}
 | Traces | `docs/architecture/traces.md` |
 | Check report | `docs/architecture/check-report.md` |
 | Local tasks | `.scratch/architecture/issues/` (only with the `local` tracker) |
+
+With the per-quantum layout, every `docs/architecture/` location above is under
+`docs/architecture/<quantum>/`; ADRs stay in `docs/adr/`.
