@@ -1,7 +1,8 @@
 # Brief: {{system name}}
 
-<!-- Kata format. One short paragraph or a short list per section. Write in the user's words,
-     in English. Every statement comes from the user's answers or from the repository. -->
+<!-- Kata format. One short paragraph or a short list per section. Write in the user's words
+     and in the user's language, headings included (language.md). Every statement comes from the
+     user's answers or from the repository. -->
 
 ## Description
 

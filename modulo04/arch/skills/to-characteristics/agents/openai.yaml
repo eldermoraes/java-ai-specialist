@@ -1,0 +1,5 @@
+interface:
+  display_name: "To Characteristics"
+  short_description: "Find the architecture characteristics and their fitness functions"
+policy:
+  allow_implicit_invocation: false
