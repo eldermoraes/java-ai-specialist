@@ -13,6 +13,9 @@ dossier in `docs/architecture/`, the ADRs in `docs/adr/`, and the choices every 
 Read [references/vocabulary.md](references/vocabulary.md) before you start: use its terms with its
 meanings. Do not mention the source book in generated files.
 
+Write every file and every question in the user's language, template headings included, following
+[references/language.md](references/language.md).
+
 Templates for the files you write:
 - [references/dossier-readme.md](references/dossier-readme.md) for `docs/architecture/README.md`;
 - [references/agents-architecture.md](references/agents-architecture.md) for
@@ -29,9 +32,10 @@ Look before you ask. Check each item and keep a note of what you found:
   defaults for every question.
 - `docs/agents/issue-tracker.md`: if it exists, another skill set already chose the tracker. Reuse
   that choice and skip question A.
-- Deployables: count the independently deployable units (one `pom.xml` with packaging per service,
-  one `Dockerfile` per service, separate apps in a monorepo). More than one is a sign of more than
-  one architecture quantum.
+- Deployables: count the independently deployable units by build unit (one `pom.xml` or
+  `build.gradle` with its own packaging per service, one app per folder in a monorepo). Several
+  images of the same build (for example `Dockerfile.jvm` and `Dockerfile.native`) are one
+  deployable, not more. More than one deployable is a sign of more than one architecture quantum.
 
 Done when every item above has an answer.
 
@@ -94,14 +98,17 @@ Create:
    ```
 
 6. With the local tracker, create `.scratch/architecture/issues/` with a `.gitkeep` file. Each
-   task the skills open later is a file `NN-slug.md` in that folder, numbered from `01`, whose
-   first lines are a `# Title` and a `Labels: <label>` line.
+   task the skills open later is a file `NN-slug.md` in that folder, numbered from `01` (`slug`
+   is the title already translated, in kebab-case), whose first lines are a `# Title`, a
+   `Labels: <label>` line and a `Status: open` line. Closing the task means changing that line to
+   `Status: closed`.
 
 Done when every file in the draft exists with the confirmed content, and, with the GitHub tracker,
 `gh label list` shows the three labels.
 
 ## 5. Report and next step
 
-List what was created and what was left as it was. End with this line:
+List what was created and what was left as it was. End with this line, translated into the
+user's language, with commands and file names as they are:
 
 `Next: /arch:grill-architecture (Claude Code) · $arch:grill-architecture (Codex)`
