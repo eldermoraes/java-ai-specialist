@@ -1,6 +1,6 @@
 #!/bin/sh
-# Copies the single source in reference/ into the references/ folder of each skill, so every
-# skill folder works on its own (inside the plugin or copied loose into a skills folder).
+# Copies the single source in reference/ into the references/ and scripts/ folders of each skill,
+# so every skill folder works on its own (inside the plugin or copied loose into a skills folder).
 #
 # Usage, from anywhere:
 #   scripts/sync-references.sh          copy the files
@@ -14,8 +14,9 @@ PLUGIN_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 MODE=${1:-sync}
 STATUS=0
 
-# skill:file pairs. vocabulary.md and language.md come from reference/, the others from
-# reference/templates/.
+# skill:file pairs. vocabulary.md and language.md come from reference/, the other .md files from
+# reference/templates/ (copied to the skill's references/), and the .java files from
+# reference/scripts/ (copied to the skill's scripts/).
 PAIRS="
 setup-architecture:vocabulary.md
 setup-architecture:language.md
@@ -26,31 +27,45 @@ grill-architecture:language.md
 grill-architecture:brief.md
 grill-architecture:adr.md
 grill-architecture:dossier-readme.md
+grill-architecture:NextAdrNumber.java
 to-characteristics:vocabulary.md
 to-characteristics:language.md
 to-characteristics:characteristics.md
 to-characteristics:dossier-readme.md
+to-adr:vocabulary.md
+to-adr:language.md
+to-adr:adr.md
+to-adr:dossier-readme.md
+to-adr:NextAdrNumber.java
 "
 
 for pair in $PAIRS; do
   skill=${pair%%:*}
   file=${pair#*:}
-  if [ "$file" = "vocabulary.md" ] || [ "$file" = "language.md" ]; then
-    source="$PLUGIN_ROOT/reference/$file"
-  else
-    source="$PLUGIN_ROOT/reference/templates/$file"
-  fi
-  target="$PLUGIN_ROOT/skills/$skill/references/$file"
+  case "$file" in
+    vocabulary.md | language.md)
+      source="$PLUGIN_ROOT/reference/$file"
+      target="$PLUGIN_ROOT/skills/$skill/references/$file"
+      ;;
+    *.java)
+      source="$PLUGIN_ROOT/reference/scripts/$file"
+      target="$PLUGIN_ROOT/skills/$skill/scripts/$file"
+      ;;
+    *)
+      source="$PLUGIN_ROOT/reference/templates/$file"
+      target="$PLUGIN_ROOT/skills/$skill/references/$file"
+      ;;
+  esac
 
   if [ "$MODE" = "--check" ]; then
     if ! cmp -s "$source" "$target"; then
-      echo "out of sync: skills/$skill/references/$file"
+      echo "out of sync: ${target#"$PLUGIN_ROOT"/}"
       STATUS=1
     fi
   else
     mkdir -p "$(dirname "$target")"
     cp "$source" "$target"
-    echo "copied: skills/$skill/references/$file"
+    echo "copied: ${target#"$PLUGIN_ROOT"/}"
   fi
 done
 
