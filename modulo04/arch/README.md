@@ -16,7 +16,7 @@ change your host's plugin configuration: ask the user to approve them when your 
 
 The plugin lives in the marketplace `java-ai-specialist` (the catalog file
 `.claude-plugin/marketplace.json` at the root of the repository). Its skills are
-`setup-architecture`, `grill-architecture`, `to-characteristics` and `to-adr`.
+`setup-architecture`, `grill-architecture`, `to-characteristics`, `to-adr` and `to-risk`.
 
 ### If you are Claude Code
 
@@ -27,7 +27,7 @@ The plugin lives in the marketplace `java-ai-specialist` (the catalog file
    `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` set in its environment.
 2. Run `claude plugin install arch@java-ai-specialist`.
 3. Verify: `claude plugin list` shows `arch@java-ai-specialist` enabled, and
-   `claude plugin details arch` lists the four skills.
+   `claude plugin details arch` lists the five skills.
 4. Tell the user to run `/reload-plugins` (or start a new session), and finish with:
    `Next: /arch:setup-architecture`
 
@@ -66,16 +66,18 @@ Updating never touches the files the skills generated in the user's project (`do
 | `grill-architecture` | `/arch:grill-architecture` | `$arch:grill-architecture` | `docs/architecture/brief.md`, `docs/adr/NNNN-agent-workflow-or-multi-agent.md`, one `decision` task per open decision |
 | `to-characteristics` | `/arch:to-characteristics` | `$arch:to-characteristics` | `docs/architecture/characteristics.md` (Target, Measure and fitness function per characteristic, one section per quantum, Out of Scope), one `gap` task per characteristic without a fitness function |
 | `to-adr` | `/arch:to-adr` | `$arch:to-adr` | `docs/adr/NNNN-slug.md` (one decision per run, each part with the condition it needs, `not now` with the condition that reopens it), closes the `decision` task it answers, one `gap` task when Compliance has no fitness function |
+| `to-risk` | `/arch:to-risk` | `$arch:to-risk` | `docs/architecture/risk.md` (one block per dimension: areas, impact and likelihood, score from the risk matrix script, assessors, Direction; Effectful Retry for the whole system), one `high-risk` task per risk of 6 or 9 without mitigation in place |
 
 The skills run only when you call them: the agent never starts them on its own
 (`disable-model-invocation: true` for Claude Code, `agents/openai.yaml` with
 `allow_implicit_invocation: false` for Codex).
 
-Each skill works on its own. Without the setup, `grill-architecture`, `to-characteristics` and
-`to-adr` write to the default locations and keep their tasks as local files in
+Each skill works on its own. Without the setup, `grill-architecture`, `to-characteristics`,
+`to-adr` and `to-risk` write to the default locations and keep their tasks as local files in
 `.scratch/architecture/issues/`. `to-characteristics` needs no brief and no ADR either: it reads
 the code of a project, or starts from a two-line description. `to-adr` needs no brief either: it
-reads the code where the decision lives.
+reads the code where the decision lives. `to-risk` needs no other document: it reads the code
+where the external dependencies live.
 
 The skills write in your language: the files, tasks and questions follow the language you use in
 the conversation, unless you ask for another one (rule in `reference/language.md`).
@@ -94,6 +96,10 @@ the conversation, unless you ask for another one (rule in `reference/language.md
 6. `/arch:to-adr "per-task ceiling and loop circuit breaker"`: one decision per run; answer the
    round, read the draft, and confirm. Read the new ADR in `docs/adr/` and its `gap` task, if
    Compliance has no fitness function yet. Run it again for each new decision.
+7. `/arch:to-risk "availability when the provider fails"`: one dimension per run; answer the round
+   (the scores recommended for each area, the technologies the team does not know yet, who
+   assesses), read the draft, and confirm. Read `docs/architecture/risk.md` and the `high-risk`
+   tasks, and follow the `Next:` line.
 
 On a project that already has code, `to-characteristics` also runs alone, from the project root
 (`/arch:to-characteristics`) or with a path (`/arch:to-characteristics path/to/project`), and so
@@ -106,22 +112,24 @@ does `to-adr`.
 reference/vocabulary.md         single source of the architecture vocabulary
 reference/language.md           single source of the language rule for what the skills write
 reference/templates/            single source of the document templates
-reference/scripts/              single source of the scripts the skills ship (NextAdrNumber.java)
+reference/scripts/              single source of the scripts the skills ship (NextAdrNumber.java, RiskScore.java)
 scripts/sync-references.sh      copies reference/ into each skill (maintainer tool)
 scripts/check-language.sh       checks the language rule and the skill contracts (maintainer and CI tool)
 scripts/test-check-language.sh  mutation test: each break must make check-language.sh fail (CI tool)
+scripts/test-risk-score.sh      checks the scores and levels RiskScore.java prints (CI tool)
 skills/<skill>/SKILL.md         instructions to the agent
 skills/<skill>/agents/openai.yaml   Codex policy: explicit invocation only
 skills/<skill>/references/      copies of the vocabulary, language rule and templates the skill uses
-skills/<skill>/scripts/         copies of the scripts the skill runs: NextAdrNumber.java gives the next free ADR number (grill-architecture, to-adr)
+skills/<skill>/scripts/         copies of the scripts the skill runs: NextAdrNumber.java gives the next free ADR number (grill-architecture, to-adr); RiskScore.java scores a risk on the risk matrix (to-risk)
 ```
 
 After editing anything in `reference/`, run `scripts/sync-references.sh`, and check with
 `scripts/sync-references.sh --check`. Before a commit, run `scripts/check-language.sh`, and
-`scripts/test-check-language.sh` after changing it; the CI runs both.
+`scripts/test-check-language.sh` after changing it, and `scripts/test-risk-score.sh` after
+changing the risk matrix script; the CI runs them.
 
 ## Requirements
 
 - Claude Code or Codex with plugin support.
-- Java 11 or later, for the ADR numbering script.
+- Java 11 or later, for the ADR numbering script and the risk matrix script.
 - `gh`, authenticated, only if you choose GitHub Issues as the tracker.

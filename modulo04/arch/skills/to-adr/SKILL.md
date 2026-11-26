@@ -38,9 +38,9 @@ One decision per run. Another decision is another run of this skill.
   the artifact locations.
 - With the per-quantum layout, ask which quantum this run is for, in the first round, with your
   recommendation (the path given, or the deployable the input names), and read and write that
-  quantum's folder: `docs/architecture/<quantum>/` for brief, characteristics and its `README.md`;
-  ADRs stay in `docs/adr/` and tasks in the tracker. Every `docs/architecture/` path below then
-  means that folder, and the index row of the ADRs links to `../../adr/`.
+  quantum's folder: `docs/architecture/<quantum>/` for brief, characteristics, risk and its
+  `README.md`; ADRs stay in `docs/adr/` and tasks in the tracker. Every `docs/architecture/` path
+  below then means that folder, and the index row of the ADRs links to `../../adr/`.
 - Without `docs/agents/architecture.md`, the setup has not run. Use the defaults:
   ADRs at `docs/adr/`, dossier index at
   `docs/architecture/README.md`, tasks as local files in `.scratch/architecture/issues/`. Do not
@@ -51,19 +51,23 @@ One decision per run. Another decision is another run of this skill.
 - Read the brief (`docs/architecture/brief.md`) and the characteristics
   (`docs/architecture/characteristics.md`), or the locations the setup gives, if they exist: their
   Open Decisions, Targets and fitness functions are settled, do not ask them again.
-- Read the open `decision` and `gap` tasks in the tracker. A `gap` task whose body has a
-  `Next: /arch:to-adr "..."` line is a request for an ADR. The line is translated in the user's
-  language (for example `Próximo: /arch:to-adr "..."`): match it by the command, not by the word
-  before it.
-  - GitHub tracker: `gh issue list --label decision --state open` and
-    `gh issue list --label gap --state open`.
-  - Local tracker: the files in `.scratch/architecture/issues/` with a `Labels: decision` or
-    `Labels: gap` line and a `Status: open` line.
+- Read the risk assessment (`docs/architecture/risk.md`, or the location the setup gives), if it
+  exists: its scores and mitigations are evidence, do not ask them again.
+- Read the open `decision`, `gap` and `high-risk` tasks in the tracker. A `gap` or `high-risk`
+  task whose body has a `Next: /arch:to-adr "..."` line is a request for an ADR. The line is
+  translated in the user's language (for example `Próximo: /arch:to-adr "..."`): match it by the command, not by the word before it.
+  - GitHub tracker: `gh issue list --label decision --state open`,
+    `gh issue list --label gap --state open` and `gh issue list --label high-risk --state open`.
+  - Local tracker: the files in `.scratch/architecture/issues/` with a `Labels: decision`,
+    `Labels: gap` or `Labels: high-risk` line and a `Status: open` line.
 - If there is a project (the path given, or the current repository), read its README, build files
   (`pom.xml`, `build.gradle`, `package.json`, ...), configuration (`application.properties`,
   `application.yaml`, environment files), tests, and the code where the decision lives. For a
   decision about cost: where the model is called, how agents are composed, the token limits, the
-  retries, and every loop. Treat what they show as answered, and say where you saw it.
+  retries, and every loop. For a decision about resilience: every call over the network with its
+  timeout, retries and fallback, how the work runs (in the request, through an emitter, through a
+  queue), the state kept between requests, and the effectful actions. Treat what they show as
+  answered, and say where you saw it.
 
 Show the user, in a few lines, what you read and what you did not find. Done when you know where
 each file goes and what is already answered.
@@ -71,7 +75,7 @@ each file goes and what is already answered.
 ## 2. Pick the decision
 
 - With the decision in the input, use it. Do not list other candidates.
-- Without it, list the candidates: open `decision` tasks, `gap` tasks with a
+- Without it, list the candidates: open `decision` tasks, `gap` and `high-risk` tasks with a
   `Next: /arch:to-adr "..."` line in any language (matched by the command, as in step 1), and the
   Open Decisions of the brief. Recommend one, with its
   reason in one line, and ask in one round. With no candidate, ask the user for the decision in
@@ -98,8 +102,10 @@ the completion of a `proposed` one, or a new ADR that supersedes an `accepted` o
   two parts).
 - For each part, say the condition under which it makes sense, whether the system meets it, and
   where you saw it. The vocabulary gives the condition of the known parts: the per-task ceiling,
-  the loop circuit breaker, the router by cost and the model gateway. For any other part, reason
-  out its condition and state it.
+  the loop circuit breaker, the router by cost and the model gateway, and the parts of resilience:
+  timeout, retry, fallback, the circuit breaker of a dependency, the queue with persisted work, the
+  saga and the state scoped by user or tenant. For any other part, reason out its condition and
+  state it.
 - A part whose condition the system does not meet: recommend `not now`, recorded with the
   condition that reopens it. Do not invent what the code does not show: no loop in the code means
   no loop for the loop circuit breaker to stop.
@@ -179,6 +185,13 @@ user confirms or corrects it.
      lines. When Compliance points to a fitness function, close it the same way as the `decision`
      task. When the ADR stays `proposed`, leave it as it is. It is matched like the `decision`
      task: by the subject of its `Next: /arch:to-adr "..."` line.
+   - When the ADR answers a `high-risk` task, keep the high-risk task open: the risk falls when the mitigation
+     reaches the code, and `to-risk` closes it then. Add the link to the ADR to it: a comment on
+     GitHub (`gh issue comment <number> --body "<link to the ADR>"`), a line with the path of the
+     ADR in the local file. With the decision in the input, the task the ADR answers is the open
+     `high-risk` task whose `Next: /arch:to-adr "..."` line holds the same decision, matched by the
+     subject and not by the exact text (the user types it in their own words). With no task that
+     matches, the ADR answers no `high-risk` task.
    - When the ADR stays `proposed`, keep the `decision` task open, or open one with what is
      missing to decide.
    - Open the `gap` task of Compliance, when there is no fitness function and no `gap` task asked
@@ -213,6 +226,9 @@ commands and file names as they are:
 
 - If the ADR stays `proposed`, end with the decision task and what is missing to decide, in the form
   `Next: decide <what is missing> (<decision task>), then /arch:to-adr "<decision>" (Claude Code) · $arch:to-adr "<decision>" (Codex)`.
+  No mitigation was decided yet, so never send the user to the code.
+- If the ADR is `accepted` and answers a `high-risk` task, end with
+  `Next: put the mitigation in the code, then /arch:to-risk to close the high-risk task (Claude Code) · $arch:to-risk (Codex)`.
 - Otherwise, if the plugin you are running from has the `to-risk` skill, end with
   `Next: /arch:to-risk (Claude Code) · $arch:to-risk (Codex)`.
 - Otherwise end with: `Next: review ADR <number>, and mark it reviewed in docs/architecture/README.md.`

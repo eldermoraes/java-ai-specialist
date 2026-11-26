@@ -257,13 +257,13 @@ expect_fail missing-script
 
 # 33. The README leaves to-adr out of the skills the agent installs.
 fresh_copy readme-without-to-adr
-edit 's/`setup-architecture`, `grill-architecture`, `to-characteristics` and `to-adr`\./`setup-architecture`, `grill-architecture` and `to-characteristics`./' \
+edit 's/`to-characteristics`, `to-adr` and `to-risk`\./`to-characteristics` and `to-risk`./' \
   "$COPY/README.md"
 expect_fail readme-without-to-adr
 
 # 34. The README still says the plugin has three skills.
 fresh_copy readme-old-count
-edit 's/lists the four skills/lists the three skills/' "$COPY/README.md"
+edit 's/lists the five skills/lists the three skills/' "$COPY/README.md"
 expect_fail readme-old-count
 
 # 35. The 15 times back as a market estimate (the source is a measurement a provider published
@@ -287,6 +287,139 @@ edit '/^- The term `not now`, for a part of a decision postponed on purpose/d' \
   "$COPY/reference/language.md"
 "$COPY/scripts/sync-references.sh" > /dev/null
 expect_fail not-now-translated
+
+# 38. The vocabulary lost the score of an unproven technology (the skill would put a technology the
+#     team never used through the matrix).
+fresh_copy unproven-score-gone
+edit 's/It always scores 9, without the$/It is scored like any other area, with the/' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail unproven-score-gone
+
+# 39. A score of 4 back in the high level (the template and the vocabulary would disagree, and a
+#     medium risk would open a high-risk task).
+fresh_copy four-is-high
+edit 's/3–4 medium, 6–9 high/3 medium, 4–9 high/' "$COPY/reference/templates/risk.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail four-is-high
+
+# 40. to-risk lets the model multiply instead of running the script.
+fresh_copy score-by-model
+edit 's/^  java <this skill.s folder>\/scripts\/RiskScore.java <impact> <likelihood>$/  multiply impact by likelihood/' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail score-by-model
+
+# 41. to-risk counts the agent as an assessor.
+fresh_copy agent-as-assessor
+edit 's/The agent is not an assessor/The agent is an assessor/' "$COPY/skills/to-risk/SKILL.md"
+expect_fail agent-as-assessor
+
+# 42. to-risk opens high-risk tasks below 6.
+fresh_copy high-risk-from-four
+edit 's/risk of 6 or 9 without mitigation in place/risk of 4 or more without mitigation/g' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail high-risk-from-four
+
+# 43. The retry lost its condition on effects (a project with a send tool would get a retry).
+fresh_copy retry-without-effect-condition
+edit 's/on a call with no effect, or on an idempotent one\./on any call./' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail retry-without-effect-condition
+
+# 44. The Effectful Retry forgets the retry of a model call that already ran tools.
+fresh_copy effectful-retry-without-tools
+edit 's/retry of a call that ran tools (repeating/retry of a model call (repeating/' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail effectful-retry-without-tools
+
+# 45. language.md no longer keeps the risk terms as they are (a run could write "tecnologia não
+#     comprovada" or "avaliador único").
+fresh_copy risk-terms-translated
+edit '/^- The terms risk storming, effectful retry, unproven technology and `single-assessor`, the$/d' \
+  "$COPY/reference/language.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail risk-terms-translated
+
+# 45b. unproven technology dropped from the terms kept as they are.
+fresh_copy unproven-translated
+edit 's/^- The terms risk storming, effectful retry, unproven technology and/- The terms risk storming, effectful retry and/' \
+  "$COPY/reference/language.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail unproven-translated
+
+# 46. The dossier index template lost the row of the risk assessment.
+fresh_copy dossier-without-risk
+edit '/^| \[Risk\](risk.md) | pending | |$/d' "$COPY/reference/templates/dossier-readme.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail dossier-without-risk
+
+# 47. The queue lost the rate limit as a condition.
+fresh_copy queue-without-rate-limit
+edit 's/ or the volume goes past the rate limit of the provider\./. /' "$COPY/reference/vocabulary.md"
+edit 's/^  a crash, or the volume goes past the rate limit of the provider\./  a crash./' \
+  "$COPY/reference/vocabulary.md"
+"$COPY/scripts/sync-references.sh" > /dev/null
+expect_fail queue-without-rate-limit
+
+# 48. to-adr closes the high-risk task it answers (the risk would leave the board before the
+#     mitigation reaches the code).
+fresh_copy adr-closes-high-risk
+edit 's/keep the high-risk task open/close the high-risk task/' "$COPY/skills/to-adr/SKILL.md"
+expect_fail adr-closes-high-risk
+
+# 49. The README still says the plugin has four skills.
+fresh_copy readme-four-skills
+edit 's/lists the five skills/lists the four skills/' "$COPY/README.md"
+expect_fail readme-four-skills
+
+# 50. The copy of RiskScore.java in to-risk drifts from the single source.
+fresh_copy stale-risk-script
+drop_pair "to-risk:RiskScore.java"
+edit 's/score <= 4/score <= 5/' "$COPY/skills/to-risk/scripts/RiskScore.java"
+expect_fail stale-risk-script
+
+# 51. to-risk checks unproven technology only when it is the dimension (an availability run would
+#     miss the 9 of a beta framework).
+fresh_copy unproven-only-as-dimension
+edit 's/^- Every technology an area depends on is checked for unproven technology in every run, whatever the$/- A technology may be unproven, when unproven technology is the/' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail unproven-only-as-dimension
+
+# 52. A proof of concept gets a Next: line (the mitigation of the 9 would take the place of the
+#     architecture decision in the last line).
+fresh_copy poc-with-next-line
+edit 's/^  is not an architecture decision and gets no Next: line\.$/  gets its own line./' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail poc-with-next-line
+
+# 53. to-adr sends the user straight to to-risk, before the mitigation is in the code.
+fresh_copy adr-next-without-code
+edit 's/Next: put the mitigation in the code, then \/arch:to-risk to close the high-risk task/Next: \/arch:to-risk/' \
+  "$COPY/skills/to-adr/SKILL.md"
+expect_fail adr-next-without-code
+
+# 54. to-risk asks one question per technology (a project with many dependencies would get dozens).
+fresh_copy one-question-per-technology
+edit 's/^  knows\. Ask one question about it: list only the technologies the build or the README marks as$/  knows. Ask about each technology the build or the README lists, as/' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail one-question-per-technology
+
+# 55. to-risk rewrites the whole file on every run (a second dimension would erase the first).
+fresh_copy one-block-for-all
+edit 's/replaces only the block of that dimension; a new dimension adds a block after the last one, with$/rewrites the whole file, with/' \
+  "$COPY/skills/to-risk/SKILL.md"
+edit 's/^   replaces only the block of that dimension; a new dimension adds a block after the last one, with$/   rewrites the whole file, with/' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail one-block-for-all
+
+# 55b. to-risk matches the previous area by its exact name (every area of a rerun would be new).
+fresh_copy area-by-exact-name
+edit 's/Match an area of the$/Match an area of the previous block by its exact name; never/' \
+  "$COPY/skills/to-risk/SKILL.md"
+edit 's/^  previous block by its subject, not by its exact name:/  by its subject:/' \
+  "$COPY/skills/to-risk/SKILL.md"
+expect_fail area-by-exact-name
 
 if [ "$STATUS" -eq 0 ]; then
   echo "every mutation caught"
